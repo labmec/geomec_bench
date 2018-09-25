@@ -51,7 +51,12 @@ if(USING_VTK)
 	mark_as_advanced(Qt5Sql_DIR)
 	mark_as_advanced(Qt5Widgets_DIR)	
 else()
+	unset(Qt5Core_DIR CACHE)
+	unset(Qt5Gui_DIR CACHE)
+	unset(Qt5Sql_DIR CACHE)
+	unset(Qt5Widgets_DIR CACHE)
 	unset(VTK_LIBRARIES)
+	unset(VTK_DIR CACHE)
 endif(USING_VTK)
 
 
