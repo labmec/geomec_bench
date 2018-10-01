@@ -56,11 +56,13 @@ class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
       /** returns the name of the material*/
       virtual std::string Name();
 
+    
+    
       /**returns the integrable dimension of the material*/
-      virtual int Dimension() const { return 3; }
+      virtual int Dimension() const { return fDimension; }
 
       /** returns the number of state variables associated with the material*/
-      virtual int NStateVariables() { return 3; }
+      virtual int NStateVariables() { return fDimension; }
 
       /** print out the data associated with the material*/
       virtual void Print(std::ostream &out, const int memory);
@@ -263,6 +265,8 @@ virtual int ClassId() const;
 
 protected:
 
+    int fDimension=2;
+    
 	/**
        * gravity acceleration
        */

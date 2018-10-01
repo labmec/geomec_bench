@@ -14,11 +14,11 @@
 #include "pzfmatrix.h"
 
 template <class TMEM>
-TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() : TPZMatWithMem<TMEM>(){
+TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() {
     
     //TPZFNMatrix<3,STATE> Vl(1,1,0.);
-    TMEM memory;
-    this->SetDefaultMem(memory);
+  //  TMEM memory;
+  //  this->SetDefaultMem(memory);
     fk=1.;
     fViscosity=1.;
     fTensorK.Resize(fDimension, fDimension);
@@ -37,8 +37,8 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
 {
     
     //TPZFNMatrix<3,STATE> Vl(1,1,0.);
-    TMEM memory;
-    this->SetDefaultMem(memory);
+//    TMEM memory;
+//    this->SetDefaultMem(memory);
     fk=1.;
     fViscosity=1.;
     fDimension = dimension;
@@ -54,7 +54,7 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
 ////////////////////////////////////////////////////////////////////
 
 template <class TMEM>
-TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &mat) : TPZMatWithMem<TMEM>(mat),fDimension(mat.fDimension),fSpace(mat.fSpace), fTheta(mat.fTheta)
+TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &mat) : fDimension(mat.fDimension),fSpace(mat.fSpace), fTheta(mat.fTheta)
 {
     
     
@@ -63,7 +63,26 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &
 ////////////////////////////////////////////////////////////////////
 
 template <class TMEM>
-TPZDarcy2DMaterialMem<TMEM>::~TPZDarcy2DMaterialMem<TMEM>(){
+TPZDarcy2DMaterialMem<TMEM> & TPZDarcy2DMaterialMem<TMEM>::operator=(const TPZDarcy2DMaterialMem & mat){
+    
+    // check for self-assignment
+    if(&mat == this){
+        return *this;
+    }
+    
+    fDimension=mat.fDimension;
+    fSpace=mat.fSpace;
+    fTheta=mat.fTheta;
+
+    return *this;
+}
+
+
+
+////////////////////////////////////////////////////////////////////
+
+template <class TMEM>
+TPZDarcy2DMaterialMem<TMEM>::~TPZDarcy2DMaterialMem(){
     
     
 }
@@ -1303,4 +1322,4 @@ void TPZDarcy2DMaterialMem<TMEM>::Errors(TPZVec<TPZMaterialData> &data, TPZVec<S
 }
 
 template class TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN>;
-
+template class TPZDarcy2DMaterialMem<TPZMemoryDFN>;

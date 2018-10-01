@@ -1,14 +1,5 @@
 //
 //  TPZStiffFracture.cpp
-//  Benchmark0a
-//
-//  Created by Pablo Carvalho on 20/08/18.
-//
-
-#include "TPZStiffFracture.h"
-
-//
-//  TPZStiffFracture.cpp
 //  PZ
 //
 //  Created by Philippe Devloo on 5/2/14.
@@ -19,29 +10,28 @@
 #include "pzaxestools.h"
 
 
-
-/** @brief Unique identifier for serialization purposes */
-int TPZStiffFracture::ClassId() const{
+template <class TMEM>
+int TPZStiffFracture<TMEM>::ClassId() const{
     return Hash("TPZStiffFracture") ^ TPZDiscontinuousGalerkin::ClassId() << 1;
 }
 
-/** @brief Saves the element data to a stream */
-void TPZStiffFracture::Write(TPZStream &buf, int withclassid) const
+template <class TMEM>
+void TPZStiffFracture<TMEM>::Write(TPZStream &buf, int withclassid) const
 {
     TPZDiscontinuousGalerkin::Write(buf, withclassid);
     buf.Write(&fNStateVariables);
 }
 
-/** @brief Reads the element data from a stream */
-void TPZStiffFracture::Read(TPZStream &buf, void *context)
+template <class TMEM>
+void TPZStiffFracture<TMEM>::Read(TPZStream &buf, void *context)
 {
     TPZDiscontinuousGalerkin::Read(buf, context);
     buf.Read(&fNStateVariables);
     
 }
 
-//Contribution of skeletal elements.
-void TPZStiffFracture::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+template <class TMEM>
+void TPZStiffFracture<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     int nmesh = datavec.size();
     if (nmesh!=2) DebugStop();
@@ -69,17 +59,8 @@ void TPZStiffFracture::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight,
     }
 }
 
-/**
- * @brief Computes a contribution to the stiffness matrix and load vector at one integration point to multiphysics simulation
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ek [out] is the stiffness matrix
- * @param ef [out] is the load vector
- * @since June 5, 2012
- */
-void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+template <class TMEM>
+void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
     for (int i=0; i<dataleft.size(); i++) {
@@ -138,17 +119,8 @@ void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMate
 }
 
 
-/**
- * @brief It computes a contribution to stiffness matrix and load vector at one integration point
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ek [out] is the stiffness matrix
- * @param ef [out] is the load vector
- * @since April 16, 2007
- */
-void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+template <class TMEM>
+void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     //    TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
     //    TPZFMatrix<REAL> &dphiRdAxes = dataright.dphix;
@@ -158,7 +130,6 @@ void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialDat
     //    TPZFNMatrix<660> dphiL, dphiR;
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiLdAxes, dphiL, dataleft.axes);
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiRdAxes, dphiR, dataright.axes);
-    
     
     int nrowl = phiL.Rows();
     int nrowr = phiR.Rows();
@@ -191,46 +162,59 @@ void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialDat
     
 }
 
-/**
- * @brief It computes a contribution to residual vector at one integration point
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ef [out] is the load vector
- * @since April 16, 2007
- */
-void TPZStiffFracture::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
+template <class TMEM>
+void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
-    return;
+    
+    TPZFMatrix<REAL> &phiL = dataleft.phi;
+    TPZFMatrix<REAL> &phiR = dataright.phi;
+    
+    int nrowl = phiL.Rows();
+    int nrowr = phiR.Rows();
+    
+    STATE vn    = dataleft.sol[0][0];
+    int secondblock = ef.Rows()-phiR.Rows()*fNStateVariables;
+ 
+    // 3) phi_I_left, phi_J_right
+    for(int il=0; il<nrowl; il++) {
+            for (int ist=0; ist<fNStateVariables; ist++) {
+                ef(fNStateVariables*il+ist) += weight * fMultiplier * (phiL(il) * vn);
+            }
+    }
+
+
+    for(int ir=0; ir<nrowr; ir++) {
+        for (int ist=0; ist<fNStateVariables; ist++) {
+            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phiR(ir) * vn);
+        }
+    }
+    
 }
 
-/** @brief Updates the leak off memory */
-void TPZStiffFracture::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
+template <class TMEM>
+void TPZStiffFracture<TMEM>::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
     const int intGlobPtIndex = datavec[0].intLocPtIndex;
-    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
-    const STATE pfrac = datavec[1].sol[0][0];
-    const REAL deltaT = fData->TimeStep();
-    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
-    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
-    
-    Vl(0,0) = Vlnext;
-    this->MemItem(intGlobPtIndex) = Vl;
-    
+//    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
+//    const STATE pfrac = datavec[1].sol[0][0];
+//    const REAL deltaT = fData->TimeStep();
+//    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
+//    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
+//    Vl(0,0) = Vlnext;
+//    this->MemItem(intGlobPtIndex) = Vl;
 }
 
-/** @brief Updates the leak off memory */
-void TPZStiffFracture::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec){
+template <class TMEM>
+void TPZStiffFracture<TMEM>::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec){
     const int intGlobPtIndex = data.intGlobPtIndex;
-    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
-    const STATE pfrac = datavec[1].sol[0][0];
-    const REAL deltaT = fData->TimeStep();
-    
-    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
-    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
-    
-    Vl(0,0) = Vlnext;
-    this->MemItem(intGlobPtIndex) = Vl;
+//    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
+//    const STATE pfrac = datavec[1].sol[0][0];
+//    const REAL deltaT = fData->TimeStep();
+//    REAL tStar = fData->FictitiousTime(Vl(0,0), pfrac);
+//    REAL Vlnext = fData->VlFtau(pfrac, tStar + deltaT);
+//    Vl(0,0) = Vlnext;
+//    this->MemItem(intGlobPtIndex) = Vl;
 }
 
 
+
+template class TPZStiffFracture<TPZStiffFracMemory>;

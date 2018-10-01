@@ -1,6 +1,5 @@
 //
-//  TPMRSSegregatedAnalysis.h
-//  PMRS
+//  TPZSegregatedAnalysis.h
 //
 //  Created by Omar Durán on 9/13/18.
 //
@@ -11,8 +10,12 @@
 #include <stdio.h>
 #include "TPZMatWithMem.h"
 #include "TPZMatElastoPlasticAnalysis.h"
+#include "TPZMatElastoPlasticDFN.h"
+#include "TPZMonoPhasicMemoryDFN.h"
 #include "TPZDarcyAnalysis.h"
+#include "TPZDarcy2DMaterialMem.h"
 #include "TPZMemoryDFN.h"
+#include "TPZElasticCriterion.h"
 
 class TPZSegregatedAnalysisDFN {
     
@@ -38,19 +41,19 @@ public:
     /// Copy constructor
     TPZSegregatedAnalysisDFN(const TPZSegregatedAnalysisDFN & other);
     
-    /// Attach materials with the same share pointer (For now just volumeric linking)
-    void ApplyMemoryLink();
-    
     /// Set the pointer of Simulation data object
     void SetSimulationData(TPZSimulationData * simulation_data){
         m_simulation_data = simulation_data;
     }
     
+    /// Attach materials with the same share pointer (For now just volumeric linking)
+    void ApplyMemoryLink();
+    
     /// Configurate internal analysis objects and linked them through the memory shared pointer
-    void ConfigurateAnalysis(DecomposeType decompose_geo, DecomposeType decompose_res, TPZSimulationData * simulation_data,  TPZCompMesh * cmesh_geomechanics, TPZCompMesh * cmesh_reservoir, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZStack<std::string> & post_pro_var_res, TPZStack<std::string> & post_pro_var_geo);
+    void ConfigurateAnalysis(DecomposeType decompose_geo, DecomposeType decompose_res, TPZSimulationData * simulation_data, TPZCompMesh * cmesh_geomechanics, TPZCompMesh * cmesh_reservoir, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZStack<std::string> & post_pro_var_res, TPZStack<std::string> & post_pro_var_geo);
     
     /// Execute the evolution for a single time step
-    void ExecuteOneTimeStep(bool must_accept_solution_Q);
+    void ExecuteOneTimeStep();
     
     /// Post-processing the variables for a single time step
     void PostProcessTimeStep(std::string & geo_file, std::string & res_file);
@@ -58,6 +61,9 @@ public:
     /// Execute the transient evolution using Fixed Stress Split Iteration
     void ExecuteTimeEvolution();
     
+    /// Update solution state x = x_n
+    void UpdateState();
+    
 };
 
-#endif /* TPMRSSegregatedAnalysis_h */
+#endif /* TPZSegregatedAnalysis.h */

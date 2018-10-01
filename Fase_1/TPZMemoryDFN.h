@@ -10,7 +10,6 @@
 #define TPZMemoryDFN_h
 
 #include <stdio.h>
-#include "TPZMemoryDFN.h"
 #include "TPZElastoPlasticMemoryDFN.h"
 #include "TPZMonoPhasicMemoryDFN.h"
 

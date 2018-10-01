@@ -1,5 +1,5 @@
 /*
- *  TPZDarcy2DMaterial.h
+ *  TPZDarcy2DMaterialMem.h
  *  PZ
  *
  *  Created by Pablo G S Carvalho on 08/09/16.
@@ -7,7 +7,12 @@
  *
  */
 
+#ifndef TPZDarcy2DMaterialMem_h
+#define TPZDarcy2DMaterialMem_h
+
+#include <stdio.h>
 #include "TPZMatWithMem.h"
+#include "tpzautopointer.h"
 #include "pzdiscgal.h"
 #include "pzfmatrix.h"
 #include "pzbndcond.h"
@@ -17,15 +22,13 @@
 #include "TPZElastoPlasticMem.h"
 #include "pzporoelastoplasticmem.h"
 #include "TPZMonoPhasicMemoryDFN.h"
-
-#ifndef TPZDARCY2DMATERIAL
-#define TPZDARCY2DMATERIAL
+#include "TPZMemoryDFN.h"
 
 
-template <class TMEM = TPZMonoPhasicMemoryDFN>
+template <class TMEM>
 class TPZDarcy2DMaterialMem : public TPZMatWithMem<TMEM>  {
     
-protected:
+//protected:
     
     /// dimension of the material
     int fDimension;
@@ -73,7 +76,9 @@ public:
     /** Creates a material object based on the referred object and
      *  inserts it in the vector of material pointers of the mesh.
      */
-    TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem<TMEM> &mat);
+    TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &mat);
+    
+    TPZDarcy2DMaterialMem &operator=(const TPZDarcy2DMaterialMem & other);
     
     /**
      * Destructor
@@ -137,7 +142,7 @@ public:
     int Dimension() const {return fDimension;}
     
     /** returns the number of state variables associated with the material */
-    int NStateVariables() {return 4;} // for hdiv are 3, plus pressure, so 3 + 1 = 4 itapopo
+    int NStateVariables() {return 2;} // for hdiv are 3, plus pressure, so 3 + 1 = 4 itapopo
     
     /** print out the data associated with the material */
     void Print(std::ostream &out = std::cout);

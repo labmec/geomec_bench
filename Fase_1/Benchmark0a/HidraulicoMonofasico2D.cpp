@@ -27,8 +27,6 @@
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "pzmultiphysicselement.h"
 
-#include "TPZDarcy1DMaterial.h"
-#include "TPZDarcy2DMaterial.h"
 #include "TPZLagrangeMultiplier.h"
 #include <pzgeoel.h>
 #include "pzgeoelbc.h"

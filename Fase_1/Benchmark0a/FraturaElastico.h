@@ -1,5 +1,5 @@
 /*
- *  MonofasicoElastico.h
+ *  FraturaElastico.h
  *  PZ
  *
  *  Created by Pablo Carvalho on 28/07/2017.
@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef __PZ__MonofasicoElastico__
-#define __PZ__MonofasicoElastico__
+#ifndef __PZ__FraturaElastico__
+#define __PZ__FraturaElastico__
 
 #include <cmath>
 #include <set>
@@ -21,7 +21,7 @@
 #include "TPZVTKGeoMesh.h"
 #include "pzanalysis.h"
 #include "pzbndcond.h"
-#include "MonofasicoElastico.h"
+#include "FraturaElastico.h"
 #include "pzporoelasticmf2d.h"
 
 #include <pzgeoel.h>
@@ -52,7 +52,7 @@
 using namespace std;
 using namespace pzshape;
 
-class MonofasicoElastico{
+class FraturaElastico{
 private:
     
     int fdim; //Dimensão do problema
@@ -125,11 +125,11 @@ private:
     
 public:
 
-    MonofasicoElastico();
+    FraturaElastico();
     
     void Run(int pOrder);
     
-    ~MonofasicoElastico();
+    ~FraturaElastico();
     
     static void F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu);
     

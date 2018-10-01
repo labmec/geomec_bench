@@ -8,7 +8,8 @@
 #include <string>
 
 #include "HidraulicoMonofasico2D.h"
-#include "MonofasicoElastico.h"
+#include "HidraulicoMonofasicoElastico.h"
+#include "FraturaElastico.h"
 
 #include "pzlog.h"
 //------------------Benchmarks for Geomec------------------------
@@ -19,8 +20,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     InitializePZLOG();
-    MonofasicoElastico scenario0a;
-    scenario0a.Run(1);
+    HidraulicoMonofasicoElastico scenario0a;
+    scenario0a.Run(2);
     
     
 //    MonofasicoElastico cenario0a;

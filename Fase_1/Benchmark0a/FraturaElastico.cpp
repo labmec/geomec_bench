@@ -1,5 +1,5 @@
 /*
- *  Monofasico.cpp
+ *  FraturaElastico.cpp
  *  PZ
  *
  *  Created by Pablo Carvalho on 28/07/2017.
@@ -7,7 +7,7 @@
  *
  */
 
-#include "MonofasicoElastico.h"
+#include "FraturaElastico.h"
 #include "pzcheckgeom.h"
 #include "pzstack.h"
 #include "TPZParSkylineStructMatrix.h"
@@ -26,9 +26,10 @@
 #include "TPZElasticCriterion.h"
 #include "pzporoelastoplasticmem.h"
 #include "pzcompelwithmem.h"
-#include "TPZStiffFracture.h"
+#include "../TPZStiffFracture.h"
 #include "pzelastoplasticanalysis.h"
 #include "../TPZDarcy2DMaterialMem.h"
+#include "../TPZStiffFracMemory.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -39,7 +40,6 @@
 #include "pzbuildmultiphysicsmesh.h"
 #include "pzporoelasticmf2d.h"
 
-#include "TPZDarcy1DMaterial.h"
 #include "TPZDarcy2DMaterial.h"
 #include "TPZLagrangeMultiplier.h"
 #include <pzgeoel.h>
@@ -64,6 +64,7 @@
 #include "TPZSSpStructMatrix.h"
 #include "TPZGmshReader.h"
 #include "../TPZMonoPhasicMemoryDFN.h"
+#include "../TPZElastoPlasticMemoryDFN.h"
 #include "../TPZMatElastoPlasticDFN_impl.h"
 
 #define TRIANGLEMESH
@@ -71,9 +72,8 @@
 using namespace std;
 
 const REAL Pi=M_PI;
-REAL ftimeatual = 0.;
 
-MonofasicoElastico::MonofasicoElastico()
+FraturaElastico::FraturaElastico()
 {
     
     fdim=2; //Dimensão do problema
@@ -146,7 +146,7 @@ MonofasicoElastico::MonofasicoElastico()
 }
 
 
-void MonofasicoElastico::Run(int pOrder)
+void FraturaElastico::Run(int pOrder)
 {
     
 #ifdef LOG4CXX
@@ -202,14 +202,6 @@ void MonofasicoElastico::Run(int pOrder)
     
     // Malha Elásticidade
     TPZCompMesh *cmesh_E = CMesh_E(gmesh, pOrder); //Função para criar a malha computacional da velocidade
-    
-    // Malha Multifísica : Fluxo + Pressão
-    
-    TPZCompMesh *cmesh_q = CMesh_q(gmesh, pOrder); //Malha computacional de fluxo - Hdiv
-    TPZCompMesh *cmesh_p = CMesh_p(gmesh, pOrder); //Malha computacional de pressão - descontínua
-    TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder); //Malha multifísica (Fluxo+Pressão)
-    
-    
     
     std::ofstream filecEbf("MalhaC_E_before.txt"); //Impressão da malha computacional da velocidade (formato txt)
     cmesh_E->Print(filecEbf);
@@ -287,11 +279,11 @@ void MonofasicoElastico::Run(int pOrder)
             std::map<int, TPZMaterial *> & refMatVec = an.Mesh()->MaterialVec();
             std::map<int, TPZMaterial * >::iterator mit;
             
-            TPZMatWithMem<TPZPoroElastoPlasticMem> * pMatWithMem2; // define in file pzporous.h
+            TPZMatWithMem<TPZElastoPlasticMemoryDFN> * pMatWithMem2; // define in file pzporous.h
             
             for(mit=refMatVec.begin(); mit!= refMatVec.end(); mit++)
             {
-                pMatWithMem2 = dynamic_cast<TPZMatWithMem<TPZPoroElastoPlasticMem> *>( mit->second);
+                pMatWithMem2 = dynamic_cast<TPZMatWithMem<TPZElastoPlasticMemoryDFN> *>( mit->second);
                 if(pMatWithMem2 != NULL)
                 {
                     pMatWithMem2->SetUpdateMem(update_Q);
@@ -307,13 +299,13 @@ void MonofasicoElastico::Run(int pOrder)
     
     TPZManVector<int,10> post_mat_id(1);
     post_mat_id[0] = 1;
-    TPZManVector<std::string,10> var_names(4), vecnames(0);
-    var_names[0] = "XStress";
-    var_names[1] = "YStress";
+    TPZStack<std::string> var_names, vecnames;
+    var_names.Push("sxx");
+    var_names.Push("syy");
 //    var_names[2] = "DisplacementMemX";
 //    var_names[3] = "DisplacementMemY";
-    var_names[2] = "DisplacementX";
-    var_names[3] = "DisplacementY";
+    var_names.Push("ux");
+    var_names.Push("uy");
     post_an.SetPostProcessVariables(post_mat_id, var_names);
     
     {
@@ -347,7 +339,7 @@ void MonofasicoElastico::Run(int pOrder)
 }
 
 
-void MonofasicoElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
+void FraturaElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
     for ( int ref = 0; ref < n_div; ref++ ){
         TPZVec<TPZGeoEl *> filhos;
         int n = gmesh->NElements();
@@ -358,12 +350,12 @@ void MonofasicoElastico::UniformRef(TPZGeoMesh * gmesh, int n_div){
     }//ref
 }
 
-MonofasicoElastico::~MonofasicoElastico()
+FraturaElastico::~FraturaElastico()
 {
     
 }
 
-void MonofasicoElastico::F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu){
+void FraturaElastico::F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu){
     
     f.resize(1);
     const REAL Pi=M_PI;
@@ -377,7 +369,7 @@ void MonofasicoElastico::F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFM
     
 }
 
-TPZAutoPointer <TPZMatrix<STATE> > MonofasicoElastico::MassMatrix(TPZPoroElasticMF2d * mymaterial, TPZCompMesh* mphysics, int nthreads){
+TPZAutoPointer <TPZMatrix<STATE> > FraturaElastico::MassMatrix(TPZPoroElasticMF2d * mymaterial, TPZCompMesh* mphysics, int nthreads){
     
     mymaterial->SetLastState();
     //TPZSkylineStructMatrix matsp(mphysics);
@@ -400,7 +392,7 @@ TPZAutoPointer <TPZMatrix<STATE> > MonofasicoElastico::MassMatrix(TPZPoroElastic
     return matK2;
 }
 
-void MonofasicoElastico::StiffMatrixLoadVec(TPZPoroElasticMF2d *mymaterial, TPZCompMesh* mphysics, TPZAnalysis &an, TPZFMatrix<STATE> &matK1, TPZFMatrix<STATE> &fvec, int nthreads) {
+void FraturaElastico::StiffMatrixLoadVec(TPZPoroElasticMF2d *mymaterial, TPZCompMesh* mphysics, TPZAnalysis &an, TPZFMatrix<STATE> &matK1, TPZFMatrix<STATE> &fvec, int nthreads) {
     
     mymaterial->SetCurrentState();
     //TPZFStructMatrix matsk(mphysics);
@@ -418,7 +410,7 @@ void MonofasicoElastico::StiffMatrixLoadVec(TPZPoroElasticMF2d *mymaterial, TPZC
     
 }
 
-void MonofasicoElastico::SetParameters(REAL mod_young, REAL mod_poisson, REAL coef_alpha, REAL coef_Se, REAL permeabil_fluido, REAL visc_fluido, REAL fx, REAL fy,REAL sign){
+void FraturaElastico::SetParameters(REAL mod_young, REAL mod_poisson, REAL coef_alpha, REAL coef_Se, REAL permeabil_fluido, REAL visc_fluido, REAL fx, REAL fy,REAL sign){
     
     fEyoung = mod_young;
     fpoisson= mod_poisson;
@@ -431,7 +423,7 @@ void MonofasicoElastico::SetParameters(REAL mod_young, REAL mod_poisson, REAL co
     fsign = sign;
 }
 
-void MonofasicoElastico::PosProcessMultphysics(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile)
+void FraturaElastico::PosProcessMultphysics(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile)
 {
     TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(meshvec, mphysics);
     
@@ -465,7 +457,7 @@ void MonofasicoElastico::PosProcessMultphysics(TPZVec<TPZCompMesh *> meshvec, TP
     //    an.Print("nothing",out);
 }
 
-TPZGeoMesh *MonofasicoElastico::CreateGMesh()
+TPZGeoMesh *FraturaElastico::CreateGMesh()
 {
     int64_t id, index;
     
@@ -508,7 +500,7 @@ TPZGeoMesh *MonofasicoElastico::CreateGMesh()
 
 }
 
-void MonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STATE> &sol, TPZFMatrix<STATE> &deriv){
+void FraturaElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STATE> &sol, TPZFMatrix<STATE> &deriv){
 
     REAL y = ptx[1];
     sol.Resize(2, 0.);// ux, uy;
@@ -561,11 +553,13 @@ void MonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STATE> &sol, 
     
 }
 
-TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *FraturaElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
 {
     
     ///criar malha computacional
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
+    if(pOrder<2) DebugStop();
+    
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetDimModel(fdim);
     cmesh->ApproxSpace().SetAllCreateFunctionsContinuousWithMem();
@@ -576,9 +570,10 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     //REAL E = 0;
     //REAL poisson = 0;
     
-    TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
+    //TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
+    TPZMatElastoPlasticDFN<TPZElasticCriterion,TPZElastoPlasticMemoryDFN> *material;
     //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
-    material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> (fmatID,fdim);
+    material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZElastoPlasticMemoryDFN> (fmatID,fdim);
     TPZElasticCriterion obj ;
     
     TPZElasticResponse er;
@@ -597,7 +592,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     }
     
     //Inserir condicao de contorno
-    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+    TPZFMatrix<STATE> val1(3,3,0.), val2(3,1,0.);
     val1(1,1) = 1.e6;
     TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fmixed, val1, val2);
     val1.Zero();
@@ -635,11 +630,12 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     
   
     //Material Lagrange nas interfaces
-    TPZStiffFracture *matInterLeft = new TPZStiffFracture(fmatInterfaceLeft, fdim, nstate);
+    TPZStiffFracture<TPZStiffFracMemory> *matInterLeft;
+    matInterLeft = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceLeft, fdim, nstate);
     matInterLeft->SetMultiplier(-1);
     cmesh->InsertMaterialObject(matInterLeft);
 
-    TPZStiffFracture *matInterRight = new TPZStiffFracture(fmatInterfaceRight, fdim, nstate);
+    TPZStiffFracture<TPZStiffFracMemory> *matInterRight = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceRight, fdim, nstate);
     matInterRight->SetMultiplier(1);
     cmesh->InsertMaterialObject(matInterRight);
     
@@ -682,7 +678,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     return cmesh;
 }
 
-TPZCompMesh *MonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *FraturaElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder)
 {
     /// criar materiais
     
@@ -709,7 +705,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder)
     
     //Condições de contorno:
     
-    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+    TPZFMatrix<STATE> val1(3,3,0.), val2(3,1,0.);
     
     TPZMaterial * BCond0 = material->CreateBC(material, fmatBCbott, fdirichlet, val1, val2); //Cria material que implementa a condição de contorno inferior
     cmesh->InsertMaterialObject(BCond0); //Insere material na malha
@@ -745,7 +741,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder)
 }
 
 
-TPZCompMesh *MonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *FraturaElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
 {
     
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
@@ -799,7 +795,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
 
 }
 
-TPZCompMesh *MonofasicoElastico::CMesh_m(TPZGeoMesh *gmesh, int pOrder){
+TPZCompMesh *FraturaElastico::CMesh_m(TPZGeoMesh *gmesh, int pOrder){
 
     //Criando malha computacional:
     int bc_inte_order = 10;
@@ -827,7 +823,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_m(TPZGeoMesh *gmesh, int pOrder){
     
     //Condições de contorno:
     
-    TPZFMatrix<STATE> val1(2,2,0.), val2(3,1,0.);
+    TPZFMatrix<STATE> val1(3,3,0.), val2(3,1,0.);
     
     val2(0,0) = 0.0; // vx -> 0
     val2(1,0) = 0.0; // vy -> 0
@@ -874,7 +870,7 @@ TPZCompMesh *MonofasicoElastico::CMesh_m(TPZGeoMesh *gmesh, int pOrder){
 }
 
 
-void MonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmesh){
+void FraturaElastico::Plot_over_fractures(TPZCompMesh *cmesh){
     // Counting for n_fractures
     int ncel = cmesh->NElements();
     TPZStack<int> frac_indexes;
@@ -924,7 +920,7 @@ void MonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmesh){
 }
 
 
-void MonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
+void FraturaElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
 {
     
     TPZGeoMesh *gmesh = cmesh.Reference();
@@ -1028,7 +1024,7 @@ void MonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, int matId)
     cmesh.ExpandSolution();
 }
 
-void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids)
+void FraturaElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids)
 {
     std::set<int> boundaries_ids;
     boundaries_ids.insert(fmatBCbott);
@@ -1045,52 +1041,10 @@ void MonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int
     }
 }
 
-void MonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
+void FraturaElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh)
 {
 
     DebugStop();
-//    TPZGeoMesh *gmesh = cmesh.Reference();
-//    std::set<int> velmatid;
-//    velmatid.insert(fmatFrac[0]);
-//
-//
-//    int64_t nel = gmesh->NElements();
-//    for (int64_t el=0; el<nel; el++) {
-//        TPZGeoEl *gel = gmesh->Element(el);
-//        int matid = gel->MaterialId();
-//        if(velmatid.find(matid) == velmatid.end())
-//        {
-//            continue;
-//        }
-//        int nsides = gel->NSides();
-//        TPZGeoElSide gelside(gel,nsides-1);
-//        TPZGeoElSide neighbour = gelside.Neighbour();
-//        while (neighbour != gelside) {
-//
-//            TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
-//            LeftElIndices[0]=0;
-//            RightElIndices[0]=1;
-//
-//            if (neighbour.Element()->Dimension() == 1 && neighbour.Element()->MaterialId() == fmatFluxWrap) { //oioioi IDFlux -> ID
-//                // create an interface element
-//                TPZCompElSide celside = gelside.Reference();
-//                TPZCompElSide Wrapneigh = neighbour.Reference();
-//                if (!celside || !Wrapneigh) {
-//                    DebugStop();
-//                }
-//                std::cout << "Created an element between volumetric element " << neighbour.Element()->Index() <<
-//                " side " << neighbour.Side() <<
-//                " and interface element " << gelside.Element()->Index() << std::endl;
-//                TPZGeoElBC gelbc(gelside,fmatInterface);
-//                int64_t index;
-//                TPZMultiphysicsInterfaceElement *intf = new
-//                TPZMultiphysicsInterfaceElement(cmesh,gelbc.CreatedElement(),index,Wrapneigh,celside);
-//                intf->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
-//
-//            }
-//            neighbour = neighbour.Neighbour();
-//        }
-//    }
     
 }
 
