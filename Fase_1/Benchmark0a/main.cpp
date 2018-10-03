@@ -19,7 +19,8 @@ using namespace std;
 /// Main dedicated to execute each scenario for benchmark_1
 int main(int argc, char *argv[])
 {
-    InitializePZLOG();
+    std::string log_cfg_file = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/benchmark.cfg";
+    InitializePZLOG(log_cfg_file);
     HidraulicoMonofasicoElastico scenario0a;
     scenario0a.Run(2);
     

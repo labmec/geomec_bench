@@ -56,9 +56,15 @@ void TPZDarcyAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZManVe
     switch (decomposition) {
         case ELU:
         {
+#ifdef USING_MKL
+            TPZSpStructMatrix struct_mat(Mesh());
+            struct_mat.SetNumThreads(n_threads);
+            this->SetStructuralMatrix(struct_mat);
+#else
             TPZSkylineNSymStructMatrix struct_mat(Mesh());
             struct_mat.SetNumThreads(n_threads);
             this->SetStructuralMatrix(struct_mat);
+#endif
         }
             break;
         case ELDLt:
@@ -108,14 +114,25 @@ void TPZDarcyAnalysis::ExecuteNewtonInteration(){
     this->Solve();
 }
 
-void TPZDarcyAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
-    
-    LoadLastState();
+void TPZDarcyAnalysis::ExecuteOneTimeStep(){
+  
+    // m_X means the solution at the previous time step
+    if (m_simulation_data->IsInitialStateQ()) {
+        m_X = Solution();
+    }
+    // Set current state false means overwriting p of the memory
+    m_simulation_data->SetCurrentStateQ(false);
+    // Accect time solution means writing one of the vectors of this object in the memory
     AcceptTimeStepSolution();
-
-    LoadCurrentState();
+    
+    //    // Initial guess
+    //    m_X_n = m_X;
+    // Set current state true means overwriting p_n of the memory object
+    m_simulation_data->SetCurrentStateQ(true);
+    
+    // Accept time solution here means writing one of the vectors of the object into the memory
     this->AcceptTimeStepSolution();
-
+    
     TPZFMatrix<STATE> dx;
     bool residual_stop_criterion_Q = false;
     bool correction_stop_criterion_Q = false;
@@ -123,40 +140,42 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
     REAL r_norm = m_simulation_data->Get_epsilon_res();
     REAL dx_norm = m_simulation_data->Get_epsilon_cor();
     int n_it = m_simulation_data->Get_n_iterations();
-
+    
     for (int i = 1; i <= n_it; i++) {
         this->ExecuteNewtonInteration();
         dx = Solution();
         norm_dx  = Norm(dx);
         m_X_n += dx;
-
-//        this->AcceptTimeStepSolution();
         LoadCurrentState();
-        this->AssembleResidual();
+        AssembleResidual();
         norm_res = Norm(Rhs());
         residual_stop_criterion_Q   = norm_res < r_norm;
         correction_stop_criterion_Q = norm_dx  < dx_norm;
-
+        
         m_k_iterations = i;
         m_error = norm_res;
         m_dx_norm = norm_dx;
-
+        
         if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
-            std::cout << "TPZDarcyAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
-            std::cout << "TPZDarcyAnalysis:: Number of iterations = " << i << std::endl;
-            std::cout << "TPZDarcyAnalysis:: Correction norm = " << norm_dx << std::endl;
+            std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
+            std::cout << "TPMRSMonoPhasicAnalysis:: Number of iterations = " << i << std::endl;
+            std::cout << "TPMRSMonoPhasicAnalysis:: Correction norm = " << norm_dx << std::endl;
 #endif
-            if (must_accept_solution_Q) {
-                m_X = m_X_n;
-            }
+            this->AcceptTimeStepSolution();
             break;
         }
     }
-
+    
     if (residual_stop_criterion_Q == false) {
-        std::cout << "TPZDarcyAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
+        std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
     }
+    
+  
+}
+
+void TPZDarcyAnalysis::UpdateState(){
+    m_X = m_X_n;
 }
 
 void TPZDarcyAnalysis::PostProcessTimeStep(std::string & file, bool is_stantdard_post_pro_Q){
@@ -184,29 +203,44 @@ void TPZDarcyAnalysis::StandardPostProcessTimeStep(std::string & file){
 }
 
 void TPZDarcyAnalysis::AcceptTimeStepSolution(){
+
+  //  DebugStop();
     
-//    bool state = m_simulation_data->IsCurrentStateQ();
-//    if (state) {
-//        m_simulation_data->Set_must_accept_solution_Q(true);
-//        LoadCurrentState();
-//        AssembleResidual();
-//        m_simulation_data->Set_must_accept_solution_Q(false);
-//    }else{
-//        m_simulation_data->Set_must_accept_solution_Q(true);
-//        LoadLastState();
-//        AssembleResidual();
-//        m_simulation_data->Set_must_accept_solution_Q(false);
-//    }
+    bool state = m_simulation_data->IsCurrentStateQ();
+    if (state) {
+        
+        // must accept solution changes a global data structure shared by the material objects
+        // which indicates the solution should be overwritten in memory
+        m_simulation_data->Set_must_accept_solution_Q(true);
+        // load current state copies m_X_n into the solution vector
+        LoadCurrentState();
+        // puts the solution vector into a variable depending on yet another global variable
+        AssembleResidual();
+        m_simulation_data->Set_must_accept_solution_Q(false);
+    }else{
+        // m_simulation_data is pointer shared by the material object
+        // this call forces the solution to be loaded into the memory object
+        m_simulation_data->Set_must_accept_solution_Q(true);
+        // put m_X in the mesh solution
+        LoadLastState();
+        // copy the state vector into the memory because must_accept_solution_Q in the m_simulation_data is true
+        AssembleResidual();
+        m_simulation_data->Set_must_accept_solution_Q(false);
+    }
 }
 
 
 void TPZDarcyAnalysis::LoadCurrentState(){
     LoadSolution(m_X_n);
-    TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
+    if(m_simulation_data->Get_is_dual_formulation_Q()){
+        TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
+    }
 }
 
 void TPZDarcyAnalysis::LoadLastState(){
     LoadSolution(m_X);
-    TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
+    if(m_simulation_data->Get_is_dual_formulation_Q()){
+        TPZBuildMultiphysicsMesh::TransferFromMultiPhysics(m_mesh_vec, Mesh());
+    }
 }
 

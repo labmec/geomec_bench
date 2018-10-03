@@ -37,6 +37,11 @@ void TPZSegregatedAnalysisDFN::ApplyMemoryLink(){
     
     TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_elastoplast);
     TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_darcy);
+    if(mat_with_memory_darcy->GetMemory()->NElements() != mat_with_memory_elastoplast->GetMemory()->NElements())
+    {
+        std::cout << "The integration rules of both meshes are different - bailing out\n";
+        DebugStop();
+    }
     if (!mat_with_memory_elastoplast || !mat_with_memory_darcy) {
         DebugStop();
     }
@@ -60,7 +65,6 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     
     // The Reservoir Simulator
     m_darcy_analysis = new TPZDarcyAnalysis;
-    mustOptimizeBandwidth =false;
     m_darcy_analysis->SetCompMesh(cmesh_M,mustOptimizeBandwidth);
     m_darcy_analysis->ConfigurateAnalysis(decompose_M, mesh_vec, m_simulation_data, post_pro_var_M);
     
@@ -85,7 +89,7 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     std::string file_elastoplast("Elastoplasticity.vtk");
 
     int n_max_fss_iterations = 10; // @TODO:: MS, please to xml file structure
-    int n_enforced_fss_iterations = 3; // @TODO:: MS, please to xml file structure
+    int n_enforced_fss_iterations = 1; // @TODO:: MS, please to xml file structure
     int n_time_steps = 1;
     REAL r_norm = m_simulation_data->Get_epsilon_res();
     REAL dx_norm = m_simulation_data->Get_epsilon_cor();
@@ -110,8 +114,6 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
 }
 
 void TPZSegregatedAnalysisDFN::UpdateState(){
-    DebugStop();
-//    m_darcy_analysis->UpdateState();
-//    m_elastoplast_analysis->UpdateState();
-    
+    m_darcy_analysis->UpdateState();
+    m_elastoplast_analysis->UpdateState();
 }

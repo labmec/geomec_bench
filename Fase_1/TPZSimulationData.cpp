@@ -24,6 +24,10 @@ TPZSimulationData::TPZSimulationData()
     m_volumetric_material_id.resize(0);
     m_elasticity_ID = 0;
     m_darcy_ID = 0;
+    m_is_initial_state_Q  = false;
+    m_is_current_state_Q  = false;
+    m_must_accept_solution_Q = false;
+    m_is_dual_formulation_Q = true;
 }
 
 TPZSimulationData::~TPZSimulationData()
@@ -47,7 +51,13 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_volumetric_material_id            = other.m_volumetric_material_id;
     m_elasticity_ID                     = other.m_elasticity_ID;
     m_darcy_ID                          = other.m_darcy_ID;
-    
+    m_is_initial_state_Q                = other.m_is_initial_state_Q;
+    m_is_current_state_Q                = other.m_is_current_state_Q;
+    m_mat_ids                           = other.m_mat_ids;
+    m_is_dual_formulation_Q             = other.m_is_dual_formulation_Q;
+    m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
+    m_transfer_current_to_last_solution_Q            = other.m_transfer_current_to_last_solution_Q;
+    m_transfer_current_to_last_solution_Q = false;
 }
 
 TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
@@ -68,6 +78,11 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_volumetric_material_id            = other.m_volumetric_material_id;
         m_elasticity_ID                     = other.m_elasticity_ID;
         m_darcy_ID                          = other.m_darcy_ID;
+        m_is_initial_state_Q                = other.m_is_initial_state_Q;
+        m_is_current_state_Q                = other.m_is_current_state_Q;
+        m_mat_ids                           = other.m_mat_ids;
+        m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
+        m_transfer_current_to_last_solution_Q            = other.m_transfer_current_to_last_solution_Q;
     }
     return *this;
 }

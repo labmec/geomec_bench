@@ -23,6 +23,7 @@
 #include "pzporoelastoplasticmem.h"
 #include "TPZMonoPhasicMemoryDFN.h"
 #include "TPZMemoryDFN.h"
+#include "TPZSimulationData.h"
 
 
 template <class TMEM>
@@ -56,6 +57,9 @@ class TPZDarcy2DMaterialMem : public TPZMatWithMem<TMEM>  {
     
     /** @brief Pointer to forcing function, it is the Permeability and its inverse */
     TPZAutoPointer<TPZFunction<STATE> > fPermeabilityFunction;
+    
+    /// Pointer of Simulation data
+    TPZSimulationData * m_simulation_data;
     
 public:
     
@@ -132,6 +136,10 @@ public:
         ff = flux;
     }
     
+    /// Set the pointer of Simulation data object
+    void SetSimulationData(TPZSimulationData * simulation_data){
+        m_simulation_data = simulation_data;
+    }
     
     /** returns the name of the material */
     std::string Name() {
@@ -142,7 +150,7 @@ public:
     int Dimension() const {return fDimension;}
     
     /** returns the number of state variables associated with the material */
-    int NStateVariables() {return 2;} // for hdiv are 3, plus pressure, so 3 + 1 = 4 itapopo
+    int NStateVariables() {return 1;} // for hdiv are 3, plus pressure, so 3 + 1 = 4 itapopo
     
     /** print out the data associated with the material */
     void Print(std::ostream &out = std::cout);

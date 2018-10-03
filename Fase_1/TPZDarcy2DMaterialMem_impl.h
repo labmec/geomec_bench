@@ -13,6 +13,14 @@
 #include "TPZMatWithMem.h"
 #include "pzfmatrix.h"
 
+#include "pzlog.h"
+#include "pzbndcond.h"
+
+#ifdef LOG4CXX
+static LoggerPtr DarcyLogger(Logger::getLogger("Benchmark.Darcy"));
+#endif
+
+
 template <class TMEM>
 TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() {
     
@@ -20,6 +28,7 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() {
   //  TMEM memory;
   //  this->SetDefaultMem(memory);
     fk=1.;
+    m_simulation_data = NULL;
     fViscosity=1.;
     fTensorK.Resize(fDimension, fDimension);
     fInvK.Resize(fDimension, fDimension);
@@ -27,6 +36,15 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() {
         fTensorK(i,i) = 1.;
         fInvK(i,i) = 1.;
     }
+    
+#ifdef LOG4CXX
+    if(DarcyLogger->isDebugEnabled())
+    {
+        std::stringstream sout;
+        sout << ">>> TPZDarcy2DMaterialMem<TMEM>() constructor called ***";
+        LOGPZ_DEBUG(DarcyLogger,sout.str().c_str());
+    }
+#endif
     
 }
 
@@ -49,6 +67,15 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
         fInvK(i,i) = 1.;
     }
     
+#ifdef LOG4CXX
+    if(DarcyLogger->isDebugEnabled())
+    {
+        std::stringstream sout;
+        sout << ">>> TPZDarcy2DMaterialMem<TMEM>(int id) constructor called with id = " << matid << " ***";
+        LOGPZ_DEBUG(DarcyLogger,sout.str().c_str());
+    }
+#endif
+    
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -56,7 +83,16 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
 template <class TMEM>
 TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &mat) : fDimension(mat.fDimension),fSpace(mat.fSpace), fTheta(mat.fTheta)
 {
+    m_simulation_data   = mat.m_simulation_data;
     
+#ifdef LOG4CXX
+    if(DarcyLogger->isDebugEnabled())
+    {
+        std::stringstream sout;
+        sout << ">>> TPZDarcy2DMaterialMem<TMEM>() copy constructor called ***";
+        LOGPZ_DEBUG(DarcyLogger,sout.str().c_str());
+    }
+#endif
     
 }
 
@@ -73,6 +109,7 @@ TPZDarcy2DMaterialMem<TMEM> & TPZDarcy2DMaterialMem<TMEM>::operator=(const TPZDa
     fDimension=mat.fDimension;
     fSpace=mat.fSpace;
     fTheta=mat.fTheta;
+    m_simulation_data   = mat.m_simulation_data;
 
     return *this;
 }
@@ -365,7 +402,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ComputeDivergenceOnMaster(TPZVec<TPZMaterialDa
     int ublock = 0;
     
     // Getting test and basis functions
-    TPZFNMatrix<100,REAL> phiuH1         = datavec[ublock].phi;   // For H1  test functions Q
+    TPZFNMatrix<100,REAL> phiuH1        = datavec[ublock].phi;   // For H1  test functions Q
     TPZFNMatrix<300,REAL> dphiuH1       = datavec[ublock].dphi; // Derivative For H1  test functions
     TPZFNMatrix<300,REAL> dphiuH1axes   = datavec[ublock].dphix; // Derivative For H1  test functions
     TPZFNMatrix<9,STATE> gradu = datavec[ublock].dsol[0];
@@ -513,8 +550,8 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     //STATE dt = m_simulation_data->dt();
     TPZManVector<STATE,3> v    = datavec[vindex].sol[0];
     STATE p_n                  = datavec[pindex].sol[0][0];
-    STATE p_0      = memory.p_0();
-    STATE p        = memory.p();
+//    STATE p_0      = memory.p_0();
+//    STATE p        = memory.p();
     
     
     TPZFNMatrix<9,REAL> K(3,3),Kinv(3,3);
@@ -547,9 +584,24 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     //    TPZFNMatrix<3,STATE> phiV_i(3,1), phiV_j(3,1);
     TPZFNMatrix<3,STATE> phiVi(3,1,0.0),phiVj(3,1,0.0);
     
-    //    if(!m_simulation_data->IsCurrentStateQ()){
-    //        return;
-    //    }
+    if(!m_simulation_data->IsCurrentStateQ()){
+        return;
+    }
+    
+#ifdef LOG4CXX
+    if (DarcyLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << ">>> TPZMatElastoPlastic<T,TMEM>::Contribute ***";
+        sout << "\nIntegration Global Point index Flux = " << datavec[vindex].intGlobPtIndex;
+        sout << "\nIntegration Global Point index Pressure = " << datavec[pindex].intGlobPtIndex;
+        sout << "\ndata.axes = " << datavec[vindex].axes;
+        sout << "datavec[vindex].phi" << datavec[vindex].phi;
+        sout << "datavec[pindex].phi" << datavec[pindex].phi;
+        
+        LOGPZ_DEBUG(DarcyLogger, sout.str().c_str());
+    }
+#endif
+    
     
     
     for (int i = 0; i < nphiV; i++)
@@ -597,7 +649,6 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     }
     
     STATE div_q = (gradV_axes(0,0) + gradV_axes(1,1) + gradV_axes(2,2));
-    STATE phi_n,dphi_ndp,phi;
     
     for (int i = 0; i < nphiP; i++)
     {
@@ -611,33 +662,48 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         
     }
     
+#ifdef LOG4CXX
+    if (DarcyLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << "<<< TPZDarcy2DMaterialMem<TMEM>::Contribute ***";
+        sout << " Resultant rhs vector:\n" << ef;
+        sout << " Resultant stiff vector:\n" << ek;
+        LOGPZ_DEBUG(DarcyLogger, sout.str().c_str());
+    }
+#endif
+    
     
 }
 
 template <class TMEM>
 void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef){
     
-//    unsigned int q_b = 0;
-//    unsigned int p_b = 1;
-//    if (m_simulation_data->Get_must_accept_solution_Q()) {
-//        long gp_index = datavec[0].intGlobPtIndex;
-//        TPZManVector<STATE,3> q  = datavec[q_b].sol[0];
-//        STATE p                  = datavec[p_b].sol[0][0];
-//
-//        if (m_simulation_data->IsInitialStateQ()) {
-//            this->GetMemory().get()->operator[](gp_index).Setp_0(p);
-//        }
-//
-//        if (m_simulation_data->IsCurrentStateQ()) {
-//            this->GetMemory().get()->operator[](gp_index).Setp_n(p);
-//        }else{
-//            this->GetMemory().get()->operator[](gp_index).Setp(p);
-//        }
-//
-//    }else{
+    unsigned int q_b = 0;
+    unsigned int p_b = 1;
+    if (m_simulation_data->Get_must_accept_solution_Q()) {
+        long gp_index = datavec[0].intGlobPtIndex;
+        if(gp_index < 0)
+        {
+            std::cout << "Integration point index is not initialized\n";
+            DebugStop();
+        }
+        TPZManVector<STATE,3> q  = datavec[q_b].sol[0];
+        STATE p                  = datavec[p_b].sol[0][0];
+
+        if (m_simulation_data->IsInitialStateQ()) {
+            this->GetMemory().get()->operator[](gp_index).Setp_0(p);
+        }
+
+        if (m_simulation_data->IsCurrentStateQ()) {
+            this->GetMemory().get()->operator[](gp_index).Setp_n(p);
+        }else{
+            this->GetMemory().get()->operator[](gp_index).Setp(p);
+        }
+
+    }else{
         TPZFMatrix<STATE>  ek_fake(ef.Rows(),ef.Rows(),0.0);
         this->Contribute(datavec, weight, ek_fake, ef);
-//    }
+    }
     
     
     return;
@@ -688,17 +754,6 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
     //  nshapeV = datavec[vindex].fVecShapeIndex.NElements();
     nshapeV = phiV.Rows();
     
-    
-    //Adaptação para Hdiv
-    //    int ekr= ek.Rows();
-    
-    //Vefifica se HDiv
-    //    if(ekr!=nshapeP+nshapeV){
-    //        nshapeV=nshapeV/2;
-    //    }
-    
-    
-    
     TPZFNMatrix<9> phiVi(fDimension,1), phiVj(fDimension,1), phiPi(fDimension,1),phiPj(fDimension,1);
     
     TPZFMatrix<STATE> v_2=bc.Val2();
@@ -706,24 +761,12 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
     STATE p_D = bc.Val1()(0,0);
     
     switch (bc.Type()) {
-        case 0: //Dirichlet for continuous formulation
+        case 0: // Dirichlet for mixed formulation
         {
-            
-            if(bc.HasForcingFunction())
-            {
-                TPZManVector<STATE> vbc(3);
-                TPZFNMatrix<9,STATE> gradu(2,1);
-                bc.ForcingFunction()->Execute(datavec[vindex].x,vbc,gradu);
-                v_2(0,0) = vbc[0];
-                v_2(1,0) = vbc[1];
-                p_D = vbc[2];
-            }
-            
+        
             for(int i = 0; i < nshapeV; i++ )
             {
-                
-                ef(i,0) += -weight * p_D * phiV(i,0);
-                
+                ef(i,0) += weight * p_D * phiV(i,0);
             }
             
         }
@@ -732,51 +775,21 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
         case 1: //Neumann for continuous formulation
         {
             
-            if(bc.HasForcingFunction())
-            {
-                TPZManVector<STATE> vbc(3);
-                TPZFNMatrix<9,STATE> gradu(2,1);
-                bc.ForcingFunction()->Execute(datavec[vindex].x,vbc,gradu);
-                v_2(0,0) = vbc[0];
-                v_2(1,0) = vbc[1];
-                p_D = vbc[2];
-            }
+            TPZManVector<REAL,3> n = datavec[0].normal;
             
-            bool strong_Neumann = true; // @omar:: why enforced Neumann data results in a wrong solution?
-            if(strong_Neumann){
+            REAL Vn = v_2(0,0);
+            
+            for(int i = 0; i < nshapeV; i++ )
+            {
                 
-                TPZManVector<REAL,3> n = datavec[0].normal;
+                ef(i) += BIGNUMBER * (v_h[0] - Vn) * phiV(i,0);
                 
-                REAL Vn = n[0]*v_2(0,0) + n[1]*v_2(1,0);
-                
-                for(int i = 0; i < nshapeV; i++ )
-                {
+                for(int j = 0; j < nshapeV; j++){
                     
-                    ef(i) += BIGNUMBER * Vn * phiV(i,0);
-                    
-                    for(int j = 0; j < nshapeV; j++){
-                        
-                        ek(i,j) += BIGNUMBER * (phiV(i,0) * phiV(j,0));
-                        
-                    }
+                    ek(i,j) += BIGNUMBER * (phiV(i,0) * phiV(j,0));
                     
                 }
                 
-            }
-            else{
-                
-                for(int i = 0; i < nshapeP; i++ )
-                {
-                    
-                    TPZManVector<REAL> n = datavec[0].normal;
-                    
-                    REAL v_n = n[0] * v_2[0] + n[1] * v_2[1];
-                    
-                    STATE factf=(-1.) * weight * v_n * phiP(i,0);
-                    
-                    //ef(i+nshapeV,0) += fTheta*factf ; //apapaPablo
-                    
-                }
             }
             
         }
@@ -785,6 +798,9 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
             
         case 5: //Ponto pressao
         {
+            
+            DebugStop();
+            
             p_D = bc.Val2()(0,0);
             
             
@@ -828,7 +844,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
 template <class TMEM>
 void TPZDarcy2DMaterialMem<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavecleft, TPZVec<TPZMaterialData> &datavecright, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef){
     
-    
+    DebugStop();
 #ifdef PZDEBUG
     //2 = 1 Vel space + 1 Press space for datavecleft
     int nrefleft =  datavecleft.size();
@@ -1007,6 +1023,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeInterface(TPZMaterialData &data, TPZ
 template <class TMEM>
 void TPZDarcy2DMaterialMem<TMEM>::ContributeBCInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc){
     
+    DebugStop();
 #ifdef IsH1
     //Caso H1 -> return
     return;

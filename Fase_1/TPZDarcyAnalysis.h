@@ -76,7 +76,7 @@ public:
     void ExecuteNewtonInteration();
     
     /// Execute the evolution for a single time step
-    void ExecuteOneTimeStep(bool must_accept_solution_Q = true);
+    void ExecuteOneTimeStep();
     
     /// Post-processing the variables for a single time step from memory (is_stantdard_post_pro_Q = false)
     void PostProcessTimeStep(std::string & file, bool is_stantdard_post_pro_Q = true);
@@ -92,6 +92,9 @@ public:
     
     /// Load the last state for the hdiv and 2 meshes
     void LoadLastState();
+    
+    /// Update solution state x = x_n
+    void UpdateState();
     
     /** @brief Set Residue error */
     void Set_error(STATE error)

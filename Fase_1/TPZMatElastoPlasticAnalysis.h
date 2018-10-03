@@ -17,6 +17,8 @@
 #include "TPZSpStructMatrix.h"
 #include "pzfstrmatrix.h"
 #include "pzstepsolver.h"
+#include "TPZMatWithMem.h"
+#include "TPZMemoryDFN.h"
 #include "pzbuildmultiphysicsmesh.h"
 
 class TPZMatElastoPlasticAnalysis : public TPZAnalysis {
@@ -63,6 +65,9 @@ public:
         m_simulation_data = simulation_data;
     }
     
+    /// Set material directive according to the given directive
+    void SetUpdateMemmory(bool accept_solution_Q);
+    
     /// Configurate the solver being used to compute the approximation
     void ConfigurateAnalysis(DecomposeType decomposition, TPZSimulationData * simulation_data);
     
@@ -84,6 +89,8 @@ public:
     /// Load the last state for the hdiv and 2 meshes
     void LoadLastState();
     
+    /// Update solution state x = x_n
+    void UpdateState();
     
     /** @brief Set Residue error */
     void Set_error(STATE error)

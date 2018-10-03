@@ -214,66 +214,35 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     
     RunningPoroElasticity(gmesh, pOrder, simulation_data);
 
-//    //Resolução Analysis
-//    bool optimizeBandwidth = true;
-//    TPZAnalysis an(cmesh_E,optimizeBandwidth);
-//    TPZSymetricSpStructMatrix matskl(cmesh_E); //Pardiso
-//    //    TPZSkylineStructMatrix matskl(cmesh_E);
-//    int numthreads = 0;
-//    matskl.SetNumThreads(numthreads);
-//  //  TPZFMatrix<STATE> Initialsolution = an.Solution();
-//    an.SetStructuralMatrix(matskl);
-//    TPZStepSolver<STATE> step;
-//    step.SetDirect(ELDLt);
-//    an.SetSolver(step);
-//    an.Assemble();
-    
 #ifdef PZDEBUG
     //Imprimir Matriz de rigidez Global:
-        std::ofstream filestiff("stiffness.txt");
+//        std::ofstream filestiff("stiffness.txt");
 //        an.Solver().Matrix()->Print("K1 = ",filestiff,EMathematicaInput);
-        
-        std::ofstream filerhs("rhs.txt");
+//        std::ofstream filerhs("rhs.txt");
 //        an.Rhs().Print("Rhs = ",filerhs,EMathematicaInput);
 #endif
-//    an.Solve();
 
-    
-//    TPZPostProcAnalysis post_an;
-//    post_an.SetCompMesh(an.Mesh());
-//
-//
-//    TPZManVector<int,10> post_mat_id(1);
-//    post_mat_id[0] = 1;
-//    TPZStack<std::string> var_names, vecnames;
-//    var_names.Push("sxx");
-//    var_names.Push("syy");
-//    var_names.Push("ux");
-//    var_names.Push("uy");
-//    post_an.SetPostProcessVariables(post_mat_id, var_names);
-//
-//    {
-//        std::ofstream file("Malha_postproc.txt");
-//        post_an.Mesh()->Print(file);
-//    }
-//
-//    TPZFStructMatrix structmatrix(post_an.Mesh());
-//    structmatrix.SetNumThreads(0);
-//    post_an.SetStructuralMatrix(structmatrix);
-//    post_an.TransferSolution();
-//
-//    int dim = an.Mesh()->Dimension();
-//    int div = 0; //  keep low as possible
-//    std::string plotfile_post("Benchmark_0a_PoroElast.vtk");
-//    post_an.DefineGraphMesh(dim,var_names,vecnames,plotfile_post);
-//    post_an.PostProcess(div,dim);
 
 }
 
 void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *simulation_data){
     
     //Malha com formulação elástica:
-    TPZCompMesh *cmesh_E = CMesh_E(gmesh, pOrder);
+    TPZCompMesh *cmesh_E = CMesh_E(gmesh, pOrder,simulation_data);
+    
+    {
+//        cmesh_E->LoadReferences();
+        long nel = cmesh_E->NElements();
+        
+        TPZVec<long> indices;
+        for (long el = 0; el<nel; el++) {
+            TPZCompEl *cel = cmesh_E->Element(el);
+            if (!cel) {
+                continue;
+            }
+            cel->PrepareIntPtIndices();
+        }
+    }
     
     if (finsert_fractures_Q) {
         
@@ -299,11 +268,11 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
 
     //Malha com formulação mista (Darcy):
     TPZManVector<TPZCompMesh* , 2 > mesh_vector(2);
-    TPZCompMesh *cmesh_M = CMesh_M(mesh_vector, gmesh, pOrder);
+    TPZCompMesh *cmesh_M = CMesh_M(mesh_vector, gmesh, pOrder-1, simulation_data);
     
-    std::ofstream filecMbf("MalhaC_M.txt");
-    cmesh_M->Print(filecMbf);
-    cmesh_M->LoadReferences();
+
+    // ******* write a procedure to set equalize the integration order of the meshes
+//    cmesh_M->LoadReferences();
     long nel = cmesh_M->NElements();
     
     TPZVec<long> indices;
@@ -317,8 +286,12 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
         mfcel->InitializeIntegrationRule();
         mfcel->PrepareIntPtIndices();
     }
-    cmesh_M->InitializeBlock();
+//    cmesh_M->InitializeBlock();
     
+    {
+        std::ofstream filecMbf("MalhaC_M.txt");
+        cmesh_M->Print(filecMbf);
+    }
     //Cria Análise das malhas
     
     std::string plotfileM("Benchmark_HME_Darcy.vtk");
@@ -336,7 +309,7 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     
     TPZSegregatedAnalysisDFN * segregated_analysis = new TPZSegregatedAnalysisDFN;
     
-    segregated_analysis->ConfigurateAnalysis(ELDLt, ELDLt, simulation_data , cmesh_E, cmesh_M, mesh_vector, var_names_elastoplast, var_names_darcy);
+    segregated_analysis->ConfigurateAnalysis(ELDLt, ELU, simulation_data , cmesh_E, cmesh_M, mesh_vector, var_names_elastoplast, var_names_darcy);
     //Depois adicionar variaveis vetoriais Darcy
     
     segregated_analysis->ExecuteTimeEvolution();
@@ -569,7 +542,7 @@ void HidraulicoMonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STA
     
 }
 
-TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *sim_data)
 {
     
     // Criando malha computacional
@@ -578,7 +551,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetDimModel(fdim);
-    cmesh->ApproxSpace().SetAllCreateFunctionsContinuousWithMem();
+    cmesh->SetAllCreateFunctionsContinuousWithMem();
     
     // 1 - Material volumétrico
     int nstate = 2;
@@ -595,22 +568,24 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     er.SetUp(fEyoung,fpoisson);
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
+    material->SetSimulationData(sim_data);
     cmesh->InsertMaterialObject(material);
     
+    int null_dir_dirichlet = 3;
+    
     // 1 - Condições de contorno
-    TPZFMatrix<STATE> val1(3,3,0.), val2(3,1,0.);
-    val1(1,1) = 1.e6;
-    TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, fmixed, val1, val2);
-    val1.Zero();
-    val2(1,0)= 1.;
+    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+    val2(1,0)= 1;
+    TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, null_dir_dirichlet, val1, val2);
+    val2.Zero();
+    val2(1,0)= -1.;
     TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
-    val2(1,0)= 0.;
-    val1(0,0) = 1.e6;
-    TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, fmixed, val1, val2);
-    val1.Zero();
-    val2(0,0)=0.;
-    TPZMaterial * BCond4 = material->CreateBC(material, fmatBCleft, fneumann, val1, val2);
+    val2(0,0)=1;
+    TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, null_dir_dirichlet, val1, val2);
+    val2.Zero();
+    val2(0,0)=1;
+    TPZMaterial * BCond4 = material->CreateBC(material, fmatBCleft, null_dir_dirichlet, val1, val2);
     
     cmesh->InsertMaterialObject(BCond1);
     cmesh->InsertMaterialObject(BCond2);
@@ -785,11 +760,12 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder
         cmesh->SetDimModel(fdimFrac);
         cmesh->SetAllCreateFunctionsHDiv();
         cmesh->AutoBuild(matids);
-        cmesh->AdjustBoundaryElements();
-        cmesh->ExpandSolution();
-        cmesh->SetDimModel(fdim);
-        cmesh->SetAllCreateFunctionsHDiv();
     }
+    
+    cmesh->AdjustBoundaryElements();
+    cmesh->ExpandSolution();
+    cmesh->SetDimModel(fdim);
+    cmesh->SetAllCreateFunctionsHDiv();
 
     return cmesh;
     
@@ -815,19 +791,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder
     TPZL2Projection *material = new TPZL2Projection(fmatID,fdim,nstate,sol);//criando material que implementa a formulacao fraca do problema modelo
     cmesh->InsertMaterialObject(material); //Insere material na malha
     
-    // 1 - Condições de contorno
-    TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    TPZMaterial * BCond0 = material->CreateBC(material, fmatBCbott, fdirichlet, val1, val2);
-    cmesh->InsertMaterialObject(BCond0);
-    
-    TPZMaterial * BCond1 = material->CreateBC(material, fmatBCtop, fdirichlet, val1, val2);
-    cmesh->InsertMaterialObject(BCond1);
-    
-    TPZMaterial * BCond2 = material->CreateBC(material, fmatBCright, fdirichlet, val1, val2);
-    cmesh->InsertMaterialObject(BCond2);
-    
-    TPZMaterial * BCond3 = material->CreateBC(material, fmatBCleft, fdirichlet, val1, val2);
-    cmesh->InsertMaterialObject(BCond3);
 
     
     // 2 - Material Fraturas
@@ -844,6 +807,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder
 
     std::set<int> matids;
     matids.insert(fmatID);
+    
     cmesh->SetDimModel(fdim);
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetAllCreateFunctionsContinuous();
@@ -856,7 +820,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder
             matids.insert(fmatFrac[i_frac]);
         }
         cmesh->SetDimModel(fdimFrac); //Insere dimensão do modelo
-        cmesh->SetDefaultOrder(pOrder); //Insere ordem polimonial de aproximação
     }
     
     cmesh->AutoBuild(matids);
@@ -875,7 +838,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder
 
 }
 
-TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2 >  mesh_vector, TPZGeoMesh *gmesh, int pOrder){
+TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2 >  &mesh_vector, TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *sim_data){
     
     int nstate = 2;
     
@@ -900,8 +863,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
     cmesh->SetDefaultOrder(pOrder); //Insere ordem polimonial de aproximação
     cmesh->SetDimModel(fdim); //Insere dimensão do modelo
-    cmesh->SetAllCreateFunctionsMultiphysicElemWithMem();
-    cmesh->ApproxSpace().CreateWithMemory(true);
     
     // 1 - Material volumétrico
     TPZDarcy2DMaterialMem<TPZMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMemoryDFN> (fmatID,fdim,1,1);
@@ -917,6 +878,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
 
     TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact);
     material->SetForcingFunctionExact(solp);
+    material->SetSimulationData(sim_data);
     cmesh->InsertMaterialObject(material);
 
     // 1 - Condições de contorno
@@ -981,8 +943,18 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
 
     //Criando elementos computacionais que gerenciarão o espaco de aproximação da malha:
+    cmesh->SetAllCreateFunctionsMultiphysicElemWithMem();
+    cmesh->ApproxSpace().CreateWithMemory(true);
+
+    std::set<int> matids;
+    matids.insert(fmatID);
+    cmesh->AutoBuild(matids);
+
+    cmesh->SetAllCreateFunctionsMultiphysicElem();
+    cmesh->ApproxSpace().CreateWithMemory(false);
+    cmesh->LoadReferences();
     cmesh->AutoBuild();
-    cmesh->AdjustBoundaryElements();
+    
     cmesh->CleanUpUnconnectedNodes();
     
     mesh_vector[0] = cmesh_q;

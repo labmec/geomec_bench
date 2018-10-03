@@ -153,10 +153,10 @@ public:
     void UniformRef(TPZGeoMesh * gmesh, int n_div);
 
     /* Malhas computacionais */
-    TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de elasticidade
+    TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *simulation_data); // Malha computacional de elasticidade
     TPZCompMesh *CMesh_q(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de fluxo
     TPZCompMesh *CMesh_p(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de pressão
-    TPZCompMesh *CMesh_M(TPZManVector<TPZCompMesh * , 2 > mesh_vector, TPZGeoMesh *gmesh, int pOrder); // Malha computacional multifísica
+    TPZCompMesh *CMesh_M(TPZManVector<TPZCompMesh * , 2 > &mesh_vector, TPZGeoMesh *gmesh, int pOrder,TPZSimulationData *simulation_data); // Malha computacional multifísica
     
     //solucao exata
     static void Sol_exact(const TPZVec<REAL> &x, TPZVec<STATE> &sol, TPZFMatrix<STATE> &dsol);

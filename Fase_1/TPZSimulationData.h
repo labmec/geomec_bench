@@ -58,6 +58,19 @@ protected:
     /** @brief Number of thread */
     int m_n_threads;
     
+    bool m_is_initial_state_Q;
+    
+    bool m_is_current_state_Q;
+    
+    /** @brief Directive that states if the last memory solution is being transferred to the current memory solution */
+    bool m_transfer_current_to_last_solution_Q;
+    
+    /** @brief Directive that states if the current solution must be accepted inside the memory  */
+    bool m_must_accept_solution_Q;
+    
+    /** @brief Directive that states the use of dual (true) or pirmal (false) formulation for monophacic flow  */
+    bool m_is_dual_formulation_Q;
+    
     /** @brief Name for the Gmsh geometry file being used */
     std::string m_geometry_file;
     
@@ -69,6 +82,9 @@ protected:
     
     /** @brief Vector that storages only volumetric material identifiers (higher dimension elements) */
     std::vector<int> m_volumetric_material_id;
+    
+    /** @brief Material and boundaries identifiers sorted per region */
+    TPZManVector<std::pair<int, TPZManVector<int,12>>,12> m_mat_ids;
     
 public:
     
@@ -88,7 +104,39 @@ public:
     /** @brief Print object attributes */
     void Print();
     
+    /** @brief Set the directive that states if the current memory solution is being transferred to the last memory solution */
+    void SetTransferCurrentToLastQ(bool transfer_current_to_last_solution_Q) { m_transfer_current_to_last_solution_Q = transfer_current_to_last_solution_Q; }
+    
+    /** @brief Get the directive that states if the current memory solution is being transferred to the last memory solution */
+    bool GetTransferCurrentToLastQ() { return m_transfer_current_to_last_solution_Q; }
+    
     /// Access methods
+    
+    /** @brief Get the material and boundaries identifiers sorted per region */
+    TPZManVector<std::pair<int, TPZManVector<int,12>>,12> & MaterialIds() { return m_mat_ids; }
+    
+    /** @brief Set initial state */
+    void SetInitialStateQ(bool state) { m_is_initial_state_Q = state; }
+    
+    /** @brief Get initial state */
+    bool IsInitialStateQ() {return m_is_initial_state_Q;}
+    
+    /** @brief Set current time state */
+    void SetCurrentStateQ(bool state) { m_is_current_state_Q = state; }
+    
+    /** @brief Get current time state */
+    bool IsCurrentStateQ() {return m_is_current_state_Q;}
+    
+    /** @brief Set the directive that states if the current solution must be accepted inside the memory  */
+    void Set_must_accept_solution_Q(bool must_accept_solution_Q){
+        m_must_accept_solution_Q = must_accept_solution_Q;
+    }
+    
+    /** @brief Get the directive that states if the current solution must be accepted inside the memory  */
+    bool Get_must_accept_solution_Q() { return m_must_accept_solution_Q; }
+    
+    /** @brief Get the the use of dual (true) or pirmal (false) formulation for monophacic flow  */
+    bool Get_is_dual_formulation_Q() { return m_is_dual_formulation_Q; }
     
     /** @brief Set the spatial refinemenet level */
     void Set_h_level(int h_level){

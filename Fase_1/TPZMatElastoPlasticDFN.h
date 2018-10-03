@@ -10,6 +10,7 @@
 #include "TPZMatWithMem.h"
 #include "TPZElastoPlasticMem.h"
 #include "pzporoelastoplasticmem.h"
+#include "TPZSimulationData.h"
 
 /**
 * Implements an elastoplastic material and uses the memory feature to store the damage variables
@@ -56,6 +57,8 @@ class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
       /** returns the name of the material*/
       virtual std::string Name();
 
+      /// Set the pointer of Simulation data object
+      void SetSimulationData(TPZSimulationData * simulation_data);
     
     
       /**returns the integrable dimension of the material*/
@@ -266,6 +269,9 @@ virtual int ClassId() const;
 protected:
 
     int fDimension=2;
+    
+    /// Pointer of Simulation data
+    TPZSimulationData * m_simulation_data;
     
 	/**
        * gravity acceleration
