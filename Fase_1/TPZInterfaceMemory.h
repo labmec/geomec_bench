@@ -1,5 +1,5 @@
-#ifndef TPZStiffFracMemory_h
-#define TPZStiffFracMemory_h
+#ifndef TPZInterfaceMemory_h
+#define TPZInterfaceMemory_h
 
 #include "pzvec.h"
 #include "pzfmatrix.h"
@@ -10,21 +10,21 @@
  * @since 19/08/2014
  * @brief class to store data of fracture propagation simulation
  */
-class TPZStiffFracMemory : public TPZMonoPhasicMemoryDFN {
+class TPZInterfaceMemory : public TPZMonoPhasicMemoryDFN {
   
 public:
   
     /** @brief Default Constructor */
-    TPZStiffFracMemory();
+    TPZInterfaceMemory();
   
     /** @brief Destructor */
-    ~TPZStiffFracMemory();
+    ~TPZInterfaceMemory();
   
     /** @brief copy constructor */
-    TPZStiffFracMemory(const TPZStiffFracMemory &copy);
+    TPZInterfaceMemory(const TPZInterfaceMemory &copy);
   
     /** @brief operator equal */
-    TPZStiffFracMemory &operator=(const TPZStiffFracMemory &copy);
+    TPZInterfaceMemory &operator=(const TPZInterfaceMemory &copy);
   
 private:
   

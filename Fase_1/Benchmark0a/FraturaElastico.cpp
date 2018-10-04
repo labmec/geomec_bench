@@ -26,10 +26,10 @@
 #include "TPZElasticCriterion.h"
 #include "pzporoelastoplasticmem.h"
 #include "pzcompelwithmem.h"
-#include "../TPZStiffFracture.h"
+#include "../TPZLagrangeInterface.h"
 #include "pzelastoplasticanalysis.h"
 #include "../TPZDarcy2DMaterialMem.h"
-#include "../TPZStiffFracMemory.h"
+#include "../TPZInterfaceMemory.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -630,12 +630,12 @@ TPZCompMesh *FraturaElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     
   
     //Material Lagrange nas interfaces
-    TPZStiffFracture<TPZStiffFracMemory> *matInterLeft;
-    matInterLeft = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceLeft, fdim, nstate);
+    TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft;
+    matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdim, nstate);
     matInterLeft->SetMultiplier(-1);
     cmesh->InsertMaterialObject(matInterLeft);
 
-    TPZStiffFracture<TPZStiffFracMemory> *matInterRight = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceRight, fdim, nstate);
+    TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdim, nstate);
     matInterRight->SetMultiplier(1);
     cmesh->InsertMaterialObject(matInterRight);
     

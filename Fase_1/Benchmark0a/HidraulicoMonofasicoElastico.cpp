@@ -26,13 +26,15 @@
 #include "TPZElasticCriterion.h"
 #include "pzporoelastoplasticmem.h"
 #include "pzcompelwithmem.h"
-#include "../TPZStiffFracture.h"
+#include "../TPZLagrangeInterface.h"
 #include "pzelastoplasticanalysis.h"
 #include "../TPZSegregatedAnalysisDFN.h"
 #include "pzl2projection.h"
 
 #include "../TPZDarcy2DMaterialMem.h"
-#include "../TPZStiffFracMemory.h"
+#include "../TPZInterfaceMemory.h"
+#include "../TPZMatFractureBB.h"
+#include "../TPZMemoryFracDFN.h"
 
 #include "pzelasmat.h"
 #include "pzinterpolationspace.h"
@@ -99,8 +101,8 @@ HidraulicoMonofasicoElastico::HidraulicoMonofasicoElastico()
     
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
         fmatFrac[i_frac] = 6+i_frac;
-     //   fmatPointLeft[i_frac] = 7+3*i_frac;
-     //   fmatPointRight[i_frac] = 8+3*i_frac;
+        fmatPointLeft[i_frac] = 7+3*i_frac;
+        fmatPointRight[i_frac] = 8+3*i_frac;
     }
     
     //Material do elemento de interface
@@ -181,7 +183,7 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     REAL Lx = 8.*La;
     REAL timeT = 0.;
     this->SetParameters(Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
-    finsert_fractures_Q = false;
+    finsert_fractures_Q = true;
     
     TPZSimulationData SimData;
     ofstream saidaerro("ErroLoula.txt");
@@ -313,9 +315,7 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     //Depois adicionar variaveis vetoriais Darcy
     
     segregated_analysis->ExecuteTimeEvolution();
-  
-    //segregated_analysis->ExecuteOneTimeStep();
-    //segregated_analysis->PostProcessTimeStep(plotfileE,plotfileM);
+
     
     if(finsert_fractures_Q) {
         std::cout << "Postprocessing fracture" << std::endl;
@@ -459,7 +459,7 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometrySqSimple.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -498,47 +498,6 @@ void HidraulicoMonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STA
     deriv.Resize(2,2);//sigx, sigxy, sigyx, sigy
     deriv(0,0) = deriv(0,1) = deriv(1,0) = deriv(1,1) = 0.;
     
-//    bool sol_dimensionless=true;
-//
-//    //REAL x = ptx[0];
-//    REAL x = ptx[1];
-//
-//    REAL pini = 1000.;
-//    REAL lamb = 8333.33;
-//    REAL mi = 12500.0;
-//    REAL H=1.;
-//    REAL tp = ftimeatual;
-//    int in;
-//    REAL uD = 0.0, sigD=0.;
-//    REAL sumuD = 0.0, sumsigD = 0.;
-//
-//    REAL M =0.;
-//    REAL PI = atan(1.)*4.;
-//
-//    sol.Resize(2, 0.);// ux, uy;
-//    deriv.Resize(2,2);//sigx, sigxy, sigyx, sigy
-//    deriv(0,0) = deriv(0,1) = deriv(1,0) = deriv(1,1) = 0.;
-//
-//
-//    REAL tD = tp;//(lamb+2.*mi)*perm*tp/(visc*H*H);
-//    REAL xD = fabs(1.-x)/H;
-//    for (in =999; in >= 0; in--) {
-//
-//        M = PI*(2.*in+1.)/2.;
-//        sumuD += (2./(M*M))*cos(M*xD)*exp(-1.*M*M*tD);
-//        sumsigD += (2./M)*sin(M*xD)*exp(-1.*M*M*tD);
-//    }
-//
-//    uD = (H/H - xD) - sumuD;
-//    sigD = -1. + sumsigD;
-//
-//    if(sol_dimensionless==true){
-//        sol[1] = (-1.)*uD;
-//        deriv(1,1) = sigD;
-//    }else{
-//        sol[1] = (-1.)*uD*(pini*H)/(lamb+2.*mi);
-//        deriv(1,1) = (sigD)*pini;
-//    }
     
 }
 
@@ -595,21 +554,19 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     // 2 - Material Fraturas
     if (finsert_fractures_Q) {
-        TPZMat1dLin *materialFrac;
+        TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            materialFrac = new TPZMat1dLin(fmatFrac[i_frac]);
-            TPZFMatrix<STATE> xkin3(nstate,nstate,0.), xcin3(nstate,nstate,0.), xbin3(nstate,nstate,0.), xfin3(nstate,nstate,0.);
-            materialFrac->SetMaterial(xkin3, xcin3, xbin3, xfin3);
+            materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdim,nstate);
             cmesh->InsertMaterialObject(materialFrac);
         }
         
         // 2 - Material Lagrange nas interfaces
-        TPZStiffFracture<TPZStiffFracMemory> *matInterLeft;
-        matInterLeft = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceLeft, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft;
+        matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdim, nstate);
         matInterLeft->SetMultiplier(-1);
         cmesh->InsertMaterialObject(matInterLeft);
         
-        TPZStiffFracture<TPZStiffFracMemory> *matInterRight = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceRight, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdim, nstate);
         matInterRight->SetMultiplier(1);
         cmesh->InsertMaterialObject(matInterRight);
         
@@ -708,10 +665,10 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder
             cmesh->InsertMaterialObject(materialFrac);
 
         // 2 - Condições de contorno
-        // TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
-        // cmesh->InsertMaterialObject(BCond4);
-        // TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
-        // cmesh->InsertMaterialObject(BCond5);
+         TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
+         cmesh->InsertMaterialObject(BCond4);
+         TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
+         cmesh->InsertMaterialObject(BCond5);
 
         }
         
@@ -914,22 +871,22 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             cmesh->InsertMaterialObject(materialFrac);
             
             // 2 - Condições de contorno
-            //val1(0,0) =  -Pjusante; // right
-            //TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
-            //cmesh->InsertMaterialObject(BCond4);
-            
-            //val1(0,0) = -Pmontante; // left
-            //TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
-            //cmesh->InsertMaterialObject(BCond5);
+            val1(0,0) =  -Pjusante; // right
+            TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
+            cmesh->InsertMaterialObject(BCond4);
+
+            val1(0,0) = -Pmontante; // left
+            TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
+            cmesh->InsertMaterialObject(BCond5);
         }
         
         // 2 - Material Lagrange nas interfaces
-        TPZStiffFracture<TPZStiffFracMemory> *matInterLeft;
-        matInterLeft = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceLeft, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft;
+        matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdim, nstate);
         matInterLeft->SetMultiplier(-1);
         cmesh->InsertMaterialObject(matInterLeft);
         
-        TPZStiffFracture<TPZStiffFracMemory> *matInterRight = new TPZStiffFracture<TPZStiffFracMemory>(fmatInterfaceRight, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdim, nstate);
         matInterRight->SetMultiplier(1);
         cmesh->InsertMaterialObject(matInterRight);
         

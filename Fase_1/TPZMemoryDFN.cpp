@@ -10,12 +10,12 @@
 
 TPZMemoryDFN::TPZMemoryDFN() : TPZMonoPhasicMemoryDFN() , TPZElastoPlasticMemoryDFN() {
     m_alpha = 0.5;
-    m_Se = 1.0*0.0000145038;
+
 }
 
 TPZMemoryDFN::TPZMemoryDFN(const TPZMemoryDFN & other): TPZMonoPhasicMemoryDFN(other), TPZElastoPlasticMemoryDFN(other) {
     m_alpha = other.m_alpha;
-    m_Se    = other.m_Se;
+
 }
 
 const TPZMemoryDFN & TPZMemoryDFN::operator=(const TPZMemoryDFN & other) {
@@ -26,7 +26,7 @@ const TPZMemoryDFN & TPZMemoryDFN::operator=(const TPZMemoryDFN & other) {
     }
     
     m_alpha = other.m_alpha;
-    m_Se    = other.m_Se;
+
     
     return *this;
 }

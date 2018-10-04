@@ -1,24 +1,24 @@
 //
-//  TPZStiffFracture.h
+//  TPZLagrangeInterface.h
 //  Benchmark0a
 //
 //  Created by Pablo Carvalho on 20/08/18.
 //
 
-#ifndef TPZStiffFracture_h
-#define TPZStiffFracture_h
+#ifndef TPZLagrangeInterface_h
+#define TPZLagrangeInterface_h
 
 #include <stdio.h>
 #include <iostream>
 #include "pzdiscgal.h"
 #include "TPZMatWithMem.h"
 #include "tpzautopointer.h"
-#include "TPZStiffFracMemory.h"
+#include "TPZInterfaceMemory.h"
 
 /// Material which implements a Lagrange Multiplier
 
-template <class TMEM = TPZStiffFracMemory>
-class TPZStiffFracture : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
+template <class TMEM = TPZInterfaceMemory>
+class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
 {
     protected:
     
@@ -32,26 +32,26 @@ class TPZStiffFracture : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
     
     public :
     // Simple constructor
-    TPZStiffFracture() : TPZRegisterClassId(&TPZStiffFracture::ClassId), TPZMatWithMem<TMEM,
+    TPZLagrangeInterface() : TPZRegisterClassId(&TPZLagrangeInterface::ClassId), TPZMatWithMem<TMEM,
     TPZDiscontinuousGalerkin >()
     {
         
     }
     // Constructor with the index of the material object within the vector
-    TPZStiffFracture(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZStiffFracture::ClassId),TPZMatWithMem<TMEM,
+    TPZLagrangeInterface(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZLagrangeInterface::ClassId),TPZMatWithMem<TMEM,
     TPZDiscontinuousGalerkin>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
         
     }
     
     // Copy constructor
-    TPZStiffFracture(const TPZStiffFracture &copy) : TPZRegisterClassId(&TPZStiffFracture::ClassId),TPZMatWithMem<TMEM,
+    TPZLagrangeInterface(const TPZLagrangeInterface &copy) : TPZRegisterClassId(&TPZLagrangeInterface::ClassId),TPZMatWithMem<TMEM,
     TPZDiscontinuousGalerkin>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
         
     }
     
-    TPZStiffFracture &operator=(const TPZStiffFracture &copy)
+    TPZLagrangeInterface &operator=(const TPZLagrangeInterface &copy)
     {
         TPZDiscontinuousGalerkin::operator=(copy);
         fNStateVariables = copy.fNStateVariables;
@@ -60,13 +60,13 @@ class TPZStiffFracture : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
         return *this;
     }
     
-//    TPZStiffFracture *NewMaterial()
+//    TPZLagrangeInterface *NewMaterial()
 //    {
-//        return new TPZStiffFracture(*this);
+//        return new TPZLagrangeInterface(*this);
 //    }
     
     // Destructor
-    ~TPZStiffFracture()
+    ~TPZLagrangeInterface()
     {
         
     }
@@ -85,7 +85,7 @@ class TPZStiffFracture : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
     
     virtual std::string Name()
     {
-        return "TPZStiffFracture";
+        return "TPZLagrangeInterface";
     }
     
     
@@ -156,4 +156,4 @@ public:
 };
 
 
-#endif /* TPZStiffFracture_h */
+#endif /* TPZLagrangeInterface_h */

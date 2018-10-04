@@ -1,29 +1,29 @@
 //
-//  TPZStiffFracture.cpp
+//  TPZLagrangeInterface.cpp
 //  PZ
 //
 //  Created by Philippe Devloo on 5/2/14.
 //
 //
 
-#include "TPZStiffFracture.h"
+#include "TPZLagrangeInterface.h"
 #include "pzaxestools.h"
 
 
 template <class TMEM>
-int TPZStiffFracture<TMEM>::ClassId() const{
-    return Hash("TPZStiffFracture") ^ TPZDiscontinuousGalerkin::ClassId() << 1;
+int TPZLagrangeInterface<TMEM>::ClassId() const{
+    return Hash("TPZLagrangeInterface") ^ TPZDiscontinuousGalerkin::ClassId() << 1;
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::Write(TPZStream &buf, int withclassid) const
+void TPZLagrangeInterface<TMEM>::Write(TPZStream &buf, int withclassid) const
 {
     TPZDiscontinuousGalerkin::Write(buf, withclassid);
     buf.Write(&fNStateVariables);
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::Read(TPZStream &buf, void *context)
+void TPZLagrangeInterface<TMEM>::Read(TPZStream &buf, void *context)
 {
     TPZDiscontinuousGalerkin::Read(buf, context);
     buf.Read(&fNStateVariables);
@@ -31,7 +31,7 @@ void TPZStiffFracture<TMEM>::Read(TPZStream &buf, void *context)
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void TPZLagrangeInterface<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     int nmesh = datavec.size();
     if (nmesh!=2) DebugStop();
@@ -60,7 +60,7 @@ void TPZStiffFracture<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
     for (int i=0; i<dataleft.size(); i++) {
@@ -120,7 +120,7 @@ void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<T
 
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     //    TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
     //    TPZFMatrix<REAL> &dphiRdAxes = dataright.dphix;
@@ -163,7 +163,7 @@ void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMater
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
+void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
     
     TPZFMatrix<REAL> &phiL = dataleft.phi;
@@ -192,7 +192,7 @@ void TPZStiffFracture<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMater
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
+void TPZLagrangeInterface<TMEM>::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
     const int intGlobPtIndex = datavec[0].intLocPtIndex;
 //    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
 //    const STATE pfrac = datavec[1].sol[0][0];
@@ -204,7 +204,7 @@ void TPZStiffFracture<TMEM>::UpdateMemory(TPZVec<TPZMaterialData> &datavec){
 }
 
 template <class TMEM>
-void TPZStiffFracture<TMEM>::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec){
+void TPZLagrangeInterface<TMEM>::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec){
     const int intGlobPtIndex = data.intGlobPtIndex;
 //    TPZFMatrix<REAL> Vl = this->MemItem(intGlobPtIndex);
 //    const STATE pfrac = datavec[1].sol[0][0];
@@ -217,4 +217,4 @@ void TPZStiffFracture<TMEM>::UpdateMemory(TPZMaterialData &data, TPZVec<TPZMater
 
 
 
-template class TPZStiffFracture<TPZStiffFracMemory>;
+template class TPZLagrangeInterface<TPZInterfaceMemory>;
