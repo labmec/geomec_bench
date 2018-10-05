@@ -76,6 +76,7 @@ private:
     
     //Material do elemento de interface
 
+    int fmatInterface;
     int fmatInterfaceLeft;
     int fmatInterfaceRight;
     int fmatFluxWrap;
@@ -167,7 +168,7 @@ public:
     void BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     
     //Multiphysics Interfaces
-    void AddMultiphysicsInterfaces(TPZCompMesh &cmesh);
+    void AddMultiphysicsInterfaces(TPZCompMesh &cmesh,int mat_frac);
     
     bool insert_fractures_Q = true;
     

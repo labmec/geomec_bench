@@ -88,6 +88,10 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     std::string file_darcy("DarcyFlow.vtk");
     std::string file_elastoplast("Elastoplasticity.vtk");
 
+    //Testes
+    std::string file_darcy_test("DarcyFlow_test.vtk");
+    std::string file_elastoplast_test("Elastoplasticity_teste.vtk");
+    
     int n_max_fss_iterations = 10; // @TODO:: MS, please to xml file structure
     int n_enforced_fss_iterations = 1; // @TODO:: MS, please to xml file structure
     int n_time_steps = 1;
@@ -100,7 +104,8 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
             this->ExecuteOneTimeStep();
             error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
             dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
-
+            this->PostProcessTimeStep(file_elastoplast_test, file_darcy_test);
+            
             if ((error_stop_criterion_Q && (k > n_enforced_fss_iterations)) || dx_stop_criterion_Q) {
                 this->PostProcessTimeStep(file_elastoplast, file_darcy);
                 std::cout << "TPZSegregatedAnalysisDFN:: Iterative process converged with residue norm for Darcy = " << m_darcy_analysis->Get_error() << std::endl;

@@ -60,6 +60,7 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
     fk=1.;
     fViscosity=1.;
     fDimension = dimension;
+    m_simulation_data = NULL;
     fTensorK.Resize(fDimension, fDimension);
     fInvK.Resize(fDimension, fDimension);
     for (int i=0; i<fDimension; i++) {

@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     std::string log_cfg_file = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/benchmark.cfg";
     InitializePZLOG(log_cfg_file);
     HidraulicoMonofasicoElastico scenario0a;
+    //StopError();
     scenario0a.Run(2);
     
     
