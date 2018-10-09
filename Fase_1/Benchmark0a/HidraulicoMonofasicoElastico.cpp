@@ -319,7 +319,7 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     
     TPZSegregatedAnalysisDFN * segregated_analysis = new TPZSegregatedAnalysisDFN;
     
-    segregated_analysis->ConfigurateAnalysis(ECholesky, ELU, simulation_data , cmesh_E, cmesh_M, mesh_vector, var_names_elastoplast, var_names_darcy);
+    segregated_analysis->ConfigurateAnalysis(ELDLt, ELU, simulation_data , cmesh_E, cmesh_M, mesh_vector, var_names_elastoplast, var_names_darcy);
     //Depois adicionar variaveis vetoriais Darcy
     
     segregated_analysis->ExecuteTimeEvolution();
@@ -502,7 +502,7 @@ void HidraulicoMonofasicoElastico::Sol_exact(const TPZVec<REAL> &ptx, TPZVec<STA
     REAL y = ptx[1];
     sol.Resize(2, 0.);// ux, uy;
     
-    sol[1] = 10.*y;
+    sol[1] = 0.;
     deriv.Resize(2,2);//sigx, sigxy, sigyx, sigy
     deriv(0,0) = deriv(0,1) = deriv(1,0) = deriv(1,1) = 0.;
     
@@ -541,7 +541,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     int null_dir_dirichlet = 3;
     
     // 1 - Condições de contorno
-    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+    TPZFMatrix<STATE> val1(3,2,0.), val2(3,1,0.);
     val2(1,0)= 1;
     TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, null_dir_dirichlet, val1, val2);
     val2.Zero();
@@ -588,9 +588,9 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         //    }
         
         // 2 - Criando material para FluxWrap
-        //    TPZBndCond * bc_fracture_wrap;
-        //    bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
-        //    cmesh->InsertMaterialObject(bc_fracture_wrap);
+//            TPZBndCond * bc_fracture_wrap;
+//            bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
+//            cmesh->InsertMaterialObject(bc_fracture_wrap);
         
     }
     
@@ -626,7 +626,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     cmesh->AdjustBoundaryElements();
     cmesh->CleanUpUnconnectedNodes();
     cmesh->InitializeBlock();
-    
     
     return cmesh;
 }

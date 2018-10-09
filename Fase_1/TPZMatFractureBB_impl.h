@@ -33,6 +33,9 @@ void TPZMatFractureBB<TMEM>::Read(TPZStream &buf, void *context)
 template <class TMEM>
 void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
     
+    ek.Zero();
+    ef.Zero();
+    
     return;
     DebugStop();
 }
