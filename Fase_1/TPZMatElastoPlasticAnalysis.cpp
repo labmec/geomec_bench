@@ -129,6 +129,7 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
     //    LoadSolution(Solution());
     
     TPZFMatrix<STATE> dx(Solution());
+    dx.Zero();
     bool residual_stop_criterion_Q = false;
     bool correction_stop_criterion_Q = false;
     REAL norm_res, norm_dx;
@@ -152,18 +153,24 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
         
         if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
-            std::cout << "TPMRSGeomechanicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
-            std::cout << "TPMRSGeomechanicAnalysis:: Number of iterations = " << i << std::endl;
-            std::cout << "TPMRSGeomechanicAnalysis:: Correction norm = " << norm_dx << std::endl;
+            std::cout << "TPZMatElastoPlasticAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
+            std::cout << "TPZMatElastoPlasticAnalysis:: Number of iterations = " << i << std::endl;
+            std::cout << "TPZMatElastoPlasticAnalysis:: Correction norm = " << norm_dx << std::endl;
 #endif
-            LoadSolution(dx);
             this->AcceptPseudoTimeStepSolution();
+#ifdef PZDEBUG
+            Solution().Zero();
+            LoadSolution();
+            AssembleResidual();
+            REAL norm_res_c = Norm(this->Rhs());
+            std::cout << " norm = " << norm_res_c << std::endl;
+#endif
             break;
         }
     }
     
     if (residual_stop_criterion_Q == false) {
-        std::cout << "TPMRSGeomechanicAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
+        std::cout << "TPZMatElastoPlasticAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
     }
     
 }
@@ -191,8 +198,7 @@ void TPZMatElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
     AssembleResidual();
     SetUpdateMemmory(false);
     
-    m_simulation_data->Set_must_accept_solution_Q(false);
-    
+//    m_simulation_data->Set_must_accept_solution_Q(false);    
 //    bool state = m_simulation_data->IsCurrentStateQ();
 //    if (state) {
 //        m_simulation_data->Set_must_accept_solution_Q(true);

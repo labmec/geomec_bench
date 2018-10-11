@@ -15,6 +15,7 @@
 #include "TPZDarcyAnalysis.h"
 #include "TPZDarcy2DMaterialMem.h"
 #include "TPZMemoryDFN.h"
+#include "TPZMemoryFracDFN.h"
 #include "TPZElasticCriterion.h"
 
 class TPZSegregatedAnalysisDFN {
@@ -45,9 +46,12 @@ public:
     void SetSimulationData(TPZSimulationData * simulation_data){
         m_simulation_data = simulation_data;
     }
+
+    /// Attach materials with the same share pointer (For fractures linking)
+    void ApplyFracMemoryLink(int frac_matid);
     
     /// Attach materials with the same share pointer (For now just volumeric linking)
-    void ApplyMemoryLink();
+    void ApplyMemoryLink(int matid);
     
     /// Configurate internal analysis objects and linked them through the memory shared pointer
     void ConfigurateAnalysis(DecomposeType decompose_geo, DecomposeType decompose_res, TPZSimulationData * simulation_data, TPZCompMesh * cmesh_geomechanics, TPZCompMesh * cmesh_reservoir, TPZManVector<TPZCompMesh * , 2> & mesh_vec, TPZStack<std::string> & post_pro_var_res, TPZStack<std::string> & post_pro_var_geo);
@@ -63,6 +67,9 @@ public:
     
     /// Update solution state x = x_n
     void UpdateState();
+    
+    // Adjust integration orders
+    void AdjustIntegrationOrder(TPZCompMesh * cmesh_o, TPZCompMesh * cmesh_d);
     
 };
 

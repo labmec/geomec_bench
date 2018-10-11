@@ -95,8 +95,15 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
     virtual void FillDataRequirementsInterface(TPZMaterialData &data)
     {
         data.SetAllRequirements(false);
+        data.fNeedsNeighborSol = true;
     }
 
+    virtual void FillDataRequirements(TPZMaterialData &data)
+    {
+        data.SetAllRequirements(false);
+        data.fNeedsNeighborSol = true;
+    }
+    
     // Contribute methods
     virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef);
     
@@ -124,6 +131,7 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
     // Computes a contribution to residual vector at one integration point
     virtual void ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ef)
     {
+        DebugStop();
         ContributeInterface(data, dataleft[0], dataright[0], weight, ef);
     }
     

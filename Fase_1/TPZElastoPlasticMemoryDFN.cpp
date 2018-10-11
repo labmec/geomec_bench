@@ -87,14 +87,14 @@ void TPZElastoPlasticMemoryDFN::Read(TPZStream &buf, void *context){
 
 void TPZElastoPlasticMemoryDFN::Print(std::ostream &out) const{
     out << Name();
-    out << "\n Current state stress = " << m_sigma_n;
-    out << "\n Current Plastic strasin state = " << m_plastic_strain_n;
+    out << "\n Current state stress = \n" << m_sigma_n;
+    out << "\n Current Plastic strasin state = \n" << m_plastic_strain_n;
     out << "\n Current displacement field = " << m_u_n;
-    out << "\n Last state stress = " << m_sigma;
-    out << "\n Last Plastic strasin state = " << m_plastic_strain;
+    out << "\n Last state stress = \n" << m_sigma;
+    out << "\n Last Plastic strasin state = \n" << m_plastic_strain;
     out << "\n Last displacement field = " << m_u;
     out << "\n Initial state stress = " << m_sigma_0;
-    out << "\n Initial Plastic strasin state = " << m_plastic_strain_0;
+    out << "\n Initial Plastic strasin state = \n" << m_plastic_strain_0;
     out << "\n Initial displacement field = " << m_u_0;
 }
 

@@ -62,16 +62,20 @@ void TPZLagrangeInterface<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, RE
 template <class TMEM>
 void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
+    int leftdataindex = -1;
     TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
     for (int i=0; i<dataleft.size(); i++) {
         if (dataleft[i].phi.Rows() != 0) {
             phiLPtr = &dataleft[i].phi;
+            leftdataindex = i;
             break;
         }
     }
+    int rightdataindex = -1;
     for (int i=0; i<dataright.size(); i++) {
         if (dataright[i].phi.Rows() != 0) {
             phiRPtr = &dataright[i].phi;
+            rightdataindex = i;
             break;
         }
     }
@@ -116,8 +120,9 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZV
         }
     }
     
+    ContributeInterface(data, dataleft[leftdataindex], dataright[rightdataindex], weight, ef);
+    
 }
-
 
 template <class TMEM>
 void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
@@ -160,6 +165,8 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
         }
     }
     
+    this->ContributeInterface(data, dataleft, dataright, weight, ef);
+    
 }
 
 template <class TMEM>
@@ -172,20 +179,22 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
     int nrowl = phiL.Rows();
     int nrowr = phiR.Rows();
     
-    STATE vn    = dataleft.sol[0][0];
+    TPZManVector<STATE> vLn    = dataleft.sol[0];
+    TPZManVector<STATE> vRn    = dataright.sol[0];
+    
     int secondblock = ef.Rows()-phiR.Rows()*fNStateVariables;
  
     // 3) phi_I_left, phi_J_right
     for(int il=0; il<nrowl; il++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ef(fNStateVariables*il+ist) += weight * fMultiplier * (phiL(il) * vn);
+                ef(fNStateVariables*il+ist) += weight * fMultiplier * (phiL(il) * vRn[ist]);
             }
     }
 
 
     for(int ir=0; ir<nrowr; ir++) {
         for (int ist=0; ist<fNStateVariables; ist++) {
-            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phiR(ir) * vn);
+            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phiR(ir) * vLn[ist]);
         }
     }
     

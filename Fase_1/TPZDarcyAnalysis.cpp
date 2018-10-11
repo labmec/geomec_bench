@@ -6,7 +6,11 @@
 //
 
 #include "TPZDarcyAnalysis.h"
+#include "pzlog.h"
+#ifdef LOG4CXX
+static LoggerPtr logger(Logger::getLogger("DarcyAnalysis"));
 
+#endif
 TPZDarcyAnalysis::TPZDarcyAnalysis() : TPZAnalysis(){
     
     m_simulation_data = NULL;
@@ -148,6 +152,16 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
         m_X_n += dx;
         LoadCurrentState();
         AssembleResidual();
+#ifdef LOG4CXX
+       if(logger->isDebugEnabled())
+       {
+           std::stringstream sout;
+           fRhs.Print("Rhs =",sout);
+           PrintVectorByElement(sout, fRhs);
+           PrintVectorByElement(sout, fSolution);
+           LOGPZ_DEBUG(logger, sout.str())
+       }
+#endif
         norm_res = Norm(Rhs());
         residual_stop_criterion_Q   = norm_res < r_norm;
         correction_stop_criterion_Q = norm_dx  < dx_norm;

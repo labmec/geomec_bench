@@ -23,6 +23,7 @@
 #include "pzporoelastoplasticmem.h"
 #include "TPZMonoPhasicMemoryDFN.h"
 #include "TPZMemoryDFN.h"
+#include "TPZMemoryFracDFN.h"
 #include "TPZSimulationData.h"
 
 

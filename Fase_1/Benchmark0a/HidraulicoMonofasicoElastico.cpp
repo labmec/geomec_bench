@@ -210,9 +210,14 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     
     TPZSimulationData *simulation_data =  new TPZSimulationData;
     simulation_data->Get_volumetric_material_id().push_back(fmatID);
+    if(finsert_fractures_Q){
+        for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+            simulation_data->Get_fracture_material_id().push_back(fmatFrac[i_frac]);
+        }
+    }
     simulation_data->Set_n_threads(0);
     simulation_data->Set_epsilon_res(0.001);
-    simulation_data->Set_epsilon_cor(0.001);
+    simulation_data->Set_epsilon_cor(0.6);
     simulation_data->Set_n_iterations(1);
     
     RunningPoroElasticity(gmesh, pOrder, simulation_data);
@@ -256,18 +261,17 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
             fracture_ids.push_back(fmatFrac[i_frac]);
         }
         BreakH1Connectivity(*cmesh_E, fracture_ids); // Insert new connects to represent normal fluxes
-        cmesh_E->ComputeNodElCon();
-        
+
         std::ofstream fileg1("MalhaGeo2.txt"); //Impressão da malha geométrica (formato txt)
         gmesh->Print(fileg1);
         std::ofstream filegvtk2("MalhaGeo2.vtk"); //Impressão da malha geométrica (formato vtk)
         TPZVTKGeoMesh::PrintGMeshVTK(gmesh, filegvtk2,true);
         
     }
-    
-    std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
-    cmesh_E->Print(filecE);
-    
+    {
+        std::ofstream filecE("MalhaC_E.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh_E->Print(filecE);
+    }
 
     //Malha com formulação mista (Darcy):
     TPZManVector<TPZCompMesh* , 2 > mesh_vector(2);
@@ -529,7 +533,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     TPZMatElastoPlasticDFN<TPZElasticCriterion,TPZMemoryDFN> *material;
     //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
     material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZMemoryDFN> (fmatID,fdim);
-    TPZElasticCriterion obj ;
+    TPZElasticCriterion obj;
     
     TPZElasticResponse er;
     er.SetUp(fEyoung,fpoisson);
@@ -562,19 +566,19 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     // 2 - Material Fraturas
     if (finsert_fractures_Q) {
+     
         TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdim,nstate);
+            materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate);
             cmesh->InsertMaterialObject(materialFrac);
         }
         
         // 2 - Material Lagrange nas interfaces
-        TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft;
-        matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdimFrac, nstate);
         matInterLeft->SetMultiplier(-1);
         cmesh->InsertMaterialObject(matInterLeft);
         
-        TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdim, nstate);
+        TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdimFrac, nstate);
         matInterRight->SetMultiplier(1);
         cmesh->InsertMaterialObject(matInterRight);
         
@@ -616,11 +620,14 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
 //    matids.clear();
 //    cmesh->LoadReferences();
 //    cmesh->SetDefaultOrder(pOrder-1);
-//    for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-//        matids.insert(fmatFrac[i_frac]);
-//    }
-//    matids.insert(fmatInterfaceRight);
-//    matids.insert(fmatInterfaceLeft);
+    matids.insert(fmatInterfaceRight);
+    matids.insert(fmatInterfaceLeft);
+
+    if (finsert_fractures_Q) {
+        for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+            matids.insert(fmatFrac[i_frac]);
+        }
+    }
     
     cmesh->AutoBuild(matids);
     cmesh->AdjustBoundaryElements();
@@ -753,8 +760,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_p(TPZGeoMesh *gmesh, int pOrder
     TPZL2Projection *material = new TPZL2Projection(fmatID,fdim,nstate,sol);//criando material que implementa a formulacao fraca do problema modelo
     cmesh->InsertMaterialObject(material); //Insere material na malha
     
-
-    
     // 2 - Material Fraturas
     if (finsert_fractures_Q) {
         TPZMat2dLin *materialFrac;
@@ -867,9 +872,9 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     if (finsert_fractures_Q) {
         // 2 - Material Fraturas
-        TPZDarcy2DMaterialMem<TPZMemoryDFN> *materialFrac;
+        TPZDarcy2DMaterialMem<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryDFN> (fmatFrac[i_frac],fdimFrac,1,1);
+            materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryFracDFN> (fmatFrac[i_frac],fdimFrac,1,1);
             REAL kf = 4.68789e-4;
             REAL Dyf = 6.5e-5;
             materialFrac->SetPermeability(kf*Dyf);
@@ -877,21 +882,23 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             cmesh->InsertMaterialObject(materialFrac);
             
             // 2 - Condições de contorno
-            val1(0,0) =  -Pjusante; // right
+            val1(0,0) =  Pjusante; // right
             TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond4);
 
-            val1(0,0) = -Pmontante; // left
+            val1(0,0) = Pmontante; // left
             TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond5);
         }
         
         // 2 - Material Lagrange nas interfaces
         
-        TPZMaterial *MatLagrange = new TPZLagrangeMultiplier(fmatInterface,fdimFrac,1);
+        TPZLagrangeInterface<TPZInterfaceMemory> *MatLagrange = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterface,fdimFrac,1);
         cmesh->InsertMaterialObject(MatLagrange);
         
         // 2 - Flux Warap
+        val1.Zero();
+        val1.Zero();
         TPZBndCond *FluxWrapBC = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
         cmesh->InsertMaterialObject(FluxWrapBC);
     }
@@ -909,6 +916,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             matids.insert(fmatFrac[i_frac]);
         }
     }
+    matids.insert(fmatInterface);
     
     cmesh->AutoBuild(matids);
 
@@ -1008,6 +1016,7 @@ void HidraulicoMonofasicoElastico::BreakH1Connectivity(TPZCompMesh &cmesh, std::
         fracture.SetDiscontinuosFrac(&cmesh); // (ok)
         fracture.SetInterfaces(&cmesh, fmatInterfaceLeft, fmatInterfaceRight);
     }
+    cmesh.ComputeNodElCon();
 }
 
 void HidraulicoMonofasicoElastico::AddMultiphysicsInterfaces(TPZCompMesh &cmesh, int mat_Frac)

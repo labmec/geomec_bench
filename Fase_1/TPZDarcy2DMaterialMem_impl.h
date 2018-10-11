@@ -133,6 +133,7 @@ void TPZDarcy2DMaterialMem<TMEM>::FillDataRequirements(TPZMaterialData &data)
 {
     TPZMaterial::FillDataRequirements(data);
     data.fNeedsSol = true;
+    data.fNeedsNeighborSol = true;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -144,6 +145,7 @@ void TPZDarcy2DMaterialMem<TMEM>::FillDataRequirements(TPZVec<TPZMaterialData> &
     for (int idata=0; idata < ndata ; idata++) {
         datavec[idata].SetAllRequirements(false);
         datavec[idata].fNeedsNormal = true;
+        datavec[idata].fNeedsNeighborSol = true;
         datavec[idata].fNeedsSol = true;
     }
 }
@@ -156,6 +158,7 @@ void TPZDarcy2DMaterialMem<TMEM>::FillBoundaryConditionDataRequirement(int type,
     int ndata = datavec.size();
     for (int idata=0; idata < ndata ; idata++) {
         datavec[idata].SetAllRequirements(false);
+        datavec[idata].fNeedsNeighborSol = true;
         datavec[idata].fNeedsSol = true;
         datavec[idata].fNeedsNormal = true;
     }
@@ -167,6 +170,8 @@ template <class TMEM>
 void TPZDarcy2DMaterialMem<TMEM>::FillDataRequirementsInterface(TPZMaterialData &data)
 {
     data.fNeedsNormal = false;
+    data.fNeedsSol = true;
+    data.fNeedsNeighborSol = true;
 }
 
 
@@ -1341,3 +1346,4 @@ void TPZDarcy2DMaterialMem<TMEM>::Errors(TPZVec<TPZMaterialData> &data, TPZVec<S
 
 template class TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN>;
 template class TPZDarcy2DMaterialMem<TPZMemoryDFN>;
+template class TPZDarcy2DMaterialMem<TPZMemoryFracDFN>;

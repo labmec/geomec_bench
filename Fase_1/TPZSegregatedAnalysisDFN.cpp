@@ -24,19 +24,46 @@ TPZSegregatedAnalysisDFN::TPZSegregatedAnalysisDFN(const TPZSegregatedAnalysisDF
     m_darcy_analysis    = other.m_darcy_analysis;
 }
 
-void TPZSegregatedAnalysisDFN::ApplyMemoryLink(){
+void TPZSegregatedAnalysisDFN::ApplyFracMemoryLink(int frac_matid){
+
+    TPZMaterial * frac_material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(frac_matid);
+    TPZMaterial * frac_material_darcy = m_darcy_analysis->Mesh()->FindMaterial(frac_matid);
     
-    int matid = 1; //Material Volumétrico
-        
+    if (!frac_material_elastoplast || !frac_material_darcy) {
+        DebugStop();
+    }
+
+    TPZMatWithMem<TPZMemoryFracDFN,TPZDiscontinuousGalerkin> * matfrac_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN,TPZDiscontinuousGalerkin> * >(frac_material_elastoplast);
+    TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_darcy);
+    
+    if(matfrac_with_memory_darcy->GetMemory()->NElements() != matfrac_with_memory_elastoplast->GetMemory()->NElements())
+    {
+        std::cout << "The integration rules of both meshes are different - bailing out\n";
+        DebugStop();
+    }
+    if (!matfrac_with_memory_elastoplast || !matfrac_with_memory_darcy) {
+        DebugStop();
+    }
+    
+    matfrac_with_memory_darcy->SetMemory(matfrac_with_memory_elastoplast->GetMemory());
+    
+}
+
+void TPZSegregatedAnalysisDFN::ApplyMemoryLink(int matid){
+    
+    matid = m_simulation_data->Get_elasticity_matid(); //Material Volumétrico
+
     TPZMaterial * material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
     TPZMaterial * material_darcy = m_darcy_analysis->Mesh()->FindMaterial(matid);
-
+    
     if (!material_elastoplast || !material_darcy) {
         DebugStop();
     }
     
     TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_elastoplast);
     TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_darcy);
+    
+    
     if(mat_with_memory_darcy->GetMemory()->NElements() != mat_with_memory_elastoplast->GetMemory()->NElements())
     {
         std::cout << "The integration rules of both meshes are different - bailing out\n";
@@ -68,7 +95,16 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     m_darcy_analysis->SetCompMesh(cmesh_M,mustOptimizeBandwidth);
     m_darcy_analysis->ConfigurateAnalysis(decompose_M, mesh_vec, m_simulation_data, post_pro_var_M);
     
-    this->ApplyMemoryLink();
+    
+    for (int imat = 0; imat < simulation_data->Get_volumetric_material_id().size(); imat++) {
+        int matid = simulation_data->Get_volumetric_material_id()[imat];
+        this->ApplyMemoryLink(matid);
+    }
+
+    for (int imat_frac = 0; imat_frac < simulation_data->Get_fracture_material_id().size(); imat_frac++) {
+        int frac_matid = simulation_data->Get_fracture_material_id()[imat_frac];
+        this->ApplyFracMemoryLink(frac_matid);
+    }
     
 }
 
@@ -121,4 +157,62 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
 void TPZSegregatedAnalysisDFN::UpdateState(){
     m_darcy_analysis->UpdateState();
     m_elastoplast_analysis->UpdateState();
+}
+
+void TPZSegregatedAnalysisDFN::AdjustIntegrationOrder(TPZCompMesh * cmesh_o, TPZCompMesh * cmesh_d){
+    
+    // Assuming the cmesh_o as directive.
+    
+    cmesh_d->LoadReferences();
+    int nel_o = cmesh_o->NElements();
+    int nel_d = cmesh_d->NElements();
+    
+    if (nel_o != nel_d) {
+        std::cout << "The geometrical partitions are not the same." << std::endl;
+        DebugStop();
+    }
+    
+    int counter = 0;
+    for (long el = 0; el < nel_o; el++) {
+        TPZCompEl *cel_o = cmesh_o->Element(el);
+        if (!cel_o) {
+            continue;
+        }
+        
+        TPZGeoEl * gel = cel_o->Reference();
+        if (!gel) {
+            continue;
+        }
+        
+        // Finding the other computational element
+        TPZCompEl * cel_d = gel->Reference();
+        if (!cel_d) {
+            continue;
+        }
+        cel_o->SetFreeIntPtIndices();
+        cel_o->ForcePrepareIntPtIndices();
+        const TPZIntPoints & rule = cel_o->GetIntegrationRule();
+        TPZIntPoints * cloned_rule = rule.Clone();
+        
+        TPZManVector<int64_t,20> indices;
+        cel_o->GetMemoryIndices(indices);
+        cel_d->SetMemoryIndices(indices);
+        //        cel_d->SetFreeIntPtIndices();
+        cel_d->SetIntegrationRule(cloned_rule);
+        //        cel_d->ForcePrepareIntPtIndices();
+        
+        counter++;
+    }
+    
+#ifdef PZDEBUG
+    std::ofstream out_geo("Cmesh_origin_adjusted.txt");
+    cmesh_o->Print(out_geo);
+#endif
+    
+    
+#ifdef PZDEBUG
+    std::ofstream out_res("Cmesh_destination_adjusted.txt");
+    cmesh_d->Print(out_res);
+#endif
+    
 }

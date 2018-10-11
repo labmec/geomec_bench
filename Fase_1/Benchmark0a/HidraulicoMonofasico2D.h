@@ -47,6 +47,7 @@
 #include "TPZSpStructMatrix.h"
 #include "../TPZFractureInsertion.h"
 #include "../TPZDarcyAnalysis.h"
+#include "../TPZSimulationData.h"
 
 using namespace std;
 using namespace pzshape;
@@ -108,7 +109,7 @@ public:
     /* Malhas computacionais */
     TPZCompMesh *CMesh_v(TPZGeoMesh *gmesh, int pOrder);
     TPZCompMesh *CMesh_p(TPZGeoMesh *gmesh, int pOrder);
-    TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder);
+    TPZCompMesh *CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *simulation_data);
     
     //solucao exata
     static void Sol_exact(const TPZVec<REAL> &x, TPZVec<STATE> &sol, TPZFMatrix<STATE> &dsol);

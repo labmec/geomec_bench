@@ -142,7 +142,14 @@ void HidraulicoMonofasico2D::Run(int pOrder)
         cmesh_v->Print(filecv);
     }
     
-    TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder); //Função para criar a malha computacional multifísica
+    TPZSimulationData *simulation_data =  new TPZSimulationData;
+    simulation_data->Get_volumetric_material_id().push_back(fmatID);
+    simulation_data->Set_n_threads(0);
+    simulation_data->Set_epsilon_res(0.001);
+    simulation_data->Set_epsilon_cor(0.001);
+    simulation_data->Set_n_iterations(1);
+    
+    TPZCompMesh *cmesh_m = CMesh_m(gmesh, pOrder, simulation_data); //Função para criar a malha computacional multifísica
     
     TPZManVector<TPZCompMesh *, 2> meshvector(2);
     meshvector[0] = cmesh_v;
@@ -184,13 +191,7 @@ void HidraulicoMonofasico2D::Run(int pOrder)
     
     // Setting up the 
     
-    TPZSimulationData *simulation_data =  new TPZSimulationData;
-    simulation_data->Get_volumetric_material_id().push_back(fmatID);
-    simulation_data->Set_n_threads(0);
-    simulation_data->Set_epsilon_res(0.001);
-    simulation_data->Set_epsilon_cor(0.001);
-    simulation_data->Set_n_iterations(1);
-    
+
     std::string plotfile("Benchmark_Mono_DarcyTest.vtk");
     TPZStack<std::string> scalnames, vecnames;
     scalnames.Push("P");
@@ -469,7 +470,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_p(TPZGeoMesh *gmesh, int pOrder)
     
 }
 
-TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
+TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *sim_data)
 {
     //Criando malha computacional:
     int bc_inte_order = 10;
@@ -495,14 +496,16 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder)
     invK(0,0)=1./K(0,0);
     invK(1,1)=1./K(1,1);
     
-    // material->SetPermeabilityTensor(K, invK);
+    material->SetPermeabilityTensor(K, invK);
+    material->SetSimulationData(sim_data);
+    
     
     TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *materialFrac = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatFrac,fdimFrac,1,1); // Darcy's material with mem
     //TPZDarcy2DMaterial *materialFrac = new TPZDarcy2DMaterial(fmatFrac,fdimFrac,1,ftheta); // Simple Darcy's material
     REAL kf = 4.68789e-4;
     REAL Dyf = 6.5e-5;
     materialFrac->SetPermeability(kf*Dyf);
-    
+    materialFrac->SetSimulationData(sim_data);
     // Inserindo material na malha
     TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact);
     

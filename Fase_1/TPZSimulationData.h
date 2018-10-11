@@ -83,6 +83,9 @@ protected:
     /** @brief Vector that storages only volumetric material identifiers (higher dimension elements) */
     std::vector<int> m_volumetric_material_id;
     
+    /** @brief Vector that storages only fracture material identifiers (higher dimension elements) */
+    std::vector<int> m_fracture_material_id;
+    
     /** @brief Material and boundaries identifiers sorted per region */
     TPZManVector<std::pair<int, TPZManVector<int,12>>,12> m_mat_ids;
     
@@ -277,6 +280,16 @@ public:
         m_volumetric_material_id = volumetric_material_id;
     }
 
+    /** @brief Get the vector that storages only fracture material identifiers (higher dimension elements)  */
+    std::vector<int> & Get_fracture_material_id(){
+        return m_fracture_material_id;
+    }
+    
+    /** @brief Set the vector that storages only fracture material identifiers (higher dimension elements) */
+    void Set_fracture_material_id(std::vector<int> & fracture_material_id){
+        m_fracture_material_id = fracture_material_id;
+    }
+    
 };
 
 #endif /* TPZSimulationData_h */

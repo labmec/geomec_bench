@@ -732,10 +732,12 @@ void TPZFractureInsertion::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLef
         TPZGeoEl *gel = elvec[fracture_index[iel]];
         
         const int gelMatId = gel->MaterialId();
+#ifdef PZDEBUG
         if (gelMatId != fracture_id)
-            continue;
+            DebugStop();
         if (gel->HasSubElement())
-            continue;
+            DebugStop();
+#endif
         TPZGeoElSide gelside(gel, gel->NSides() - 1);
         TPZCompElSide celside = gelside.Reference();
         if (!celside) {
@@ -764,8 +766,9 @@ void TPZFractureInsertion::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLef
                 int64_t index;
                 new TPZInterfaceElement(*cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
                 
+            }else{
+                DebugStop();
             }
-            
         }
         
     }
