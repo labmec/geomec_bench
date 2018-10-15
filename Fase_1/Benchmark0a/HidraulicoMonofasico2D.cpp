@@ -507,7 +507,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZS
     materialFrac->SetPermeability(kf*Dyf);
     materialFrac->SetSimulationData(sim_data);
     // Inserindo material na malha
-    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact);
+    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact,5);
     
     material->SetForcingFunctionExact(solp);
     

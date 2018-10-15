@@ -95,16 +95,18 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     m_darcy_analysis->SetCompMesh(cmesh_M,mustOptimizeBandwidth);
     m_darcy_analysis->ConfigurateAnalysis(decompose_M, mesh_vec, m_simulation_data, post_pro_var_M);
     
-    
     for (int imat = 0; imat < simulation_data->Get_volumetric_material_id().size(); imat++) {
         int matid = simulation_data->Get_volumetric_material_id()[imat];
         this->ApplyMemoryLink(matid);
     }
-
+    
     for (int imat_frac = 0; imat_frac < simulation_data->Get_fracture_material_id().size(); imat_frac++) {
         int frac_matid = simulation_data->Get_fracture_material_id()[imat_frac];
         this->ApplyFracMemoryLink(frac_matid);
     }
+    
+   // this->AdjustIntegrationOrder(cmesh_E,cmesh_M);
+
     
 }
 

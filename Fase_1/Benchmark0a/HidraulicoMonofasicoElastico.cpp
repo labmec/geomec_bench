@@ -843,7 +843,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     invK(0,0)=1./K(0,0);
     invK(1,1)=1./K(1,1);
 
-    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact);
+    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact,5);
     material->SetForcingFunctionExact(solp);
     material->SetSimulationData(sim_data);
     cmesh->InsertMaterialObject(material);
