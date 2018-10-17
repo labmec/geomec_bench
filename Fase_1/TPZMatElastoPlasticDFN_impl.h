@@ -221,7 +221,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData 
     plasticloc.ApplyStrainComputeSigma(EpsT, Sigma, &Dep);
     Sigma.CopyTo(Stress);
     
-    if(TPZMatWithMem<TMEM>::fUpdateMem)
+    if(m_simulation_data->Get_must_accept_solution_Q())
     {
         this->MemItem(intPt).GetSigma_n()        = Sigma;
         this->MemItem(intPt).GetPlasticState_n() = plasticloc.GetState();
@@ -390,7 +390,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
     TPZFNMatrix<6> Stress(6, 1);
     int ptindex = data.intGlobPtIndex;
     
-    if (TPZMatWithMem<TMEM>::fUpdateMem && data.sol.size() > 0) {
+    if (m_simulation_data->Get_must_accept_solution_Q()) {
         // Loop over the solutions if update memory is true
         //TPZFNMatrix<9> Dep(3, 3);
         
@@ -423,7 +423,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
     if (elastoplasticLogger->isDebugEnabled()) {
         std::stringstream sout;
         sout << ">>> TPZMatElastoPlastic<T,TMEM>::Contribute ***";
-        sout << "\nIntegration Local Point index = " << data.intGlobPtIndex;
+        sout << "\nIntegration Local Point index = " << data.intLocPtIndex;
         sout << "\nIntegration Global Point index = " << data.intGlobPtIndex;
         sout << "\ndata.axes = " << data.axes;
         sout << "\nStress " << endl;
@@ -469,53 +469,25 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
     
 }
 
-//template <class T, class TMEM>
-//void TPZMatElastoPlasticDFN<T,TMEM>::FillBoundaryConditionDataRequirement(int type,TPZMaterialData &data)
-//{
-//
-//
-//    //TPZMatWithMem<TMEM>::FillBoundaryConditionDataRequirement(type,data);
-//    data.fNeedsSol = true;
-//    if (type == 4 || type ==5 || type == 6) {
-//        data.fNeedsNormal = true;
-//    }
-//    else {
-//        data.fNeedsNormal = false;
-//    }
-//}
-
 template <class T, class TMEM>
 void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ek, TPZFMatrix<REAL> &ef, TPZBndCond &bc) {
   
     TPZBndCondWithMem<TPZMemoryBCDFN> & bc_with_memory = dynamic_cast<TPZBndCondWithMem<TPZMemoryBCDFN> &>(bc);
     int gp_index = data.intGlobPtIndex;
-    if (m_simulation_data->Get_must_accept_solution_Q()) {
-        
-//        if (m_simulation_data->GetTransferCurrentToLastQ()) {
-//            bc_with_memory.MemItem(gp_index).Setu(bc_with_memory.MemItem(gp_index).Getu_n()) ;
-//            return;
-//        }
-        
-        
-            TPZManVector<STATE,3> delta_u    = data.sol[0];
-            TPZManVector<STATE,3> u_n(fDimension,0.0);
-            TPZManVector<STATE,3> u(bc_with_memory.MemItem(gp_index).Getu());
-            for (int i = 0; i < fDimension; i++) {
-                u_n[i] = delta_u[i] + u[i];
-            }
-            bc_with_memory.MemItem(gp_index).Setu_n(u_n);
-            
-    }
     
-    TPZFMatrix<REAL>  &phi = data.phi;
     TPZManVector<STATE,3> delta_u    = data.sol[0];
     TPZManVector<STATE,3> u_n(fDimension,0.0);
+    
     TPZManVector<STATE,3> u(bc_with_memory.MemItem(gp_index).Getu_n());
     for (int i = 0; i < fDimension; i++) {
         u_n[i] = delta_u[i] + u[i];
     }
     
+    if (m_simulation_data->Get_must_accept_solution_Q()) {
+        bc_with_memory.MemItem(gp_index).Setu_n(u_n);
+    }
     
+    TPZFMatrix<REAL>  &phi = data.phi;
     int phr = phi.Rows();
     int in, jn, idf, jdf;
     REAL BigNumber = TPZDiscontinuousGalerkin::gBigNumber;

@@ -330,10 +330,6 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     segregated_analysis->ConfigurateAnalysis(ELDLt, ELU, simulation_data , cmesh_E, cmesh_M, mesh_vector, var_names_elastoplast, var_names_darcy);
     //Depois adicionar variaveis vetoriais Darcy
     
-    TPZVec<int64_t> indices1;
-    TPZCompEl *cel = cmesh_E->Element(11);
-    cmesh_E->Element(11)->PrepareIntPtIndices();
-    
     segregated_analysis->ExecuteTimeEvolution();
 
     
@@ -588,10 +584,12 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         // 2 - Material Lagrange nas interfaces
         TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdimFrac, nstate);
         matInterLeft->SetMultiplier(-1);
+        matInterLeft->SetSimulationData(sim_data);
         cmesh->InsertMaterialObject(matInterLeft);
         
         TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdimFrac, nstate);
         matInterRight->SetMultiplier(1);
+        matInterRight->SetSimulationData(sim_data);
         cmesh->InsertMaterialObject(matInterRight);
         
         // 2 - Condições de contorno
@@ -907,7 +905,11 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
         
         // 2 - Material Lagrange nas interfaces
         
+//        TPZMaterial *MatLagrange = new TPZLagrangeMultiplier(fmatInterface,fdimFrac,1); //
+//        cmesh->InsertMaterialObject(MatLagrange);
+        
         TPZLagrangeInterface<TPZInterfaceMemory> *MatLagrange = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterface,fdimFrac,1);
+        MatLagrange->SetSimulationData(sim_data);
         cmesh->InsertMaterialObject(MatLagrange);
         
         // 2 - Flux Warap

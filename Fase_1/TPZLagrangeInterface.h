@@ -14,6 +14,7 @@
 #include "TPZMatWithMem.h"
 #include "tpzautopointer.h"
 #include "TPZInterfaceMemory.h"
+#include "TPZSimulationData.h"
 
 /// Material which implements a Lagrange Multiplier
 
@@ -29,6 +30,9 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
     int fDimension;
     
     STATE fMultiplier;
+    
+    /// Pointer of Simulation data
+    TPZSimulationData * m_simulation_data;
     
     public :
     // Simple constructor
@@ -88,6 +92,10 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
         return "TPZLagrangeInterface";
     }
     
+    /// Set the pointer of Simulation data object
+    void SetSimulationData(TPZSimulationData * simulation_data){
+        m_simulation_data = simulation_data;
+    }
     
     // Fill material data parameter with necessary requirements for the ContributeInterface method.
     // Here, in base class, all requirements are considered as necessary. \n

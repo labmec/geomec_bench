@@ -5,11 +5,16 @@
 #include <cmath>
 
 
-TPZInterfaceMemory::TPZInterfaceMemory() : TPZMonoPhasicMemoryDFN()
+TPZInterfaceMemory::TPZInterfaceMemory()
 {
 
   SolL.Resize(3);
   SolR.Resize(3);
+    for (int i=0; i<3; i++) {
+        SolL[i] = 0.;
+        SolR[i] = 0.;
+    }
+
   //this->SetCurrentState();
 }
 
@@ -20,7 +25,8 @@ TPZInterfaceMemory::~TPZInterfaceMemory()
 }
 
 /** @brief copy constructor */
-TPZInterfaceMemory::TPZInterfaceMemory(const TPZInterfaceMemory &copy) : TPZMonoPhasicMemoryDFN(copy) {
+TPZInterfaceMemory::TPZInterfaceMemory(const TPZInterfaceMemory &copy) : SolL(copy.SolL), SolR(copy.SolR)
+{
     
 }
 

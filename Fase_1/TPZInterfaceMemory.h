@@ -10,7 +10,7 @@
  * @since 19/08/2014
  * @brief class to store data of fracture propagation simulation
  */
-class TPZInterfaceMemory : public TPZMonoPhasicMemoryDFN {
+class TPZInterfaceMemory {//}: public TPZMonoPhasicMemoryDFN {
   
 public:
   
@@ -32,12 +32,18 @@ private:
     enum nState { n = 0, nplusone = 1 };
     nState State;
   
-    /** @brief Solution left */
+    /** @brief Solution left at current state */
     TPZManVector<STATE,3> SolL;
     
-    /** @brief Solution right */
+    /** @brief Solution right at current state */
     TPZManVector<STATE,3> SolR;
-  
+
+//    /** @brief Solution left at last state */
+//    TPZManVector<STATE,3> SolL_n;
+//
+//    /** @brief Solution right at last state */
+//    TPZManVector<STATE,3> SolR_n;
+//
     
 public:
     
@@ -49,19 +55,47 @@ public:
   
     /** @brief Returns the postprocess file for fracture vtk */
     std::string PostProcessFileName();
+    
+    /** @brief Set left solution at current state. */
+    void SetLeftSol(TPZManVector<STATE,3> solL){
+        SolL = solL;
+    }
+    
+    /** @brief Returns left solution at current state. */
+    TPZManVector<STATE,3> GetLeftSol() const {
+        return SolL;
+    }
 
-    /** @brief Set left solution. */
-    void SetLeftSol(TPZManVector<STATE,3> solL){this->SolL = solL;}
+//    /** @brief Set left solution at last state. */
+//    void SetLeftSol_n(TPZManVector<STATE,3> solL_n){
+//        SolL_n = solL_n;
+//    }
     
-    /** @brief Returns left solution. */
-    TPZManVector<STATE,3> LeftSol() const {return this->SolL;}
+//    /** @brief Returns left solution at last state. */
+//    TPZManVector<STATE,3> GetLeftSol_n() const {
+//        return SolL_n;
+//    }
+    
+    /** @brief Set right solution at current state. */
+    void SetRightSol(TPZManVector<STATE,3> solR){
+        SolR = solR;
+    }
+    
+    /** @brief Returns right solution at current state. */
+    TPZManVector<STATE,3> GetRightSol() const {
+        return SolR;
+    }
 
-    /** @brief Set right solution. */
-    void SetRightSol(TPZManVector<STATE,3> solL){this->SolR = solL;}
+//    /** @brief Set right solution at last state. */
+//    void SetRightSol_n(TPZManVector<STATE,3> solR_n){
+//        SolR_n = solR_n;
+//    }
     
-    /** @brief Returns right solution. */
-    TPZManVector<STATE,3> RightSol() const {return this->SolR;}
-    
+//    /** @brief Returns right solution at last state. */
+//    TPZManVector<STATE,3> GetRightSol_n() const {
+//        return SolR_n;
+//    }
+//    
     /// Class name
     const std::string Name() const;
     
@@ -78,5 +112,12 @@ public:
     
     
 };
+
+inline std::ostream &operator<<(std::ostream &out, const TPZInterfaceMemory&obj)
+{
+    obj.Print(out);
+    return out;
+}
+
 
 #endif
