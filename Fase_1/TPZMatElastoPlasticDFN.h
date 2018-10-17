@@ -8,9 +8,11 @@
 
 #include "TPZMaterial.h"
 #include "TPZMatWithMem.h"
-#include "TPZElastoPlasticMem.h"
-#include "pzporoelastoplasticmem.h"
 #include "TPZSimulationData.h"
+#include "TPZBndCondWithMem.h"
+#include "TPZMemoryFracDFN.h"
+#include "TPZMemoryDFN.h"
+#include "TPZMemoryBCDFN.h"
 
 /**
 * Implements an elastoplastic material and uses the memory feature to store the damage variables

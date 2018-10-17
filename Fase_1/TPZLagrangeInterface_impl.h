@@ -62,6 +62,11 @@ void TPZLagrangeInterface<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, RE
 template <class TMEM>
 void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
+    
+    long gp_index = data.intGlobPtIndex;
+   // TMEM & memory = this->GetMemory().get()->operator[](gp_index);
+    
+    
     int leftdataindex = -1;
     TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
     for (int i=0; i<dataleft.size(); i++) {
@@ -129,6 +134,14 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
 {
     //    TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
     //    TPZFMatrix<REAL> &dphiRdAxes = dataright.dphix;
+    
+    long gp_index = data.intGlobPtIndex;
+    TMEM & memory = this->GetMemory().get()->operator[](gp_index);
+    
+    TPZManVector<STATE,3> solR = memory.RightSol();
+    TPZManVector<STATE,3> solL = memory.LeftSol();
+    
+    
     TPZFMatrix<REAL> &phiL = dataleft.phi;
     TPZFMatrix<REAL> &phiR = dataright.phi;
     
@@ -172,6 +185,8 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
 template <class TMEM>
 void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
+    
+    long gp_index = data.intGlobPtIndex;
     
     TPZFMatrix<REAL> &phiL = dataleft.phi;
     TPZFMatrix<REAL> &phiR = dataright.phi;

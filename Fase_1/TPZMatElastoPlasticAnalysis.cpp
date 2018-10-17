@@ -59,6 +59,7 @@ void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositio
         case ELDLt:
         {
             TPZSymetricSpStructMatrix struct_mat(Mesh());
+//            TPZSkylineStructMatrix struct_mat(Mesh());
             struct_mat.SetNumThreads(number_threads);
             this->SetStructuralMatrix(struct_mat);
         }
@@ -113,7 +114,15 @@ void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositio
 void TPZMatElastoPlasticAnalysis::ExecuteNewtonInteration(){
     this->Assemble();
     this->Rhs() *= -1.0;
+    {
+        std::ofstream out("RhsExecuteNewton.txt");
+        PrintVectorByElement(out, this->Rhs());
+    }
     this->Solve();
+    {
+        std::ofstream out("SolExecuteNewton.txt");
+        PrintVectorByElement(out, this->Solution());
+    }
 }
 
 void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
@@ -162,6 +171,10 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
             Solution().Zero();
             LoadSolution();
             AssembleResidual();
+            {
+            std::ofstream fileRhs("SaidaRHS.txt");
+            PrintVectorByElement(fileRhs, this->Rhs());
+            }
             REAL norm_res_c = Norm(this->Rhs());
             std::cout << " norm = " << norm_res_c << std::endl;
 #endif
@@ -225,6 +238,7 @@ void TPZMatElastoPlasticAnalysis::LoadLastState(){
 
 void TPZMatElastoPlasticAnalysis::SetUpdateMemmory(bool accept_solution_Q){
 
+    m_simulation_data->Set_must_accept_solution_Q(accept_solution_Q);
     std::map<int, TPZMaterial * >::iterator mit;
     std::map<int, TPZMaterial *> & refMatVec = Mesh()->MaterialVec();
 

@@ -8,10 +8,8 @@
 TPZInterfaceMemory::TPZInterfaceMemory() : TPZMonoPhasicMemoryDFN()
 {
 
-  fmu = 0.;
-  fE = 0.;
-  fnu = 0.;
-  fSigmaConf = 0.;
+  SolL.Resize(3);
+  SolR.Resize(3);
   //this->SetCurrentState();
 }
 
@@ -28,19 +26,35 @@ TPZInterfaceMemory::TPZInterfaceMemory(const TPZInterfaceMemory &copy) : TPZMono
 
 /** @brief operator equal */
 TPZInterfaceMemory & TPZInterfaceMemory::operator=(const TPZInterfaceMemory &copy) {
-    fmu = copy.fmu;
-    fE = copy.fE;
-    fnu = copy.fnu;
-    fSigmaConf = copy.fSigmaConf;
-    
+    SolL = copy.SolL;
+    SolR = copy.SolR;
+    return *this;
+}
+
+const std::string TPZInterfaceMemory::Name() const{
+    return "TPZInterfaceMemory";
+}
+
+void TPZInterfaceMemory::Write(TPZStream &buf, int withclassid) const {
+    buf.Write(SolL);
+    buf.Write(SolR);
+
 }
 
 
-void TPZInterfaceMemory::Viscosity(REAL p, REAL &FluidViscosity, REAL &dFluidViscosityDp) const
-{
-  // Constant for a while.
-  FluidViscosity = fmu;
-  dFluidViscosityDp = 0;
+void TPZInterfaceMemory::Read(TPZStream &buf, void *context){
+    buf.Read(SolL);
+    buf.Read(SolR);
 }
 
+void TPZInterfaceMemory::Print(std::ostream &out) const{
+    out << Name();
+    out << "\n current solution at left = " << SolL;
+    out << "\n current solution at right = " << SolR;
+    out << "\n ";
+}
+
+int TPZInterfaceMemory::ClassId() const{
+    return Hash("TPZInterfaceMemory");
+}
 

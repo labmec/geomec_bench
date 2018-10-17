@@ -17,6 +17,7 @@
 #include "TPZPersistenceManager.h"
 #include "TPZTensor.h"
 #include "TPZPlasticState.h"
+#include "TPZBndCondWithMem.h"
 
 class TPZElastoPlasticMemoryDFN{
     

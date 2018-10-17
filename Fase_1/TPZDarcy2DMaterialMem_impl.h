@@ -836,9 +836,8 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
             break;
     }
     
-    std::ofstream plotfileM("ekBC_Darcy2D.txt");
-    ek.Print("KBC = ",plotfileM,EMathematicaInput);
-    
+    //std::ofstream plotfileM("ekBC_Darcy2D.txt");
+    //ek.Print("KBC = ",plotfileM,EMathematicaInput);
     
 }
 

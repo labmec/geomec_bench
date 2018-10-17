@@ -85,6 +85,8 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     this->SetSimulationData(simulation_data);
     bool mustOptimizeBandwidth = true;
     
+    m_simulation_data = simulation_data;
+    
     // The Geomechanics Simulator
     m_elastoplast_analysis = new TPZMatElastoPlasticAnalysis;
     m_elastoplast_analysis->SetCompMesh(cmesh_E,mustOptimizeBandwidth);
@@ -105,8 +107,17 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
         this->ApplyFracMemoryLink(frac_matid);
     }
     
-   // this->AdjustIntegrationOrder(cmesh_E,cmesh_M);
-
+    //this->AdjustIntegrationOrder(cmesh_E,cmesh_M);
+    //this->AdjustFractureIntegrationOrder(cmesh_E,cmesh_M);
+    
+    {
+        std::ofstream filecE("MalhaC_E_AfterAdjust.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh_E->Print(filecE);
+    }
+    {
+        std::ofstream filecM("MalhaC_M_AfterAdjust.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        cmesh_M->Print(filecM);
+    }
     
 }
 
@@ -169,12 +180,38 @@ void TPZSegregatedAnalysisDFN::AdjustIntegrationOrder(TPZCompMesh * cmesh_o, TPZ
     int nel_o = cmesh_o->NElements();
     int nel_d = cmesh_d->NElements();
     
-    if (nel_o != nel_d) {
+    int nvol_el_o = 0;
+    int nvol_el_d = 0;
+    
+    for (long el = 0; el < nel_o; el++) {
+        TPZCompEl *cel_o = cmesh_o->Element(el);
+        int matid_o = cel_o->Material()->Id();
+        for (int imat = 0; imat < m_simulation_data->Get_volumetric_material_id().size(); imat++) {
+            int matid = m_simulation_data->Get_volumetric_material_id()[imat];
+            if (matid==matid_o) {
+                nvol_el_o ++;
+                break;
+            }
+        }
+    }
+    
+    for (long el = 0; el < nel_d; el++) {
+        TPZCompEl *cel_d = cmesh_d->Element(el);
+        int matid_d = cel_d->Material()->Id();
+        for (int imat = 0; imat < m_simulation_data->Get_volumetric_material_id().size(); imat++) {
+            int matid = m_simulation_data->Get_volumetric_material_id()[imat];
+            if (matid==matid_d) {
+                nvol_el_d ++;
+                break;
+            }
+        }
+    }
+    
+    if (nvol_el_o != nvol_el_d) {
         std::cout << "The geometrical partitions are not the same." << std::endl;
         DebugStop();
     }
     
-    int counter = 0;
     for (long el = 0; el < nel_o; el++) {
         TPZCompEl *cel_o = cmesh_o->Element(el);
         if (!cel_o) {
@@ -198,12 +235,90 @@ void TPZSegregatedAnalysisDFN::AdjustIntegrationOrder(TPZCompMesh * cmesh_o, TPZ
         
         TPZManVector<int64_t,20> indices;
         cel_o->GetMemoryIndices(indices);
+        cel_d->SetFreeIntPtIndices();
         cel_d->SetMemoryIndices(indices);
-        //        cel_d->SetFreeIntPtIndices();
         cel_d->SetIntegrationRule(cloned_rule);
-        //        cel_d->ForcePrepareIntPtIndices();
+    }
+    
+#ifdef PZDEBUG
+    std::ofstream out_geo("Cmesh_origin_adjusted.txt");
+    cmesh_o->Print(out_geo);
+#endif
+    
+    
+#ifdef PZDEBUG
+    std::ofstream out_res("Cmesh_destination_adjusted.txt");
+    cmesh_d->Print(out_res);
+#endif
+    
+}
+
+void TPZSegregatedAnalysisDFN::AdjustFractureIntegrationOrder(TPZCompMesh * cmesh_o, TPZCompMesh * cmesh_d){
+    
+    // Assuming the cmesh_o as directive.
+    
+    cmesh_d->LoadReferences();
+    int nel_o = cmesh_o->NElements();
+    int nel_d = cmesh_d->NElements();
+    
+    int nvol_el_o = 0;
+    int nvol_el_d = 0;
+    
+    for (long el = 0; el < nel_o; el++) {
+        TPZCompEl *cel_o = cmesh_o->Element(el);
+        int matid_o = cel_o->Material()->Id();
+        for (int imat = 0; imat < m_simulation_data->Get_fracture_material_id().size(); imat++) {
+            int matid = m_simulation_data->Get_fracture_material_id()[imat];
+            if (matid==matid_o) {
+                nvol_el_o ++;
+                break;
+            }
+        }
+    }
+    
+    for (long el = 0; el < nel_d; el++) {
+        TPZCompEl *cel_d = cmesh_d->Element(el);
+        int matid_d = cel_d->Material()->Id();
+        for (int imat = 0; imat < m_simulation_data->Get_fracture_material_id().size(); imat++) {
+            int matid = m_simulation_data->Get_fracture_material_id()[imat];
+            if (matid==matid_d) {
+                nvol_el_d ++;
+                break;
+            }
+        }
+    }
+    
+    if (nvol_el_o != nvol_el_d*2) {
+        std::cout << "The geometrical partitions are not the same." << std::endl;
+        DebugStop();
+    }
+    
+    for (long el = 0; el < nel_o; el++) {
+        TPZCompEl *cel_o = cmesh_o->Element(el);
+        if (!cel_o) {
+            continue;
+        }
         
-        counter++;
+        TPZGeoEl * gel = cel_o->Reference();
+        if (!gel) {
+            continue;
+        }
+        
+        // Finding the other computational element
+        TPZCompEl * cel_d = gel->Reference();
+        if (!cel_d) {
+            continue;
+        }
+        cel_o->SetFreeIntPtIndices();
+        cel_o->ForcePrepareIntPtIndices();
+        const TPZIntPoints & rule = cel_o->GetIntegrationRule();
+        TPZIntPoints * cloned_rule = rule.Clone();
+        
+        TPZManVector<int64_t,20> indices;
+        cel_o->GetMemoryIndices(indices);
+        cel_d->SetFreeIntPtIndices();
+        cel_d->SetMemoryIndices(indices);
+        cel_d->SetIntegrationRule(cloned_rule);
     }
     
 #ifdef PZDEBUG

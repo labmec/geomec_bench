@@ -70,7 +70,9 @@ public:
     
     // Adjust integration orders
     void AdjustIntegrationOrder(TPZCompMesh * cmesh_o, TPZCompMesh * cmesh_d);
-    
+
+    // Adjust fracture integration orders
+    void AdjustFractureIntegrationOrder(TPZCompMesh * cmesh_o, TPZCompMesh * cmesh_d);
 };
 
 #endif /* TPZSegregatedAnalysis.h */

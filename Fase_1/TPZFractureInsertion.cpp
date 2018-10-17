@@ -9,6 +9,7 @@
 #include "pzinterpolationspace.h"
 #include "pzintel.h"
 #include "TPZInterfaceEl.h"
+#include "pzcompelwithmem.h"
 #include <pzgeoel.h>
 #include "pzgeoelbc.h"
 
@@ -758,13 +759,17 @@ void TPZFractureInsertion::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLef
                 
                 TPZGeoElBC gbcleft(gelside,matInterfaceLeft);
                 int64_t index;
-                new TPZInterfaceElement(*cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
+                auto elem_left  = new TPZCompElWithMem<TPZInterfaceElement>(*cmesh, gbcleft.CreatedElement(),index);
+                elem_left->SetLeftRightElements(celside, celstack[stack_i]);
+                //new TPZInterfaceElement(*cmesh,gbcleft.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
                 
                 TPZGeoElBC gbcright(gelside,matInterfaceRight);
                 int64_t index;
-                new TPZInterfaceElement(*cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
+                auto elem_right  = new TPZCompElWithMem<TPZInterfaceElement>(*cmesh, gbcright.CreatedElement(),index);
+                elem_right->SetLeftRightElements(celside, celstack[stack_i]);
+                //new TPZInterfaceElement(*cmesh,gbcright.CreatedElement(),index,celside,celstack[stack_i]);
                 
             }else{
                 DebugStop();

@@ -32,28 +32,13 @@ private:
     enum nState { n = 0, nplusone = 1 };
     nState State;
   
-    /** @brief Fluid Viscosity - Pa.s */
-    REAL fmu;
-  
-    /** @brief Fracture height */
-    REAL fheight;
-  
-    /** @brief Reservoir young modulus */
-    REAL fE;
-  
-    /** @brief Reservoir poisson */
-    REAL fnu;
-  
-    /** @brief Confinement Stress */
-    REAL fSigmaConf;
+    /** @brief Solution left */
+    TPZManVector<STATE,3> SolL;
     
-    /** @brief Simulation time step */
-    REAL fDeltaT;
-    
-    /** @brief Simulation current time */
-    REAL fTime;
-    
+    /** @brief Solution right */
+    TPZManVector<STATE,3> SolR;
   
+    
 public:
     
     /** @brief Enum for materials Ids */
@@ -64,43 +49,33 @@ public:
   
     /** @brief Returns the postprocess file for fracture vtk */
     std::string PostProcessFileName();
-  
-    /** @brief Set fluid viscosity. */
-    void SetViscosity(REAL mu){this->fmu = mu;}
-  
-    /** @brief Returns fluid viscosity. */
-    REAL Viscosity() const {return this->fmu;}
-  
-    /**
-     * @brief Fluid viscosity function. \f$ FluidViscosity = Visc( p ) \f$
-     * @param p pressure
-     */
-    void Viscosity(REAL p, REAL &FluidViscosity, REAL &dFluidViscosityDp) const;
-  
-    /** @brief Defines simulation elasticity */
-    void SetE(REAL E){ this->fE = E;}
-  
-    /** @brief Returns simulation elasticity */
-    REAL E() const {return this->fE;}
-  
-    /** @brief Defines simulation poisson */
-    void SetPoisson(REAL nu){ this->fnu = nu;}
-  
-    /** @brief Returns simulation poisson */
-    REAL Poisson() const {return this->fnu;}
-  
-    /** @brief Defines simulation Confinement stress */
-    void SetSigmaConf(REAL SigmaConf){ this->fSigmaConf = SigmaConf;}
-  
-    /** @brief Returns simulation confinement stress */
-    REAL SigmaConf() const {return this->fSigmaConf;}
-    
-    /** @brief Defines simulation time step. */
-    void SetTimeStep(REAL timestep){ this->fDeltaT = timestep;}
-    
-    /** @brief Returns simulation time step. */
-    REAL TimeStep() const {return this->fDeltaT;}
 
+    /** @brief Set left solution. */
+    void SetLeftSol(TPZManVector<STATE,3> solL){this->SolL = solL;}
+    
+    /** @brief Returns left solution. */
+    TPZManVector<STATE,3> LeftSol() const {return this->SolL;}
+
+    /** @brief Set right solution. */
+    void SetRightSol(TPZManVector<STATE,3> solL){this->SolR = solL;}
+    
+    /** @brief Returns right solution. */
+    TPZManVector<STATE,3> RightSol() const {return this->SolR;}
+    
+    /// Class name
+    const std::string Name() const;
+    
+    /// Write class attributes
+    virtual void Write(TPZStream &buf, int withclassid) const;
+    
+    /// Read class attributes
+    virtual void Read(TPZStream &buf, void *context);
+    
+    /// Print class attributes
+    virtual void Print(std::ostream &out = std::cout) const;
+    
+    virtual int ClassId() const;
+    
     
 };
 
