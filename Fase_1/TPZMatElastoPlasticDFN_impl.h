@@ -188,7 +188,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, TP
     plasticloc.ApplyStrainComputeSigma(EpsT, Sigma);
     Sigma.CopyTo(Stress);
     
-    if(TPZMatWithMem<TMEM>::fUpdateMem)
+    if(m_simulation_data->Get_must_accept_solution_Q())
     {
         this->MemItem(intPt).GetSigma_n()        = Sigma;
         this->MemItem(intPt).GetPlasticState_n() = plasticloc.GetState();
@@ -254,7 +254,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
     TPZFNMatrix<6> Stress(6, 1);
     int ptindex = data.intGlobPtIndex;
     
-    if (TPZMatWithMem<TMEM>::fUpdateMem && data.sol.size() > 0) {
+    if (m_simulation_data->Get_must_accept_solution_Q()) {
         // Loop over the solutions if update memory is true
         TPZSolVec locsol(data.sol);
         TPZGradSolVec locdsol(data.dsol);
@@ -476,11 +476,9 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
     int gp_index = data.intGlobPtIndex;
     
     TPZManVector<STATE,3> delta_u    = data.sol[0];
-    TPZManVector<STATE,3> u_n(fDimension,0.0);
-    
-    TPZManVector<STATE,3> u(bc_with_memory.MemItem(gp_index).Getu_n());
+    TPZManVector<STATE,3> u_n(bc_with_memory.MemItem(gp_index).Getu_n());
     for (int i = 0; i < fDimension; i++) {
-        u_n[i] = delta_u[i] + u[i];
+        u_n[i] += delta_u[i];
     }
     
     if (m_simulation_data->Get_must_accept_solution_Q()) {
@@ -502,8 +500,8 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
     switch (bc.Type()) {
         case 0: // Dirichlet condition
             for (in = 0; in < phr; in++) {
-                ef(nstate * in + 0, 0) += BigNumber * (data.sol[0][0]-v2[0]) * phi(in, 0) * weight;
-                ef(nstate * in + 1, 0) += BigNumber * (data.sol[0][1]-v2[1]) * phi(in, 0) * weight;
+                ef(nstate * in + 0, 0) += BigNumber * (u_n[0]-v2[0]) * phi(in, 0) * weight;
+                ef(nstate * in + 1, 0) += BigNumber * (u_n[1]-v2[1]) * phi(in, 0) * weight;
                 
                 for (jn = 0; jn < phr; jn++) {
                     ek(nstate * in + 0, nstate * jn + 0) += BigNumber * phi(in, 0) * phi(jn, 0) * weight;
@@ -525,7 +523,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
             TPZFNMatrix<2, STATE> res(2, 1, 0.);
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
-                    res(i, 0) += bc.Val1()(i, j) * data.sol[0][j];
+                    res(i, 0) += bc.Val1()(i, j) * u_n[j];
                 }
             }
             
@@ -572,7 +570,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
             TPZFNMatrix<2, STATE> res(2, 1, 0.);
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
-                    res(i, 0) += data.normal[i] * bc.Val1()(i, j) * data.sol[0][j] * data.normal[j];
+                    res(i, 0) += data.normal[i] * bc.Val1()(i, j) * u_n[j] * data.normal[j];
                 }
             }
             for (in = 0; in < phi.Rows(); in++) {
@@ -597,7 +595,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
             TPZFNMatrix<2, STATE> res(2, 1, 0.);
             for (int i = 0; i < 2; i++) {
                 for (int j = 0; j < 2; j++) {
-                    res(i, 0) += bc.Val1()(i, j) * data.sol[0][j];
+                    res(i, 0) += bc.Val1()(i, j) * u_n[j];
                 }
             }
             for (in = 0; in < phi.Rows(); in++) {
@@ -632,6 +630,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
 
 template <class T, class TMEM>
 void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ef, TPZBndCond &bc) {
+    
     TPZFMatrix<REAL> ek_fake;
     ek_fake.Resize(ef.Rows(),ef.Rows());
     this->ContributeBC(data, weight, ek_fake, ef, bc);

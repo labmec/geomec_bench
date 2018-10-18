@@ -63,10 +63,6 @@ template <class TMEM>
 void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     
-    long gp_index = data.intGlobPtIndex;
-   // TMEM & memory = this->GetMemory().get()->operator[](gp_index);
-    
-    
     int leftdataindex = -1;
     TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
     for (int i=0; i<dataleft.size(); i++) {
@@ -222,15 +218,6 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
         TPZManVector<STATE,3> vL    = dataleft.sol[0];
         TPZManVector<STATE,3> vR    = dataright.sol[0];
 
-//        if (m_simulation_data->IsInitialStateQ()) {
-//            this->GetMemory().get()->operator[](gp_index).Setp_0(p);
-//            this->GetMemory().get()->operator[](gp_index).Setp_0(p);
-//        }
-
-//        if (m_simulation_data->IsCurrentStateQ()) {
-//            this->GetMemory().get()->operator[](gp_index).SetRightSol_n(vR);
-//            this->GetMemory().get()->operator[](gp_index).SetLeftSol_n(vL);
-//        }else{
         TMEM &mem = this->GetMemory().get()->operator[](gp_index);
         TPZManVector<STATE,3> solL = mem.GetLeftSol();
         TPZManVector<STATE,3> solR = mem.GetRightSol();
@@ -241,40 +228,10 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
         }
         mem.SetLeftSol(solL);
         mem.SetRightSol(solR);
-//        }
 
     }else{
         TPZFMatrix<STATE>  ek_fake(ef.Rows(),ef.Rows(),0.0);
         this->ContributeInterface(data, dataleft, dataright, weight, ek_fake, ef);
-    }
-
-
-    return;
-    
-    
-    TPZFMatrix<REAL> &phiL = dataleft.phi;
-    TPZFMatrix<REAL> &phiR = dataright.phi;
-    
-    int nrowl = phiL.Rows();
-    int nrowr = phiR.Rows();
-    
-    TPZManVector<STATE> vLn    = dataleft.sol[0];
-    TPZManVector<STATE> vRn    = dataright.sol[0];
-    
-    int secondblock = ef.Rows()-phiR.Rows()*fNStateVariables;
- 
-    // 3) phi_I_left, phi_J_right
-    for(int il=0; il<nrowl; il++) {
-            for (int ist=0; ist<fNStateVariables; ist++) {
-                ef(fNStateVariables*il+ist) += weight * fMultiplier * (phiL(il) * vRn[ist]);
-            }
-    }
-
-
-    for(int ir=0; ir<nrowr; ir++) {
-        for (int ist=0; ist<fNStateVariables; ist++) {
-            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phiR(ir) * vLn[ist]);
-        }
     }
     
 }

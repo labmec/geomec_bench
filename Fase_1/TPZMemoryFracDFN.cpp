@@ -11,13 +11,14 @@
 TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryDFN() , TPZElastoPlasticMemoryDFN() {
     m_alpha = 0.5;
     m_uR.resize(3);
-
+    for (int i=0; i<3; i++) {
+        m_uR[i]=0.;
+    }
 }
 
 TPZMemoryFracDFN::TPZMemoryFracDFN(const TPZMemoryFracDFN & other): TPZMonoPhasicMemoryDFN(other), TPZElastoPlasticMemoryDFN(other) {
     m_alpha = other.m_alpha;
     m_uR   = other.m_uR;
-
 }
 
 const TPZMemoryFracDFN & TPZMemoryFracDFN::operator=(const TPZMemoryFracDFN & other) {

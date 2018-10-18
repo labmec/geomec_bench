@@ -10,12 +10,10 @@
 
 TPZMemoryBCDFN::TPZMemoryBCDFN() : TPZMonoPhasicMemoryBCDFN() , TPZElastoPlasticMemoryBCDFN() {
     m_alpha = 0.5;
-
 }
 
 TPZMemoryBCDFN::TPZMemoryBCDFN(const TPZMemoryBCDFN & other): TPZMonoPhasicMemoryBCDFN(other), TPZElastoPlasticMemoryBCDFN(other) {
     m_alpha = other.m_alpha;
-
 }
 
 const TPZMemoryBCDFN & TPZMemoryBCDFN::operator=(const TPZMemoryBCDFN & other) {

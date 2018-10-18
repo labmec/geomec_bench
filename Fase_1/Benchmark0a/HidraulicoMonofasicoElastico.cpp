@@ -553,19 +553,15 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     val2(1,0)= 1;
     
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, null_dir_dirichlet, val1, val2);
-    //TPZMaterial * BCond1 = material->CreateBC(material, fmatBCbott, null_dir_dirichlet, val1, val2);
     val2.Zero();
     val2(1,0)= -1.;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
-    //TPZMaterial * BCond2 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
     val2(0,0)=1;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, null_dir_dirichlet, val1, val2);
-    //TPZMaterial * BCond3 = material->CreateBC(material, fmatBCright, null_dir_dirichlet, val1, val2);
     val2.Zero();
     val2(0,0)=1;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, null_dir_dirichlet, val1, val2);
-    //TPZMaterial * BCond4 = material->CreateBC(material, fmatBCleft, null_dir_dirichlet, val1, val2);
     
     cmesh->InsertMaterialObject(BCond1);
     cmesh->InsertMaterialObject(BCond2);
@@ -602,9 +598,9 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         //    }
         
         // 2 - Criando material para FluxWrap
-//            TPZBndCond * bc_fracture_wrap;
-//            bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
-//            cmesh->InsertMaterialObject(bc_fracture_wrap);
+        //    TPZBndCond * bc_fracture_wrap;
+        //    bc_fracture_wrap = material->CreateBC(material,fmatFluxWrap,fdirichlet,val1,val2);
+        //    cmesh->InsertMaterialObject(bc_fracture_wrap);
         
     }
     
@@ -633,7 +629,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         matids.insert(fmatInterfaceLeft);
     }
     
-//    cmesh->SetAllCreateFunctionsContinuousWithMem();
     cmesh->ApproxSpace().CreateWithMemory(true);// Force the creation of interfaces with memory.
     cmesh->AutoBuild(matids);
     cmesh->AdjustBoundaryElements();
@@ -678,7 +673,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder
         TPZMat1dLin *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZMat1dLin(fmatFrac[i_frac]);
-            //TPZFMatrix<STATE> xkin3(1,1,0.), xcin3(1,1,0.), xbin3(1,,0.), xfin3(1,1,0.);
+
             materialFrac->SetMaterial(xkin, xcin, xbin, xfin);
             cmesh->InsertMaterialObject(materialFrac);
 
@@ -720,7 +715,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_q(TPZGeoMesh *gmesh, int pOrder
     }
     
     cmesh->AutoBuild(matids);
-
 
     if (finsert_fractures_Q) {
         gmesh->ResetReference();
@@ -839,7 +833,6 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     // 1 - Material volumétrico
     TPZDarcy2DMaterialMem<TPZMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMemoryDFN> (fmatID,fdim,1,1);
-    //TPZDarcy2DMaterial *material = new TPZDarcy2DMaterial(fmatID,fdim,1,ftheta); // Simple Darcy's material
     TPZFMatrix<REAL> K(fdim,fdim),invK(fdim,fdim);
     K.Zero();
     invK.Zero();
@@ -861,22 +854,18 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     val1(0,0) = 0.; //botton
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
-    //TPZMaterial * BCond0 = material->CreateBC(material, fmatBCbott, fneumann , val1, val2);
     cmesh->InsertMaterialObject(BCond0);
     
     val1(0,0) = 0.; //top
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
-    //TPZMaterial * BCond1 = material->CreateBC(material, fmatBCtop, fneumann, val1, val2);
     cmesh->InsertMaterialObject(BCond1);
     
     val1(0,0) = Pjusante; // right
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, fdirichlet, val1, val2);
-    //TPZMaterial * BCond2 = material->CreateBC(material, fmatBCright, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond2);
     
     val1(0,0) = Pmontante; // left
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, fdirichlet, val1, val2);
-    //TPZMaterial * BCond3 = material->CreateBC(material, fmatBCleft, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond3);
     val1(0,0) = 0.0;
     
@@ -894,19 +883,14 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             // 2 - Condições de contorno
             val1(0,0) =  Pjusante; // right
             TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fdirichlet, val1, val2);
-            //TPZMaterial * BCond4 = materialFrac->CreateBC(materialFrac, fmatPointRight[i_frac] , fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond4);
 
             val1(0,0) = Pmontante; // left
             TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fdirichlet, val1, val2);
-            //TPZMaterial * BCond5 = materialFrac->CreateBC(materialFrac, fmatPointLeft[i_frac] , fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond5);
         }
         
         // 2 - Material Lagrange nas interfaces
-        
-//        TPZMaterial *MatLagrange = new TPZLagrangeMultiplier(fmatInterface,fdimFrac,1); //
-//        cmesh->InsertMaterialObject(MatLagrange);
         
         TPZLagrangeInterface<TPZInterfaceMemory> *MatLagrange = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterface,fdimFrac,1);
         MatLagrange->SetSimulationData(sim_data);
