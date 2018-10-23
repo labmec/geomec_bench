@@ -14,11 +14,12 @@
 #include "TPZMatWithMem.h"
 #include "tpzautopointer.h"
 #include "TPZMemoryFracDFN.h"
+#include "TPZSimulationData.h"
 
 /// Material which implements a Lagrange Multiplier
 
 template <class TMEM = TPZMemoryFracDFN>
-class TPZMatFractureBB : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
+class TPZMatFractureBB : public TPZMatWithMem<TMEM>
 {
     protected:
     
@@ -30,40 +31,42 @@ class TPZMatFractureBB : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
     
     STATE fMultiplier;
     
+    // Dimensiona associated with the material
+    STATE fFracHsize;
+    
+    /// Pointer of Simulation data
+    TPZSimulationData * m_simulation_data;
+    
+    
     public :
     // Simple constructor
-    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM,
-    TPZDiscontinuousGalerkin >()
+    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM>()
     {
         
     }
     // Constructor with the index of the material object within the vector
-    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM,
-    TPZDiscontinuousGalerkin>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
+    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
-        
+        m_simulation_data = NULL;
     }
     
     // Copy constructor
-    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM,
-    TPZDiscontinuousGalerkin>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
-        
+        m_simulation_data = copy.m_simulation_data;
     }
     
     TPZMatFractureBB &operator=(const TPZMatFractureBB &copy)
     {
-        TPZDiscontinuousGalerkin::operator=(copy);
+        if(&copy == this){
+            return *this;
+        }
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
         return *this;
     }
     
-//    TPZMatFractureBB *NewMaterial()
-//    {
-//        return new TPZMatFractureBB(*this);
-//    }
     
     // Destructor
     ~TPZMatFractureBB()
@@ -72,69 +75,49 @@ class TPZMatFractureBB : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
     }
     
     // Returns the integrable dimension of the material
-    virtual int Dimension() const
+    int Dimension() const
     {
         return fDimension;
     }
     
-    virtual void SetMultiplier(STATE mult)
+    void SetMultiplier(STATE mult)
     {
         fMultiplier = mult;
     }
+
+    void SetFracHSize(STATE fracHsize)
+    {
+        fFracHsize = fracHsize;
+    }
+
     
+    STATE GetFracHSize()
+    {
+        return fFracHsize;
+    }
     
     virtual std::string Name()
     {
         return "TPZMatFractureBB";
     }
     
-    
     // Fill material data parameter with necessary requirements for the ContributeInterface method.
     // Here, in base class, all requirements are considered as necessary. \n
     // Each derived class may optimize performance by selecting only the necessary data.
-    virtual void FillDataRequirementsInterface(TPZMaterialData &data)
+    void FillDataRequirementsInterface(TPZMaterialData &data)
     {
         data.SetAllRequirements(false);
     }
-
-    // Contribute methods
-    virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
+    
+    void Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef);
+    
+    void Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ef);
+    
+    void ContributeBC(TPZMaterialData &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc){
         DebugStop();
     }
     
-    virtual void Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef);
-    
-    virtual void ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc){
-        DebugStop();
-    }
-    
-    virtual void ContributeBCInterface(TPZMaterialData &data, TPZMaterialData &dataleft, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
-        DebugStop();
-    }
-    
-    // It computes a contribution to stiffness matrix and load vector at one integration point
-    virtual void ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
-        DebugStop();
-    }
-    
-    // Computes a contribution to the stiffness matrix and load vector at one integration point to multiphysics simulation
-    virtual void ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
-        DebugStop();
-    }
-    
-    // It computes a contribution to residual vector at one integration point
-    virtual void ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef){
-        DebugStop();
-    }
-    
-    // Computes a contribution to residual vector at one integration point
-    virtual void ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ef)
-    {
-        DebugStop();
-        ContributeInterface(data, dataleft[0], dataright[0], weight, ef);
-    }
-    
-    virtual int NStateVariables()
+    int NStateVariables()
     {
         return fNStateVariables;
     }
@@ -147,17 +130,13 @@ class TPZMatFractureBB : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerkin>
     
 
 public:
-    
-    // Unique identifier for serialization purposes
-    virtual int ClassId() const;
-    
-    
+
     // Saves the element data to a stream
-    virtual void Write(TPZStream &buf, int withclassid) const;
+    void Write(TPZStream &buf, int withclassid);
     
     
     // Reads the element data from a stream
-    virtual void Read(TPZStream &buf, void *context);
+    void Read(TPZStream &buf, void *context);
     
 
 };

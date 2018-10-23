@@ -10,17 +10,17 @@
 #define TPZMemoryFracDFN_h
 
 #include <stdio.h>
-#include "TPZElastoPlasticMemoryDFN.h"
-#include "TPZMonoPhasicMemoryDFN.h"
+#include "TPZElastoPlasticMemoryFracDFN.h"
+#include "TPZMonoPhasicMemoryFracDFN.h"
 
-class TPZMemoryFracDFN : public TPZMonoPhasicMemoryDFN, public TPZElastoPlasticMemoryDFN {
+class TPZMemoryFracDFN : public TPZMonoPhasicMemoryFracDFN, public TPZElastoPlasticMemoryFracDFN {
     
 private:
     
     /// Biot-Willis coefficient
     REAL m_alpha;
     
-    /// Relative displacement
+    /// Relative displacement (fracture oppening)
     TPZManVector<REAL,3> m_uR;
     
 public:

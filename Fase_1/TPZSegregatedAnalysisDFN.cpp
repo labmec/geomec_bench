@@ -33,7 +33,7 @@ void TPZSegregatedAnalysisDFN::ApplyFracMemoryLink(int frac_matid){
         DebugStop();
     }
 
-    TPZMatWithMem<TPZMemoryFracDFN,TPZDiscontinuousGalerkin> * matfrac_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN,TPZDiscontinuousGalerkin> * >(frac_material_elastoplast);
+    TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_elastoplast);
     TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_darcy);
     
     if(matfrac_with_memory_darcy->GetMemory()->NElements() != matfrac_with_memory_elastoplast->GetMemory()->NElements())

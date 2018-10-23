@@ -8,7 +8,7 @@
 #include "TPZMemoryFracDFN.h"
 
 
-TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryDFN() , TPZElastoPlasticMemoryDFN() {
+TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryFracDFN() , TPZElastoPlasticMemoryFracDFN() {
     m_alpha = 0.5;
     m_uR.resize(3);
     for (int i=0; i<3; i++) {
@@ -16,7 +16,7 @@ TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryDFN() , TPZElastoPlast
     }
 }
 
-TPZMemoryFracDFN::TPZMemoryFracDFN(const TPZMemoryFracDFN & other): TPZMonoPhasicMemoryDFN(other), TPZElastoPlasticMemoryDFN(other) {
+TPZMemoryFracDFN::TPZMemoryFracDFN(const TPZMemoryFracDFN & other): TPZMonoPhasicMemoryFracDFN(other), TPZElastoPlasticMemoryFracDFN(other) {
     m_alpha = other.m_alpha;
     m_uR   = other.m_uR;
 }
@@ -43,19 +43,19 @@ const std::string TPZMemoryFracDFN::Name() const {
 }
 
 void TPZMemoryFracDFN::Write(TPZStream &buf, int withclassid) const {
-    TPZMonoPhasicMemoryDFN::Write(buf, withclassid);
-    TPZElastoPlasticMemoryDFN::Write(buf, withclassid);
+    TPZMonoPhasicMemoryFracDFN::Write(buf, withclassid);
+    TPZElastoPlasticMemoryFracDFN::Write(buf, withclassid);
 
 }
 
 void TPZMemoryFracDFN::Read(TPZStream &buf, void *context){
-    TPZMonoPhasicMemoryDFN::Read(buf, context);
-    TPZElastoPlasticMemoryDFN::Read(buf, context);
+    TPZMonoPhasicMemoryFracDFN::Read(buf, context);
+    TPZElastoPlasticMemoryFracDFN::Read(buf, context);
 }
 
 void TPZMemoryFracDFN::Print(std::ostream &out) const {
-    TPZMonoPhasicMemoryDFN::Print(out);
-    TPZElastoPlasticMemoryDFN::Print(out);
+    TPZMonoPhasicMemoryFracDFN::Print(out);
+    TPZElastoPlasticMemoryFracDFN::Print(out);
 }
 
 int TPZMemoryFracDFN::ClassId() const {

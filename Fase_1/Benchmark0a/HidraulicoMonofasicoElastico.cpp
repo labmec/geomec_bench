@@ -296,7 +296,8 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     
     TPZStack<std::string> var_names_darcy;
     var_names_darcy.Push("P");
-  //  var_names_darcy.Push("V");
+    var_names_darcy.Push("Vx");
+    var_names_darcy.Push("Vy");
     
     TPZStack<std::string> var_names_elastoplast;
     var_names_elastoplast.Push("sxx");

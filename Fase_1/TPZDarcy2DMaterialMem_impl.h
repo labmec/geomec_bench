@@ -194,6 +194,8 @@ int TPZDarcy2DMaterialMem<TMEM>::VariableIndex(const std::string &name) {
     if (!strcmp("f", name.c_str()))         return 2;
     if (!strcmp("V_exact", name.c_str()))   return 3;
     if (!strcmp("P_exact", name.c_str()))   return 4;
+    if (!strcmp("Vx", name.c_str()))   return 5;
+    if (!strcmp("Vy", name.c_str()))   return 6;
     //    if (!strcmp("V_exactBC", name.c_str()))   return 5;
     
     std::cout  << " Var index not implemented " << std::endl;
@@ -218,6 +220,10 @@ int TPZDarcy2DMaterialMem<TMEM>::NSolutionVariables(int var) {
             return this->Dimension(); // V_exact, Vector
         case 4:
             return 1; // P_exact, Scalar
+        case 5:
+            return 1; // V_x, Scalar
+        case 6:
+            return 1; // V_y, Scalar
             
         default:
         {
@@ -292,7 +298,21 @@ void TPZDarcy2DMaterialMem<TMEM>::Solution(TPZVec<TPZMaterialData> &datavec, int
             
         }
             break;
+         
+        case 5: //Velocity X
+        {
+            Solout[0] = v_h[0]; // Vx
             
+        }
+
+            break;
+            
+        case 6: //Velocity Y
+        {
+            Solout[0] = v_h[1]; // Vy
+        }
+            
+            break;
             
         default:
         {
