@@ -1,14 +1,14 @@
 //
-//  TPZMatElastoPlasticAnalysis.hpp
+//  TPZPoroElastoPlasticAnalysis.hpp
 //  Benchmark0a
 //
 //  Created by Pablo Carvalho on 14/09/18.
 //
 
 
-#include "TPZMatElastoPlasticAnalysis.h"
+#include "TPZPoroElastoPlasticAnalysis.h"
 
-TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis() : TPZAnalysis(){
+TPZPoroElastoPlasticAnalysis::TPZPoroElastoPlasticAnalysis() : TPZAnalysis(){
     
     m_simulation_data = NULL;
     m_X_n.Resize(0, 0);
@@ -21,11 +21,11 @@ TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis() : TPZAnalysis(){
     
 }
 
-TPZMatElastoPlasticAnalysis::~TPZMatElastoPlasticAnalysis(){
+TPZPoroElastoPlasticAnalysis::~TPZPoroElastoPlasticAnalysis(){
     
 }
 
-TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis(const TPZMatElastoPlasticAnalysis & other){
+TPZPoroElastoPlasticAnalysis::TPZPoroElastoPlasticAnalysis(const TPZPoroElastoPlasticAnalysis & other){
     
     m_simulation_data   = other.m_simulation_data;
     m_X_n               = other.m_X_n;
@@ -38,7 +38,7 @@ TPZMatElastoPlasticAnalysis::TPZMatElastoPlasticAnalysis(const TPZMatElastoPlast
     
 }
 
-void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZSimulationData * simulation_data){
+void TPZPoroElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZSimulationData * simulation_data){
     SetSimulationData(simulation_data);
     TPZStepSolver<STATE> step;
     unsigned int number_threads = m_simulation_data->Get_n_threads();
@@ -111,7 +111,7 @@ void TPZMatElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositio
     
 }
 
-void TPZMatElastoPlasticAnalysis::ExecuteNewtonInteration(){
+void TPZPoroElastoPlasticAnalysis::ExecuteNewtonInteration(){
     this->Assemble();
     this->Rhs() *= -1.0;
     {
@@ -125,7 +125,7 @@ void TPZMatElastoPlasticAnalysis::ExecuteNewtonInteration(){
     }
 }
 
-void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
+void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q){
     
     if (m_simulation_data->IsInitialStateQ()) {
         m_X = Solution();
@@ -162,9 +162,9 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
         
         if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
-            std::cout << "TPZMatElastoPlasticAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
-            std::cout << "TPZMatElastoPlasticAnalysis:: Number of iterations = " << i << std::endl;
-            std::cout << "TPZMatElastoPlasticAnalysis:: Correction norm = " << norm_dx << std::endl;
+            std::cout << "TPZPoroElastoPlasticAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
+            std::cout << "TPZPoroElastoPlasticAnalysis:: Number of iterations = " << i << std::endl;
+            std::cout << "TPZPoroElastoPlasticAnalysis:: Correction norm = " << norm_dx << std::endl;
 #endif
             this->AcceptPseudoTimeStepSolution();
 #ifdef PZDEBUG
@@ -183,19 +183,19 @@ void TPZMatElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_Q
     }
     
     if (residual_stop_criterion_Q == false) {
-        std::cout << "TPZMatElastoPlasticAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
+        std::cout << "TPZPoroElastoPlasticAnalysis:: Nonlinear process not converged with residue norm = " << norm_res << std::endl;
     }
     
 }
 
-void TPZMatElastoPlasticAnalysis::UpdateState(){
+void TPZPoroElastoPlasticAnalysis::UpdateState(){
     m_simulation_data->SetTransferCurrentToLastQ(true);
     AcceptPseudoTimeStepSolution();
     m_simulation_data->SetTransferCurrentToLastQ(false);
 }
 
 
-void TPZMatElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
+void TPZPoroElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
     
     int dim = Mesh()->Dimension();
     int div = 0;
@@ -205,7 +205,7 @@ void TPZMatElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
     m_post_processor->PostProcess(div,dim);
 }
 
-void TPZMatElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
+void TPZPoroElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 
     SetUpdateMemmory(true);
     AssembleResidual();
@@ -225,18 +225,18 @@ void TPZMatElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 }
 
 
-void TPZMatElastoPlasticAnalysis::LoadCurrentState(){
+void TPZPoroElastoPlasticAnalysis::LoadCurrentState(){
     LoadSolution(m_X_n);
     DebugStop();
 }
 
-void TPZMatElastoPlasticAnalysis::LoadLastState(){
+void TPZPoroElastoPlasticAnalysis::LoadLastState(){
     LoadSolution(m_X);
     DebugStop();
 }
 
 
-void TPZMatElastoPlasticAnalysis::SetUpdateMemmory(bool accept_solution_Q){
+void TPZPoroElastoPlasticAnalysis::SetUpdateMemmory(bool accept_solution_Q){
 
     m_simulation_data->Set_must_accept_solution_Q(accept_solution_Q);
     std::map<int, TPZMaterial * >::iterator mit;

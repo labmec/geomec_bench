@@ -88,9 +88,8 @@ protected:
     
     /** @brief Material and boundaries identifiers sorted per region */
     TPZManVector<std::pair<int, TPZManVector<int,12>>,12> m_mat_ids;
-    
+
 public:
-    
     
     /** @brief default constructor */
     TPZSimulationData();

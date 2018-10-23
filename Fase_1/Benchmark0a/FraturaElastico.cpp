@@ -65,7 +65,7 @@
 #include "TPZGmshReader.h"
 #include "../TPZMonoPhasicMemoryDFN.h"
 #include "../TPZElastoPlasticMemoryDFN.h"
-#include "../TPZMatElastoPlasticDFN_impl.h"
+#include "../TPZPoroElastoPlasticDFN_impl.h"
 
 #define TRIANGLEMESH
 
@@ -570,10 +570,10 @@ TPZCompMesh *FraturaElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     //REAL E = 0;
     //REAL poisson = 0;
     
-    //TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
-    TPZMatElastoPlasticDFN<TPZElasticCriterion,TPZElastoPlasticMemoryDFN> *material;
+    //TPZPoroElastoPlasticDFN<TPZElasticCriterion , TPZPoroElastoPlasticMem> *material;
+    TPZPoroElastoPlasticDFN<TPZElasticCriterion,TPZMemoryDFN> *material;
     //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
-    material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZElastoPlasticMemoryDFN> (fmatID,fdim);
+    material = new TPZPoroElastoPlasticDFN<TPZElasticCriterion , TPZMemoryDFN> (fmatID,fdim);
     TPZElasticCriterion obj ;
     
     TPZElasticResponse er;

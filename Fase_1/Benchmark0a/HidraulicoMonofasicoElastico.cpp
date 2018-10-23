@@ -73,8 +73,9 @@
 #include "../TPZElastoPlasticMemoryDFN.h"
 #include "../TPZMonoPhasicMemoryBCDFN.h"
 #include "../TPZElastoPlasticMemoryBCDFN.h"
-#include "../TPZMatElastoPlasticDFN_impl.h"
+#include "../TPZPoroElastoPlasticDFN_impl.h"
 #include "../TPZMemoryBCDFN.h"
+#include "../TPZMemoryDFN.h"
 
 #define TRIANGLEMESH
 
@@ -221,18 +222,10 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     }
     simulation_data->Set_n_threads(0);
     simulation_data->Set_epsilon_res(0.001);
-    simulation_data->Set_epsilon_cor(0.6);
+    simulation_data->Set_epsilon_cor(0.001);
     simulation_data->Set_n_iterations(1);
     
     RunningPoroElasticity(gmesh, pOrder, simulation_data);
-
-#ifdef PZDEBUG
-    //Imprimir Matriz de rigidez Global:
-//        std::ofstream filestiff("stiffness.txt");
-//        an.Solver().Matrix()->Print("K1 = ",filestiff,EMathematicaInput);
-//        std::ofstream filerhs("rhs.txt");
-//        an.Rhs().Print("Rhs = ",filerhs,EMathematicaInput);
-#endif
 
 
 }
@@ -241,20 +234,6 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     
     //Malha com formulação elástica:
     TPZCompMesh *cmesh_E = CMesh_E(gmesh, pOrder,simulation_data);
-    
-//    {
-////        cmesh_E->LoadReferences();
-//        long nel = cmesh_E->NElements();
-//
-//        TPZVec<long> indices;
-//        for (long el = 0; el<nel; el++) {
-//            TPZCompEl *cel = cmesh_E->Element(el);
-//            if (!cel) {
-//                continue;
-//            }
-//            cel->PrepareIntPtIndices();
-//        }
-//    }
     
     if (finsert_fractures_Q) {
         
@@ -534,15 +513,16 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     //REAL E = 0;
     //REAL poisson = 0;
     
-    TPZMatElastoPlasticDFN<TPZElasticCriterion,TPZMemoryDFN> *material;
+    TPZPoroElastoPlasticDFN<TPZElasticCriterion,TPZMemoryDFN> *material;
     //material = new TPZElasticityMaterial(fmatID, fEyoung, fpoisson, ffx, ffy, planestress);
-    material = new TPZMatElastoPlasticDFN<TPZElasticCriterion , TPZMemoryDFN> (fmatID,fdim);
+    material = new TPZPoroElastoPlasticDFN<TPZElasticCriterion , TPZMemoryDFN> (fmatID,fdim);
     TPZElasticCriterion obj;
     
     TPZElasticResponse er;
     er.SetUp(fEyoung,fpoisson);
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
+    material->SetAlpha(1.);
     material->SetSimulationData(sim_data);
     cmesh->InsertMaterialObject(material);
     

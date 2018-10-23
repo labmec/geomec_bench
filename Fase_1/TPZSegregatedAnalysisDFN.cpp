@@ -88,7 +88,7 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     m_simulation_data = simulation_data;
     
     // The Geomechanics Simulator
-    m_elastoplast_analysis = new TPZMatElastoPlasticAnalysis;
+    m_elastoplast_analysis = new TPZPoroElastoPlasticAnalysis;
     m_elastoplast_analysis->SetCompMesh(cmesh_E,mustOptimizeBandwidth);
     m_elastoplast_analysis->ConfigurateAnalysis(decompose_E, m_simulation_data);
     

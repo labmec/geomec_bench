@@ -1,12 +1,12 @@
 //
-//  TPZMatElastoPlasticDFN_impl.h
+//  TPZPoroElastoPlasticDFN_impl.h
 //  Benchmark0a
 //
 //  Created by Omar Durán on 9/18/18.
 //
 
 
-#include "TPZMatElastoPlasticDFN.h"
+#include "TPZPoroElastoPlasticDFN.h"
 #include "pzlog.h"
 #include "pzbndcond.h"
 
@@ -18,7 +18,7 @@ static LoggerPtr ceckconvlogger(Logger::getLogger("checkconvmaterial"));
 #endif
 
 template <class T, class TMEM>
-TPZMatElastoPlasticDFN<T,TMEM>::TPZMatElastoPlasticDFN() : TPZMatWithMem<TMEM>(), fForce(), fRhoB(0), fPostProcessDirection(), fTol(1.e-6)
+TPZPoroElastoPlasticDFN<T,TMEM>::TPZPoroElastoPlasticDFN() : TPZMatWithMem<TMEM>(), fForce(), fRhoB(0), fPostProcessDirection(), fTol(1.e-6), fAlpha(0)
 {
     fForce.Resize(3,0);
     fForce[1] = 0.; // proper gravity acceleration in m/s^2
@@ -38,7 +38,7 @@ TPZMatElastoPlasticDFN<T,TMEM>::TPZMatElastoPlasticDFN() : TPZMatWithMem<TMEM>()
 }
 
 template <class T, class TMEM>
-TPZMatElastoPlasticDFN<T,TMEM>::TPZMatElastoPlasticDFN(int id, int dim) : TPZMatWithMem<TMEM>(id), fForce(), fRhoB(0), fPostProcessDirection(), fTol(1.e-6)
+TPZPoroElastoPlasticDFN<T,TMEM>::TPZPoroElastoPlasticDFN(int id, int dim) : TPZMatWithMem<TMEM>(id), fForce(), fRhoB(0), fPostProcessDirection(), fTol(1.e-6), fAlpha(0)
 {
     fForce.Resize(3,0);
     fForce[1] = 0.; // proper gravity acceleration in m/s^2 -> 1=y 0=x 2=z
@@ -65,9 +65,9 @@ TPZMatElastoPlasticDFN<T,TMEM>::TPZMatElastoPlasticDFN(int id, int dim) : TPZMat
 }
 
 template <class T, class TMEM>
-TPZMatElastoPlasticDFN<T,TMEM>::TPZMatElastoPlasticDFN(const TPZMatElastoPlasticDFN &mat) : TPZMatWithMem<TMEM>(mat),
+TPZPoroElastoPlasticDFN<T,TMEM>::TPZPoroElastoPlasticDFN(const TPZPoroElastoPlasticDFN &mat) : TPZMatWithMem<TMEM>(mat),
 fForce(mat.fForce), fRhoB(mat.fRhoB), fPostProcessDirection(mat.fPostProcessDirection),
-fPlasticity(mat.fPlasticity), fTol(mat.fTol)
+fPlasticity(mat.fPlasticity), fTol(mat.fTol), fAlpha(mat.fAlpha)
 {
     m_simulation_data       = mat.m_simulation_data;
     
@@ -83,7 +83,7 @@ fPlasticity(mat.fPlasticity), fTol(mat.fTol)
 
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
+void TPZPoroElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
 {
 #ifdef LOG4CXX
     if(elastoplasticLogger->isDebugEnabled())
@@ -125,25 +125,25 @@ void TPZMatElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
 
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::SetBulkDensity(REAL & RhoB)
+void TPZPoroElastoPlasticDFN<T,TMEM>::SetBulkDensity(REAL & RhoB)
 {
     fRhoB = RhoB;
 }
 
 template <class T, class TMEM>
-TPZMatElastoPlasticDFN<T,TMEM>::~TPZMatElastoPlasticDFN()
+TPZPoroElastoPlasticDFN<T,TMEM>::~TPZPoroElastoPlasticDFN()
 {
     
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::SetSimulationData(TPZSimulationData * simulation_data){
+void TPZPoroElastoPlasticDFN<T,TMEM>::SetSimulationData(TPZSimulationData * simulation_data){
     m_simulation_data = simulation_data;
 }
 
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::Print(std::ostream &out, const int memory)
+void TPZPoroElastoPlasticDFN<T,TMEM>::Print(std::ostream &out, const int memory)
 {
     out << this->Name();
     out << "\n with template argurment T = " << fPlasticity.Name();
@@ -158,7 +158,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::Print(std::ostream &out, const int memory)
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::Print(std::ostream &out)
+void TPZPoroElastoPlasticDFN<T,TMEM>::Print(std::ostream &out)
 {
     out << this->Name();
     out << "\n with template argurment T = " << fPlasticity.Name();
@@ -171,7 +171,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::Print(std::ostream &out)
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, TPZFMatrix<REAL> & DeltaStrain,TPZFMatrix<REAL> & Stress)
+void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, TPZFMatrix<REAL> & DeltaStrain,TPZFMatrix<REAL> & Stress)
 {
     
     int intPt = data.intGlobPtIndex;
@@ -204,7 +204,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, TP
 
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData & data, TPZFMatrix<REAL> & DeltaStrain,TPZFMatrix<REAL> & Stress, TPZFMatrix<REAL> & Dep)
+void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData & data, TPZFMatrix<REAL> & DeltaStrain,TPZFMatrix<REAL> & Stress, TPZFMatrix<REAL> & Dep)
 {
 
     int intPt = data.intGlobPtIndex;
@@ -237,7 +237,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData 
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ek, TPZFMatrix<REAL> &ef) {
+void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ek, TPZFMatrix<REAL> &ef) {
     
     TPZFMatrix<REAL> &dphi = data.dphix, dphiXY;
     TPZFMatrix<REAL> &phi = data.phi;
@@ -246,7 +246,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
     axes.Transpose(&axesT);
     axesT.Multiply(dphi, dphiXY);
     
-    const int phr = phi.Rows();
+    const int nphi_u = phi.Rows();
     
     TPZFNMatrix<4> Deriv(2, 2);
     TPZFNMatrix<36> Dep(6, 6,0.0);
@@ -311,9 +311,37 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
         this->fForcingFunction->Execute(data.x, ForceLoc);
     }
     
+    long gp_index = data.intGlobPtIndex;
+    TMEM & memory = this->GetMemory().get()->operator[](gp_index);
+    STATE p = memory.p_n();
+    //REAL alpha = memory.GetAlpha();
+
+    
+    // Computing Gradient of the Solution
+    TPZFNMatrix<6,REAL> Grad_phi_i(2,1,0.0),Grad_phi_j(2,1,0.0);
+    TPZFNMatrix<6,REAL> Grad_vx_i(2,1,0.0);
+    TPZFNMatrix<6,REAL> Grad_vy_i(2,1,0.0);
+    
+    TPZFNMatrix<6,REAL> Grad_v(2,2,0.0);
+    TPZFNMatrix<6,REAL> Grad_vx_j(2,1,0.0);
+    TPZFNMatrix<6,REAL> Grad_vy_j(2,1,0.0);
+    
+    
     int in;
-    for (in = 0; in < phr; in++) {
+    for (in = 0; in < nphi_u; in++) {
         
+        // Coupling (Biot) :
+        // Computing Gradient of the test function for each component
+        Grad_vx_i(0,0) = dphi(0,in)*axes(0,0)+dphi(1,in)*axes(1,0); // dvx/dx
+        Grad_vx_i(1,0) = dphi(0,in)*axes(0,1)+dphi(1,in)*axes(1,1); // dvx/dy
+        
+        Grad_vy_i(0,0) = dphi(0,in)*axes(0,0)+dphi(1,in)*axes(1,0); // dvy/dx
+        Grad_vy_i(1,0) = dphi(0,in)*axes(0,1)+dphi(1,in)*axes(1,1); // dvy/dy
+        
+        ef(in * nstate + 0,0) += (-1.)* weight * fAlpha * p * Grad_vx_i(0,0);
+        ef(in * nstate + 1,0) += (-1.)* weight * fAlpha * p * Grad_vy_i(1,0);
+        
+        // Elasticity :
         val = ForceLoc[0] * phi(in, 0);
         val += Stress(_XX_, 0) * dphiXY(0, in);
         val += Stress(_XY_, 0) * dphiXY(1, in);
@@ -324,7 +352,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
         val += Stress(_YY_, 0) * dphiXY(1, in);
         ef(in * nstate + 1, 0) += weight * val;
         
-        for (int jn = 0; jn < phr; jn++) {
+        for (int jn = 0; jn < nphi_u; jn++) {
             for (int ud = 0; ud < 2; ud++) {
                 for (int vd = 0; vd < 2; vd++) {
                     Deriv(vd, ud) = dphiXY(vd, in) * dphiXY(ud, jn);
@@ -373,104 +401,16 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL wei
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ef) {
-    TPZFMatrix<REAL> &dphi = data.dphix;
-    TPZFMatrix<REAL> &phi = data.phi;
-    TPZFMatrix<REAL> &axes = data.axes;
-    TPZFNMatrix<9, REAL> axesT;
-    TPZFNMatrix<50, REAL> dphiXY;
-    
-    axes.Transpose(&axesT);
-    axesT.Multiply(dphi, dphiXY);
-    
-    const int phr = phi.Rows();
-    
-    //TPZFNMatrix<36> Deriv(6, 6);
-    TPZFNMatrix<6> DeltaStrain(6, 1);
-    TPZFNMatrix<6> Stress(6, 1);
-    int ptindex = data.intGlobPtIndex;
-    
-    if (m_simulation_data->Get_must_accept_solution_Q()) {
-        // Loop over the solutions if update memory is true
-        //TPZFNMatrix<9> Dep(3, 3);
-        
-        TPZSolVec locsol(data.sol);
-        TPZGradSolVec locdsol(data.dsol);
-        int numsol = locsol.size();
-        
-        for (int is = 0; is < numsol; is++) {
-            data.sol[0] = locsol[is];
-            data.dsol[0] = locdsol[is];
-            
-            this->ComputeDeltaStrainVector(data, DeltaStrain);
-            this->ApplyDeltaStrain(data, DeltaStrain, Stress);
-            //this->ApplyDeltaStrainComputeDep(data, DeltaStrain, Stress, Dep);
-        }
-    } else {
-        this->ComputeDeltaStrainVector(data, DeltaStrain);
-        this->ApplyDeltaStrain(data, DeltaStrain, Stress);
-        //        this->ApplyDeltaStrainComputeDep(data, DeltaStrain, Stress, Dep);
-    }
-#ifdef MACOS
-    feclearexcept(FE_ALL_EXCEPT);
-    if (fetestexcept(/*FE_DIVBYZERO*/ FE_ALL_EXCEPT)) {
-        std::cout << "division by zero reported\n";
-        DebugStop();
-    }
-#endif
-    
-#ifdef LOG4CXX
-    if (elastoplasticLogger->isDebugEnabled()) {
-        std::stringstream sout;
-        sout << ">>> TPZMatElastoPlastic<T,TMEM>::Contribute ***";
-        sout << "\nIntegration Local Point index = " << data.intLocPtIndex;
-        sout << "\nIntegration Global Point index = " << data.intGlobPtIndex;
-        sout << "\ndata.axes = " << data.axes;
-        sout << "\nStress " << endl;
-        sout << Stress(_XX_, 0) << "\t" << Stress(_YY_, 0) << "\t" << Stress(_XY_, 0) << "\n";
-        sout << "\nDELTA STRAIN " << endl;
-        sout << DeltaStrain(0, 0) << "\t" << DeltaStrain(1, 0) << "\t" << DeltaStrain(2, 0) << "\n";
-        sout << "data.phi" << data.phi;
-        
-        LOGPZ_DEBUG(elastoplasticLogger, sout.str().c_str());
-    }
-#endif
-    ptindex = 0;
-    int nstate = NStateVariables();
-    REAL val;
-    
-    TPZManVector<STATE, 3> ForceLoc(this->fForce);
-    if (this->fForcingFunction) {
-        this->fForcingFunction->Execute(data.x, ForceLoc);
-    }
-    
-    int in;
-    for (in = 0; in < phr; in++) {
-        val = ForceLoc[0] * phi(in, 0);
-        val += Stress(_XX_, 0) * dphiXY(0, in);
-        val += Stress(_XY_, 0) * dphiXY(1, in);
-        ef(in * nstate + 0, 0) += weight * val;
-        
-        val = ForceLoc[1] * phi(in, 0);
-        val += Stress(_XY_, 0) * dphiXY(0, in);
-        val += Stress(_YY_, 0) * dphiXY(1, in);
-        ef(in * nstate + 1, 0) += weight * val;
-    }
-    
-    
-#ifdef LOG4CXX
-    if (elastoplasticLogger->isDebugEnabled()) {
-        std::stringstream sout;
-        sout << "<<< TPZMatElastoPlastic2D<T,TMEM>::Contribute ***";
-        sout << " Resultant rhs vector:\n" << ef;
-        LOGPZ_DEBUG(elastoplasticLogger, sout.str().c_str());
-    }
-#endif
+void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ef) {
+
+    TPZFMatrix<REAL> ek_fake;
+    ek_fake.Resize(ef.Rows(),ef.Rows());
+    this->Contribute(data, weight, ek_fake, ef);
     
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ek, TPZFMatrix<REAL> &ef, TPZBndCond &bc) {
+void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<REAL> &ek, TPZFMatrix<REAL> &ef, TPZBndCond &bc) {
   
     TPZBndCondWithMem<TPZMemoryBCDFN> & bc_with_memory = dynamic_cast<TPZBndCondWithMem<TPZMemoryBCDFN> &>(bc);
     int gp_index = data.intGlobPtIndex;
@@ -629,7 +569,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ef, TPZBndCond &bc) {
+void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ef, TPZBndCond &bc) {
     
     TPZFMatrix<REAL> ek_fake;
     ek_fake.Resize(ef.Rows(),ef.Rows());
@@ -639,7 +579,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL w
 
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::Solution(TPZMaterialData &data, int var, TPZVec<REAL> &Solout)
+void TPZPoroElastoPlasticDFN<T,TMEM>::Solution(TPZMaterialData &data, int var, TPZVec<REAL> &Solout)
 {
  
     long gp_index = data.intGlobPtIndex;
@@ -767,7 +707,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::Solution(TPZMaterialData &data, int var, TP
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::ComputeDeltaStrainVector(TPZMaterialData & data, TPZFMatrix<REAL> &DeltaStrain) {
+void TPZPoroElastoPlasticDFN<T, TMEM>::ComputeDeltaStrainVector(TPZMaterialData & data, TPZFMatrix<REAL> &DeltaStrain) {
     TPZFNMatrix<9> DSolXYZ(3, 3, 0.);
     data.axes.Multiply(data.dsol[0], DSolXYZ, 1/*transpose*/);
     if (DeltaStrain.Rows() != 6) {
@@ -783,7 +723,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::ComputeDeltaStrainVector(TPZMaterialData &
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::EigenValues(TPZFMatrix<REAL> & vectorTensor, TPZVec<REAL> & ev)
+void TPZPoroElastoPlasticDFN<T,TMEM>::EigenValues(TPZFMatrix<REAL> & vectorTensor, TPZVec<REAL> & ev)
 {
     TPZFNMatrix<9> Tensor(3,3);
     ev.Resize(3);
@@ -797,7 +737,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::EigenValues(TPZFMatrix<REAL> & vectorTensor
 #ifdef LOG4CXX
         {
             std::stringstream sout;
-            sout << "<<< TPZMatElastoPlasticDFN<T,TMEM>::EigenValues *** not solved within " << numiterations << " iterations";
+            sout << "<<< TPZPoroElastoPlasticDFN<T,TMEM>::EigenValues *** not solved within " << numiterations << " iterations";
             sout << "\n vectorTensor = " << vectorTensor;
             LOGPZ_ERROR(elastoplasticLogger,sout.str().c_str());
         }
@@ -809,7 +749,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::EigenValues(TPZFMatrix<REAL> & vectorTensor
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::EigenVectors(TPZFMatrix<REAL> &vectorTensor, TPZVec< REAL > &Solout, int direction)
+void TPZPoroElastoPlasticDFN<T,TMEM>::EigenVectors(TPZFMatrix<REAL> &vectorTensor, TPZVec< REAL > &Solout, int direction)
 {
     TPZFNMatrix<9> Tensor(3,3);
     this->vectorToTensor(vectorTensor, Tensor);
@@ -825,7 +765,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::EigenVectors(TPZFMatrix<REAL> &vectorTensor
 #ifdef LOG4CXX
         {
             std::stringstream sout;
-            sout << "<<< TPZMatElastoPlasticDFN<T,TMEM>::EigenVectors *** not solved within " << numiterations << " iterations";
+            sout << "<<< TPZPoroElastoPlasticDFN<T,TMEM>::EigenVectors *** not solved within " << numiterations << " iterations";
             sout << "\n vectorTensor = " << vectorTensor;
             LOGPZ_ERROR(elastoplasticLogger,sout.str().c_str());
         }
@@ -839,12 +779,12 @@ void TPZMatElastoPlasticDFN<T,TMEM>::EigenVectors(TPZFMatrix<REAL> &vectorTensor
 }
 
 template <class T, class TMEM>
-TPZMaterial * TPZMatElastoPlasticDFN<T,TMEM>::NewMaterial()
+TPZMaterial * TPZPoroElastoPlasticDFN<T,TMEM>::NewMaterial()
 {
-    return new TPZMatElastoPlasticDFN<T,TMEM>(*this);
+    return new TPZPoroElastoPlasticDFN<T,TMEM>(*this);
 }
 /*
- void TPZMatElastoPlasticDFN::SetData(std::istream &data)
+ void TPZPoroElastoPlasticDFN::SetData(std::istream &data)
  {
  TPZMaterial::SetData(data);
  data >> fDeltaT; // to be removed in the elastoplastic material and readded to the poroelastoplastic material
@@ -855,12 +795,12 @@ TPZMaterial * TPZMatElastoPlasticDFN<T,TMEM>::NewMaterial()
 #include "TPZYCMohrCoulombPV.h"
 
 template <class T, class TMEM>
-std::string TPZMatElastoPlasticDFN<T,TMEM>::Name() {
-    return "TPZMatElastoPlasticDFN<T,TMEM>";
+std::string TPZPoroElastoPlasticDFN<T,TMEM>::Name() {
+    return "TPZPoroElastoPlasticDFN<T,TMEM>";
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::Write(TPZStream &buf, int withclassid) const {
+void TPZPoroElastoPlasticDFN<T, TMEM>::Write(TPZStream &buf, int withclassid) const {
     TPZMatWithMem<TMEM>::Write(buf, withclassid);
     
     buf.Write(&fForce[0], 3);
@@ -870,7 +810,7 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Write(TPZStream &buf, int withclassid) con
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T, TMEM>::Read(TPZStream &buf, void *context) {
+void TPZPoroElastoPlasticDFN<T, TMEM>::Read(TPZStream &buf, void *context) {
     //    TPZSavable::Read(buf, context);
     
     TPZMatWithMem<TMEM>::Read(buf, context);
@@ -882,19 +822,19 @@ void TPZMatElastoPlasticDFN<T, TMEM>::Read(TPZStream &buf, void *context) {
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::SetTol(const REAL & tol)
+void TPZPoroElastoPlasticDFN<T,TMEM>::SetTol(const REAL & tol)
 {
     fTol = tol;
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::SetBulkDensity(const REAL & bulk)
+void TPZPoroElastoPlasticDFN<T,TMEM>::SetBulkDensity(const REAL & bulk)
 {
     fRhoB = bulk;
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::vectorToTensor(const TPZFMatrix<REAL> & vectorTensor, TPZFMatrix<REAL> & Tensor)
+void TPZPoroElastoPlasticDFN<T,TMEM>::vectorToTensor(const TPZFMatrix<REAL> & vectorTensor, TPZFMatrix<REAL> & Tensor)
 {
     TPZTensor<REAL> vecT;
     vecT.CopyFrom(vectorTensor);
@@ -902,7 +842,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::vectorToTensor(const TPZFMatrix<REAL> & vec
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::FillDataRequirements(TPZMaterialData &data){
+void TPZPoroElastoPlasticDFN<T,TMEM>::FillDataRequirements(TPZMaterialData &data){
     
     TPZMatWithMem<TMEM>::FillDataRequirements(data);
     
@@ -913,7 +853,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::FillDataRequirements(TPZMaterialData &data)
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::FillBoundaryConditionDataRequirement(int type,TPZMaterialData &data)
+void TPZPoroElastoPlasticDFN<T,TMEM>::FillBoundaryConditionDataRequirement(int type,TPZMaterialData &data)
 {
     
     
@@ -923,7 +863,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::FillBoundaryConditionDataRequirement(int ty
 }
 
 template <class T, class TMEM>
-void TPZMatElastoPlasticDFN<T,TMEM>::Errors(TPZVec<REAL> &x,TPZVec<REAL> &u, TPZFMatrix<REAL> &dudx,
+void TPZPoroElastoPlasticDFN<T,TMEM>::Errors(TPZVec<REAL> &x,TPZVec<REAL> &u, TPZFMatrix<REAL> &dudx,
                                          TPZFMatrix<REAL> &axes, TPZVec<REAL> &flux,
                                          TPZVec<REAL> &u_exact,TPZFMatrix<REAL> &du_exact,TPZVec<REAL> &values)
 {
@@ -952,7 +892,7 @@ void TPZMatElastoPlasticDFN<T,TMEM>::Errors(TPZVec<REAL> &x,TPZVec<REAL> &u, TPZ
 }
 
 template <class T, class TMEM>
-int TPZMatElastoPlasticDFN<T,TMEM>::VariableIndex(const std::string &name)
+int TPZPoroElastoPlasticDFN<T,TMEM>::VariableIndex(const std::string &name)
 {
     if (!strcmp("ux", name.c_str())) return 0;
     if (!strcmp("uy", name.c_str())) return 1;
@@ -979,7 +919,7 @@ int TPZMatElastoPlasticDFN<T,TMEM>::VariableIndex(const std::string &name)
 }
 
 template <class T, class TMEM>
-int TPZMatElastoPlasticDFN<T,TMEM>::NSolutionVariables(int var)
+int TPZPoroElastoPlasticDFN<T,TMEM>::NSolutionVariables(int var)
 {
     switch(var) {
         case 0:

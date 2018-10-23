@@ -111,7 +111,7 @@ public:
     }
     
     /// Get pore pressure at last state
-    STATE p_n()
+    virtual STATE p_n()
     {
         return m_p_n;
     }

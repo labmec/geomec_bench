@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 #include "TPZMatWithMem.h"
-#include "TPZMatElastoPlasticAnalysis.h"
-#include "TPZMatElastoPlasticDFN.h"
+#include "TPZPoroElastoPlasticAnalysis.h"
+#include "TPZPoroElastoPlasticDFN.h"
 #include "TPZMonoPhasicMemoryDFN.h"
 #include "TPZDarcyAnalysis.h"
 #include "TPZDarcy2DMaterialMem.h"
@@ -26,7 +26,7 @@ private:
     TPZSimulationData * m_simulation_data;
     
     /// Pointer to geomechanic analysis object
-    TPZMatElastoPlasticAnalysis * m_elastoplast_analysis;
+    TPZPoroElastoPlasticAnalysis * m_elastoplast_analysis;
     
     /// Pointer to reservoir analysis object
     TPZDarcyAnalysis * m_darcy_analysis;

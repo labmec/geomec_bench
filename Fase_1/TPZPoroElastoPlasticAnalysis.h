@@ -5,8 +5,8 @@
 //  Created by Omar and Manouchehr on 9/11/18.
 //
 
-#ifndef TPZMatElastoPlasticAnalysis_h
-#define TPZMatElastoPlasticAnalysis_h
+#ifndef TPZPoroElastoPlasticAnalysis_h
+#define TPZPoroElastoPlasticAnalysis_h
 
 #include <stdio.h>
 #include "pzanalysis.h"
@@ -21,7 +21,7 @@
 #include "TPZMemoryDFN.h"
 #include "pzbuildmultiphysicsmesh.h"
 
-class TPZMatElastoPlasticAnalysis : public TPZAnalysis {
+class TPZPoroElastoPlasticAnalysis : public TPZAnalysis {
     
 private:
     
@@ -52,13 +52,13 @@ private:
 public:
     
     /// Default constructor
-    TPZMatElastoPlasticAnalysis();
+    TPZPoroElastoPlasticAnalysis();
     
     /// Destructor
-    ~TPZMatElastoPlasticAnalysis();
+    ~TPZPoroElastoPlasticAnalysis();
     
     /// Copy constructor
-    TPZMatElastoPlasticAnalysis(const TPZMatElastoPlasticAnalysis & other);
+    TPZPoroElastoPlasticAnalysis(const TPZPoroElastoPlasticAnalysis & other);
     
     /// Set the pointer of Simulation data object
     void SetSimulationData(TPZSimulationData * simulation_data){
@@ -133,4 +133,4 @@ public:
     
 };
 
-#endif /* TPZMatElastoPlasticAnalysis_h */
+#endif /* TPZPoroElastoPlasticAnalysis_h */

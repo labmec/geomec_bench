@@ -63,8 +63,6 @@ public:
         return m_alpha;
     }
     
-
-    
 };
 
 #endif /* TPZMemoryDFN_h */

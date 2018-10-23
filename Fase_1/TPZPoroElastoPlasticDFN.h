@@ -20,30 +20,30 @@
 */
 
 template <class T, class TMEM>
-class  TPZMatElastoPlasticDFN : public TPZMatWithMem<TMEM>
+class  TPZPoroElastoPlasticDFN : public TPZMatWithMem<TMEM>
 {
    public:
 		
       /**
        * Default constructor
        */
-      TPZMatElastoPlasticDFN();
+      TPZPoroElastoPlasticDFN();
 		
       /** Creates a material object and inserts it in the vector of
        *  material pointers of the mesh. Upon return vectorindex
        *  contains the index of the material object within the
        *  vector
        */
-      TPZMatElastoPlasticDFN(int id, int dim);
+      TPZPoroElastoPlasticDFN(int id, int dim);
 
       /** Creates a material object based on the referred object and
        *  inserts it in the vector of material pointers of the mesh.
        *  Upon return vectorindex contains the index of the material
        *  object within the vector
        */
-      TPZMatElastoPlasticDFN(const TPZMatElastoPlasticDFN &mat);
+      TPZPoroElastoPlasticDFN(const TPZPoroElastoPlasticDFN &mat);
 
-      virtual ~TPZMatElastoPlasticDFN();
+      virtual ~TPZPoroElastoPlasticDFN();
 
 	  /** Sets the plasticity model already with proper parameters */
       void SetPlasticity(T & plasticity);
@@ -249,13 +249,20 @@ virtual int ClassId() const;
 	 */
 	void SetBulkDensity(const REAL & bulk);
     
+    void SetAlpha(const REAL & alpha){
+        fAlpha = alpha;
+    }
+
+    REAL GetAplha(){
+        return fAlpha;
+    }
     
     virtual void SetGravity(TPZManVector<REAL, 3> Force){
         for (int i = 0; i<Force.size(); i++) {
             fForce[i]=Force[i];
         }
     }
-	
+
 	  /**
 	   * Defining what parameters the material needs. In particular this material needs the
 	   * evaluation of normal vector for the sake of boundary conditions
@@ -302,11 +309,16 @@ protected:
 	   * Tolerance for posto-processing purposes
 	   */
 	  REAL fTol;
+    
+    /**
+     * Biot coeficient
+     */
+    REAL fAlpha;
 	
 };
 
 template <class T, class TMEM>
-int TPZMatElastoPlasticDFN<T,TMEM>::ClassId() const{
+int TPZPoroElastoPlasticDFN<T,TMEM>::ClassId() const{
     return Hash("TPZMatElastoPlastic") ^ TPZMatWithMem<TMEM>::ClassId() << 1 ^ T().ClassId() << 2;
 }
 
