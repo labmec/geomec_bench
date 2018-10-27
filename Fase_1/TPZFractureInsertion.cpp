@@ -236,6 +236,7 @@ std::set<int64_t> TPZFractureInsertion::PivotNeighbours(TPZGeoElSide pivotside){
 void TPZFractureInsertion::InsertFractureNeighbours(std::set<int64_t> pivot_neighbours){
     
     
+    // this is the index of the fracture element
     int64_t fractture_neighbour_index = m_fracture_indexes[0];
     TPZGeoEl * fracture_neighbour = m_geometry->Element(fractture_neighbour_index);
     
@@ -247,8 +248,10 @@ void TPZFractureInsertion::InsertFractureNeighbours(std::set<int64_t> pivot_neig
         DebugStop();
     }
     
+    // verify if the center of the neighbour is to the left or right of the element
     TPZGeoEl * gel_left = all_neigh[0].Element();
     TPZGeoEl * gel_right = all_neigh[1].Element();
+    // classify left right using fracture_neighbour - gel_left + gel_right
     m_gel_left_indexes.insert(gel_left->Index());
     m_gel_right_indexes.insert(gel_right->Index());
     
@@ -489,7 +492,7 @@ void  TPZFractureInsertion::OpenFractureOnH1(TPZCompMesh *cmesh){
             unsigned int n_neighbors = all_neighbors.size();
             for (unsigned int i_neighbor = 0; i_neighbor < n_neighbors; i_neighbor++) {
                 TPZGeoEl * gel_neighbor = all_neighbors[i_neighbor].Element();
-//                if(gel_neighbor->Dimension() != meshdim) continue;
+                if(gel_neighbor->Dimension() != meshdim) continue;
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement *>(gel_neighbor->Reference());
                 if(!intel) continue;
                 
@@ -677,12 +680,14 @@ void TPZFractureInsertion::SetDiscontinuosFrac(TPZCompMesh *cmesh){
     
     int meshdim = cmesh->Dimension();
     cmesh->SetDimModel(meshdim);
-    cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
+    //cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(meshdim);
+    cmesh->ApproxSpace().SetAllCreateFunctionsContinuousWithMem();
+    cmesh->ApproxSpace().CreateDisconnectedElements(true);
     TPZGeoMesh *gmesh = cmesh->Reference();
     gmesh->ResetReference();
 
     int cmesh_order = cmesh->GetDefaultOrder();
-    int fracture_cel_order = cmesh->GetDefaultOrder() - 1;
+    int fracture_cel_order = cmesh->GetDefaultOrder()-1;
     cmesh->SetDefaultOrder(fracture_cel_order); // Because we need p - 1 order on fractures
     
     // Created fracture elements based on fracture material with id  GetFractureMaterialId()
@@ -698,6 +703,8 @@ void TPZFractureInsertion::SetDiscontinuosFrac(TPZCompMesh *cmesh){
         int64_t index;
         cmesh->CreateCompEl(gel, index);
         TPZCompEl *cel = cmesh->Element(index);
+        cel->SetIntegrationRule(4);
+        cel->PrepareIntPtIndices();
         int64_t cindex = cel->ConnectIndex(0);
         cel->SetgOrder(fracture_cel_order);
         int lagrangelevel = 1;

@@ -285,6 +285,8 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     }
     
     
+    AdjustIntegrationOrder(simulation_data,cmesh_E,cmesh_M);
+    
     {
         std::ofstream filecMbf("MalhaC_M.txt");
         cmesh_M->Print(filecMbf);
@@ -504,6 +506,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     TPZCompMesh * cmesh = new TPZCompMesh(gmesh);
     if(pOrder<2) DebugStop();
     
+    sim_data->Set_elasticity_order(pOrder);
     cmesh->SetDefaultOrder(pOrder);
     cmesh->SetDimModel(fdim);
     cmesh->SetAllCreateFunctionsContinuousWithMem();
@@ -535,7 +538,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, null_dir_dirichlet, val1, val2);
     val2.Zero();
-    val2(1,0)= -1.;
+    val2(1,0)= -100.;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
     val2(0,0)=1;
@@ -555,17 +558,21 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate);
+            materialFrac->Set_a0(6.5e-5);
+            materialFrac->Set_Vm(4.36236e-4);
+            materialFrac->Set_Kni(12041.);
+            materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
         }
         
         // 2 - Material Lagrange nas interfaces
         TPZLagrangeInterface<TPZInterfaceMemory> *matInterLeft = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceLeft, fdimFrac, nstate);
-        matInterLeft->SetMultiplier(-1);
+        matInterLeft->SetMultiplier(1);
         matInterLeft->SetSimulationData(sim_data);
         cmesh->InsertMaterialObject(matInterLeft);
         
         TPZLagrangeInterface<TPZInterfaceMemory> *matInterRight = new TPZLagrangeInterface<TPZInterfaceMemory>(fmatInterfaceRight, fdimFrac, nstate);
-        matInterRight->SetMultiplier(1);
+        matInterRight->SetMultiplier(-1);
         matInterRight->SetSimulationData(sim_data);
         cmesh->InsertMaterialObject(matInterRight);
         
@@ -602,14 +609,14 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     matids.insert(fmatBCleft);
 
 
-    if (finsert_fractures_Q) {
-        for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            matids.insert(fmatFrac[i_frac]);
-        }
-        matids.insert(fmatInterfaceRight);
-        matids.insert(fmatInterfaceLeft);
+   if (finsert_fractures_Q) {
+//        for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
+//            matids.insert(fmatFrac[i_frac]);
+//        }
+//        matids.insert(fmatInterfaceRight);
+//        matids.insert(fmatInterfaceLeft);
     }
-    
+
     cmesh->ApproxSpace().CreateWithMemory(true);// Force the creation of interfaces with memory.
     cmesh->AutoBuild(matids);
     cmesh->AdjustBoundaryElements();
@@ -790,6 +797,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     int nstate = 2;
     
+    sim_data->Set_darcy_order(pOrder);
     TPZCompMesh *cmesh_q = CMesh_q(gmesh,pOrder);
     TPZCompMesh *cmesh_p = CMesh_p(gmesh,pOrder);
     
@@ -831,7 +839,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
     STATE Pjusante = 54.9;
-    STATE Pmontante = 55.0;
+    STATE Pmontante = 55.;
     
     val1(0,0) = 0.; //botton
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
@@ -1059,10 +1067,10 @@ void HidraulicoMonofasicoElastico::AdjustIntegrationOrder(TPZSimulationData * si
     int nel_elastoplast = cmesh_elastoplast->NElements();
     int nel_darcy = cmesh_darcy->NElements();
     
-    if (nel_elastoplast != nel_darcy) {
-        std::cout << "The geometrical partitions are not the same." << std::endl;
-        DebugStop();
-    }
+//    if (nel_elastoplast != nel_darcy) {
+//        std::cout << "The geometrical partitions are not the same." << std::endl;
+//        DebugStop();
+//    }
     
     int p_order_elastoplast = sim_data->Get_elasticity_order();
     int p_order_darcy = sim_data->Get_darcy_order();
@@ -1094,10 +1102,18 @@ void HidraulicoMonofasicoElastico::AdjustIntegrationOrder(TPZSimulationData * si
     std::vector<TPZIntPoints *> int_rule_vec;
     for (long el = 0; el<nel_elastoplast; el++) {
         TPZCompEl *cel = cmesh_elastoplast->Element(el);
+        
+        int matId = cel->Material()->Id();
+        if (matId!=6) {
+            continue;
+        }
+        
         if (!cel) {
             continue;
         }
         cel->SetIntegrationRule(int_order);
+        int nintpoints = cel->GetIntegrationRule().NPoints();
+        
         cel->PrepareIntPtIndices();
         const TPZIntPoints & rule = cel->GetIntegrationRule();
         TPZIntPoints * rule_copy = rule.Clone();

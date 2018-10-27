@@ -36,7 +36,9 @@ void TPZSegregatedAnalysisDFN::ApplyFracMemoryLink(int frac_matid){
     TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_elastoplast);
     TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_darcy);
     
-    if(matfrac_with_memory_darcy->GetMemory()->NElements() != matfrac_with_memory_elastoplast->GetMemory()->NElements())
+    int memdarcy = matfrac_with_memory_darcy->GetMemory()->NElements();
+    int memelast = matfrac_with_memory_elastoplast->GetMemory()->NElements();
+    if(memdarcy != memelast)
     {
         std::cout << "The integration rules of both meshes are different - bailing out\n";
         DebugStop();
@@ -83,7 +85,8 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
     }
     
     this->SetSimulationData(simulation_data);
-    bool mustOptimizeBandwidth = true;
+    // totototototo
+    bool mustOptimizeBandwidth = false;
     
     m_simulation_data = simulation_data;
     
@@ -123,7 +126,7 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
 
 
 void TPZSegregatedAnalysisDFN::ExecuteOneTimeStep(){
-    m_darcy_analysis->ExecuteOneTimeStep();
+   // m_darcy_analysis->ExecuteOneTimeStep();
     m_elastoplast_analysis->ExecuteOneTimeStep();
 }
 

@@ -54,6 +54,9 @@ void TPZMemoryFracDFN::Read(TPZStream &buf, void *context){
 }
 
 void TPZMemoryFracDFN::Print(std::ostream &out) const {
+    out << Name();
+    out << "\n Coord of integratrion point = " << m_coord;
+    out << "\n";
     TPZMonoPhasicMemoryFracDFN::Print(out);
     TPZElastoPlasticMemoryFracDFN::Print(out);
 }

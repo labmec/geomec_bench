@@ -16,7 +16,7 @@
 #include "TPZMemoryFracDFN.h"
 #include "TPZSimulationData.h"
 
-/// Material which implements a Lagrange Multiplier
+/// Material which implements the Barton-Bandis fracture opnenig model
 
 template <class TMEM = TPZMemoryFracDFN>
 class TPZMatFractureBB : public TPZMatWithMem<TMEM>
@@ -31,8 +31,15 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     
     STATE fMultiplier;
     
-    // Dimensiona associated with the material
-    STATE fFracHsize;
+    // Initial fracture opening
+    STATE m_a0;
+    
+    // Maximum fracture opening
+    STATE m_Vm;
+    
+    // Initial normal stiffness
+    STATE m_Kni;
+    
     
     /// Pointer of Simulation data
     TPZSimulationData * m_simulation_data;
@@ -40,20 +47,25 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     
     public :
     // Simple constructor
-    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM>()
+    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM>(), fNStateVariables(0.), fDimension(0.), fMultiplier(0.), m_a0(0.), m_Vm(0.), m_Kni(0.)
     {
-        
+        m_simulation_data = NULL;
     }
     // Constructor with the index of the material object within the vector
-    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
+    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.), m_a0(0.), m_Vm(0.), m_Kni(0.)
     {
         m_simulation_data = NULL;
     }
     
     // Copy constructor
-    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier), m_a0(copy.m_a0), m_Vm(copy.m_Vm), m_Kni(copy.m_Kni)
     {
         m_simulation_data = copy.m_simulation_data;
+    }
+    
+    /// Set the pointer of Simulation data object
+    void SetSimulationData(TPZSimulationData * simulation_data){
+        m_simulation_data = simulation_data;
     }
     
     TPZMatFractureBB &operator=(const TPZMatFractureBB &copy)
@@ -64,6 +76,10 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
+        m_a0 = copy.m_a0;
+        m_Vm = copy.m_Vm;
+        m_Kni = copy.m_Kni;
+        
         return *this;
     }
     
@@ -84,16 +100,35 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     {
         fMultiplier = mult;
     }
-
-    void SetFracHSize(STATE fracHsize)
+    
+    void Set_a0(STATE a0)
     {
-        fFracHsize = fracHsize;
+        m_a0 = a0;
     }
 
-    
-    STATE GetFracHSize()
+    STATE Get_a0()
     {
-        return fFracHsize;
+        return m_a0;
+    }
+
+    void Set_Vm(STATE Vm)
+    {
+        m_Vm = Vm;
+    }
+    
+    STATE Get_Vm()
+    {
+        return m_Vm;
+    }
+    
+    void Set_Kni(STATE Kni)
+    {
+        m_Kni = Kni;
+    }
+    
+    STATE Get_Kni()
+    {
+        return m_Kni;
     }
     
     virtual std::string Name()
@@ -101,12 +136,13 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
         return "TPZMatFractureBB";
     }
     
-    // Fill material data parameter with necessary requirements for the ContributeInterface method.
-    // Here, in base class, all requirements are considered as necessary. \n
-    // Each derived class may optimize performance by selecting only the necessary data.
-    void FillDataRequirementsInterface(TPZMaterialData &data)
+    // Fill material data parameter with necessary requirements
+    void FillDataRequirements(TPZMaterialData &data)
     {
         data.SetAllRequirements(false);
+        data.fNeedsNormal = true;
+        data.fNeedsNeighborSol = true;
+        data.fNeedsSol = true;
     }
     
     void Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef);
@@ -120,6 +156,11 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     int NStateVariables()
     {
         return fNStateVariables;
+    }
+    
+    void SetNStateVariables(int nstateVariables)
+    {
+        fNStateVariables = nstateVariables;
     }
     
     // Updates the leak off memory

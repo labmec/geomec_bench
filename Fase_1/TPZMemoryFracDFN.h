@@ -23,6 +23,9 @@ private:
     /// Relative displacement (fracture oppening)
     TPZManVector<REAL,3> m_uR;
     
+    // Point coordenates
+    TPZManVector<REAL,3> m_coord;
+    
 public:
     
     /// Default constructor
@@ -75,6 +78,15 @@ public:
         return m_uR;
     }
 
+    /// Set the coordinates
+    void SetCoord(TPZManVector<REAL,3> & Xcoord){
+        m_coord = Xcoord;
+    }
+    
+    /// Get the coordinates
+    TPZManVector<REAL,3> GetCoord(){
+        return m_coord;
+    }
     
 };
 
