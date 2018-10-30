@@ -34,8 +34,7 @@ private:
     
     /// Last displacement field
     TPZManVector<REAL,3> m_u;
-    
-    
+
 public:
     
     /// Default constructor

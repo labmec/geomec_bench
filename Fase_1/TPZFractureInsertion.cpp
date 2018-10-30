@@ -237,23 +237,52 @@ void TPZFractureInsertion::InsertFractureNeighbours(std::set<int64_t> pivot_neig
     
     
     // this is the index of the fracture element
-    int64_t fractture_neighbour_index = m_fracture_indexes[0];
-    TPZGeoEl * fracture_neighbour = m_geometry->Element(fractture_neighbour_index);
+    int64_t fractture_index = m_fracture_indexes[0];
+    TPZGeoEl * fracture_element = m_geometry->Element(fractture_index);
     
     /// identify left and right seeds
     TPZStack<TPZGeoElSide> all_neigh;
-    TPZGeoElSide fracture_side(fracture_neighbour,fracture_neighbour->NSides()-1);
+    TPZGeoElSide fracture_side(fracture_element,fracture_element->NSides()-1);
     fracture_side.AllNeighbours(all_neigh);
     if (all_neigh.size() != 2) {
         DebugStop();
     }
     
     // verify if the center of the neighbour is to the left or right of the element
-    TPZGeoEl * gel_left = all_neigh[0].Element();
-    TPZGeoEl * gel_right = all_neigh[1].Element();
+    
+    // Fist, define fracture reference vector:
+    TPZVec<REAL> coX_frac_side0(3,0.), coord_frac_side0(3,0);
+    TPZVec<REAL> coX_frac_side1(3,0.), coord_frac_side1(3,0);
+
+    fracture_element->CenterPoint(0, coX_frac_side0);
+    fracture_element->CenterPoint(1, coX_frac_side1);
+    fracture_element->X(coX_frac_side0, coord_frac_side0);
+    fracture_element->X(coX_frac_side1, coord_frac_side1);
+    
+    
+    // Second, find center coordinates of fracture neighbour
+    TPZGeoEl * gel_neigh0 = all_neigh[0].Element();
+    TPZGeoEl * gel_neigh1 = all_neigh[1].Element();
+    TPZVec<REAL> coX_neigh0(3,0.), coord_neigh0(3,0);
+    int gel_neigh0_side = gel_neigh0->NSides()-1;
+    gel_neigh0->CenterPoint(gel_neigh0_side, coX_neigh0);
+    gel_neigh0->X(coX_neigh0, coord_neigh0);
+    
     // classify left right using fracture_neighbour - gel_left + gel_right
-    m_gel_left_indexes.insert(gel_left->Index());
-    m_gel_right_indexes.insert(gel_right->Index());
+    if( ( (coord_frac_side1[0]-coord_neigh0[0])>0 && (coord_frac_side0[1]-coord_neigh0[1]) < 0) || ( (coord_frac_side1[0]-coord_neigh0[0]) <= 0 && (coord_frac_side0[1]-coord_neigh0[1]) >= 0 ) ) {
+        neigh_is_left = true;
+    }else{
+        neigh_is_left = false;
+    }
+    
+    if(neigh_is_left){
+        m_gel_left_indexes.insert(gel_neigh0->Index());
+        m_gel_right_indexes.insert(gel_neigh1->Index());
+    }else{
+        m_gel_left_indexes.insert(gel_neigh1->Index());
+        m_gel_right_indexes.insert(gel_neigh0->Index());
+    }
+    
     
 }
 

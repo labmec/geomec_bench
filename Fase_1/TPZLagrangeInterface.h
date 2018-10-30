@@ -154,7 +154,11 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
     // Updates the leak off memory
     void UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec);
     
+    // Inner vec
+    STATE InnerVec(TPZFMatrix<STATE>  &S, TPZManVector<STATE,3>  &T);
 
+    STATE InnerVec(TPZManVector<STATE,3>  &S, TPZManVector<STATE,3>  &T);
+    
 public:
     
     // Unique identifier for serialization purposes

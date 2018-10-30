@@ -169,7 +169,10 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     // Updates the leak off memory
     void UpdateMemory(TPZMaterialData &data, TPZVec<TPZMaterialData> &datavec);
     
-
+    // Inner vec
+    STATE InnerVec(TPZManVector<STATE,3>  &S, TPZManVector<STATE,3>  &T);
+    
+    
 public:
 
     // Saves the element data to a stream

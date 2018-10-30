@@ -18,13 +18,19 @@ class TPZMemoryFracDFN : public TPZMonoPhasicMemoryFracDFN, public TPZElastoPlas
 private:
     
     /// Biot-Willis coefficient
-    REAL m_alpha;
+    STATE m_alpha;
+
+    /// Initial fracture closure
+    STATE m_Du_0;
+
+    /// Last fracture closure
+    TPZManVector<STATE,3> m_Du;
     
-    /// Relative displacement (fracture oppening)
-    TPZManVector<REAL,3> m_uR;
+    /// Current fracture closure
+    TPZManVector<STATE,3> m_Du_n;
     
     // Point coordenates
-    TPZManVector<REAL,3> m_coord;
+    TPZManVector<STATE,3> m_coord;
     
 public:
     
@@ -60,31 +66,51 @@ public:
     
     virtual int ClassId() const;
     
-    void SetAlpha(REAL alpha){
+    void SetAlpha(STATE alpha){
         m_alpha  = alpha;
     }
     
-    REAL GetAlpha(){
+    STATE GetAlpha(){
         return m_alpha;
     }
     
-    /// Set the relative displacement
-    void SetuR_n(TPZManVector<REAL,3> & uR){
-        m_uR = uR;
+    /// Set the initial fracture closure
+    void SetDu_0(STATE uR){
+        m_Du_0 = uR;
     }
     
-    /// Get the relative displacement
-    TPZManVector<REAL,3> & GetuR(){
-        return m_uR;
+    /// Get the initial fracture closure
+    STATE & GetDu_0(){
+        return m_Du_0;
+    }
+    
+    /// Set the last fracture closure
+    void SetDu(TPZManVector<STATE,3> & uR){
+        m_Du = uR;
+    }
+    
+    /// Get the last fracture closure
+    TPZManVector<STATE,3> & GetDu(){
+        return m_Du;
+    }
+    
+    /// Set the current fracture closure
+    void SetDu_n(TPZManVector<STATE,3> & uR){
+        m_Du_n = uR;
+    }
+    
+    /// Get the current fracture closure
+    TPZManVector<STATE,3> & GetDu_n(){
+        return m_Du_n;
     }
 
     /// Set the coordinates
-    void SetCoord(TPZManVector<REAL,3> & Xcoord){
+    void SetCoord(TPZManVector<STATE,3> & Xcoord){
         m_coord = Xcoord;
     }
     
     /// Get the coordinates
-    TPZManVector<REAL,3> GetCoord(){
+    TPZManVector<STATE,3> GetCoord(){
         return m_coord;
     }
     

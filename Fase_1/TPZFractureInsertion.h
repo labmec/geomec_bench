@@ -69,6 +69,9 @@ private:
     /// build the pivot and non pivot data structure (ok)
     void BuildPivotDataStructure();
     
+    /// Return true if neighboour is at left position
+    bool neigh_is_left;
+    
 public:
 
     /// @TODO:: OD, Rename TPZFractureInsertion -> TPZFractureDescription

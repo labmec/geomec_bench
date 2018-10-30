@@ -126,7 +126,7 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
 
 
 void TPZSegregatedAnalysisDFN::ExecuteOneTimeStep(){
-   // m_darcy_analysis->ExecuteOneTimeStep();
+    m_darcy_analysis->ExecuteOneTimeStep();
     m_elastoplast_analysis->ExecuteOneTimeStep();
 }
 

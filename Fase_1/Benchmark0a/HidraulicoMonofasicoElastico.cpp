@@ -553,11 +553,12 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     cmesh->InsertMaterialObject(BCond4);
     
     // 2 - Material Fraturas
+    int nstate_frac = 2;
     if (finsert_fractures_Q) {
      
         TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate);
+            materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate_frac);
             materialFrac->Set_a0(6.5e-5);
             materialFrac->Set_Vm(4.36236e-4);
             materialFrac->Set_Kni(12041.);
