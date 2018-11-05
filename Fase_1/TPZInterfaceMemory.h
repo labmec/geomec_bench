@@ -33,10 +33,10 @@ private:
     nState State;
   
     /** @brief Solution left at current state */
-    TPZManVector<STATE,3> SolL;
+    TPZManVector<STATE,3> m_forceFrac_n;
     
     /** @brief Solution right at current state */
-    TPZManVector<STATE,3> SolR;
+    TPZManVector<STATE,3> m_u_n;
 
 //    /** @brief Solution left at last state */
 //    TPZManVector<STATE,3> SolL_n;
@@ -57,45 +57,25 @@ public:
     std::string PostProcessFileName();
     
     /** @brief Set left solution at current state. */
-    void SetLeftSol(TPZManVector<STATE,3> solL){
-        SolL = solL;
+    void SetForceFrac_n(TPZManVector<STATE,3> solL){
+        m_forceFrac_n = solL;
     }
     
     /** @brief Returns left solution at current state. */
-    TPZManVector<STATE,3> GetLeftSol() const {
-        return SolL;
+    TPZManVector<STATE,3> GetForceFrac_n() const {
+        return m_forceFrac_n;
     }
 
-//    /** @brief Set left solution at last state. */
-//    void SetLeftSol_n(TPZManVector<STATE,3> solL_n){
-//        SolL_n = solL_n;
-//    }
-    
-//    /** @brief Returns left solution at last state. */
-//    TPZManVector<STATE,3> GetLeftSol_n() const {
-//        return SolL_n;
-//    }
-    
     /** @brief Set right solution at current state. */
-    void SetRightSol(TPZManVector<STATE,3> solR){
-        SolR = solR;
+    void Setu_n(TPZManVector<STATE,3> solR){
+        m_u_n = solR;
     }
     
     /** @brief Returns right solution at current state. */
-    TPZManVector<STATE,3> GetRightSol() const {
-        return SolR;
+    TPZManVector<STATE,3> Getu_n() const {
+        return m_u_n;
     }
 
-//    /** @brief Set right solution at last state. */
-//    void SetRightSol_n(TPZManVector<STATE,3> solR_n){
-//        SolR_n = solR_n;
-//    }
-    
-//    /** @brief Returns right solution at last state. */
-//    TPZManVector<STATE,3> GetRightSol_n() const {
-//        return SolR_n;
-//    }
-//    
     /// Class name
     const std::string Name() const;
     

@@ -36,9 +36,9 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     memory.SetCoord(data.x);
     D_u0 = memory.GetDu_0();
     
-    std::ofstream fileMemFrac("MemoryFrac.txt");
-    memory.Print(fileMemFrac);
     
+    std::ofstream fileMemFrac("MemoryFrac.txt", std::ofstream::app);
+    //memory.Print(fileMemFrac);
     
     TPZManVector<STATE,3> delta_forceFrac_n    = memory.GetForceFrac_n();
     TPZManVector<STATE,3> forceFrac_n    = data.sol[0];
@@ -46,22 +46,25 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     
     for(int i=0; i<2; i++)
     {
-        forceFrac_n[i] += delta_forceFrac_n[i]+0.;
+        forceFrac_n[i] += delta_forceFrac_n[i];
     }
 
+    fileMemFrac << "Coordenadas = " << data.x << std::endl;
+    fileMemFrac << "forceFrac = " << forceFrac_n << std::endl;
+    
     STATE forceFrac_normal = InnerVec(forceFrac_n, normal);
     
-    TPZFMatrix<REAL> &phi = data.phi;
+    TPZFMatrix<REAL> &phi_f = data.phi;
     TPZFMatrix<REAL> &dphi = data.dphi;
     
     //    TPZFNMatrix<660> dphiL, dphiR;
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiLdAxes, dphiL, dataleft.axes);
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiRdAxes, dphiR, dataright.axes);
 
-    int nrow = phi.Rows();
+    int nrow = phi_f.Rows();
 
 #ifdef PZDEBUG
-    if(phi.Rows()*fNStateVariables != ek.Rows())
+    if(phi_f.Rows()*fNStateVariables != ek.Rows())
     {
         DebugStop();
     }
@@ -76,7 +79,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
         //ef(fNStateVariables*i+1) += weight * (phi(i,0) * 100.);
         for (int e = 0; e < 2; e++) {
-            phiVi[e] = phi(i,0)*normal[e];
+            phiVi[e] = phi_f(i,0)*normal[e];
         }
         phiVi_normal = InnerVec(phiVi, normal);
         
@@ -85,8 +88,12 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
         for(int ist=0; ist<2; ist++)
         {
-            STATE valLinear = (weight * phi(i) * forceFrac_n[ist]);
-            ef(fNStateVariables*i+ist) += valLinear;
+
+            STATE valBB = weight * phi_f(i) * forceFrac_n[ist] * Vm /(forceFrac_n[ist] + Kni*Vm);
+            
+            STATE valNonLinear = weight * phi_f(i) * (forceFrac_n[ist] * forceFrac_n[ist])/200.;
+            STATE valLinear = weight * phi_f(i) * forceFrac_n[ist];
+            ef(fNStateVariables*i+ist) += -valBB;
         }
         
         //STATE val = (weight * phiVi_normal * forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
@@ -97,18 +104,22 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         for(int j=0; j<nrow; j++) {
                 
             for (int f = 0; f < 2; f++) {
-                phiVj[f] = phi(j,0)*normal[f];
+                phiVj[f] = phi_f(j,0)*normal[f];
             }
             phiVj_normal = InnerVec(phiVj, normal);
             
             for(int ist=0; ist<2; ist++)
             {
-                 STATE valLinear =  weight * phi(i) * phi(j);
-                 ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += valLinear;
+
+                STATE valBB = weight * phi_f(i) * phi_f(j) * Kni * Vm * Vm / ( (Kni*Vm+ forceFrac_n[ist]) * (Kni*Vm+ forceFrac_n[ist]) );
+                
+                STATE valNonLinear =  weight * phi_f(i) * phi_f(j) * 2. * (forceFrac_n [ist])/200.;
+                 STATE valLinear =  weight * phi_f(i) * phi_f(j);
+                 ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += -valBB;
             }
            
             // STATE val = weight * (phiVi_normal * phiVj_normal * Vm)/(phiVj_normal+Kni*Vm);
-            
+            //2. * forceFrac_n[ist] * * forceFrac_n[ist]
 
             }
         
@@ -131,8 +142,9 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 //            }
 //            }
     
-
-
+  //  ek.Print(cout);
+  //  ef.Print(cout);
+    
 }
 
 template <class TMEM>
@@ -150,10 +162,10 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
             
             DebugStop();
         }
-        TPZManVector<STATE,3> forceFrac_sol = data.sol[0];
+        TPZManVector<STATE,3> delta_forceFrac = data.sol[0];
         TPZManVector<STATE,3> normal = data.normal;
         
-        STATE forceFrac_normal = InnerVec(forceFrac_sol,normal);
+        STATE forceFrac_normal = InnerVec(delta_forceFrac,normal);
         
         STATE Vm = Get_Vm(); //Max opening
         STATE a0 = Get_a0(); //Initial opening
@@ -168,7 +180,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
         for(int i=0; i<fNStateVariables; i++)
         {
-            forceFrac_n[i] += forceFrac_sol[i];
+            forceFrac_n[i] += delta_forceFrac[i];
         }
         mem.SetForceFrac_n(forceFrac_n);
         

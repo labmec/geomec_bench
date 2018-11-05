@@ -143,12 +143,14 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
     long gp_index = data.intGlobPtIndex;
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
     
-    TPZManVector<STATE,3> vLn2    = memory.GetLeftSol();
-    TPZManVector<STATE,3> vRn2    = memory.GetRightSol();
+    // forceFrac
     
-    TPZManVector<STATE,3> vLn    = dataleft.sol[0];
-    TPZManVector<STATE,3> vRn    = dataright.sol[0];
-
+    TPZManVector<STATE,3> forceFrac_n    = memory.GetForceFrac_n();
+    TPZManVector<STATE,3> u_n    = memory.Getu_n();
+    
+    TPZManVector<STATE,3> delta_forceFrac_n    = dataleft.sol[0];
+    TPZManVector<STATE,3> delta_u_n    = dataright.sol[0];
+    
     data.fNeedsNormal = true;
     //Normal
     TPZManVector<REAL,3> normal = data.normal;
@@ -160,99 +162,27 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
     
     for(int i=0; i<fNStateVariables; i++)
     {
-        vLn[i] += vLn2[i];
-        vRn[i] += vRn2[i];
+        forceFrac_n[i] += delta_forceFrac_n[i];
+        u_n[i] += delta_u_n[i];
     }
-    TPZFMatrix<STATE> &phiL = dataleft.phi;
+    TPZFMatrix<STATE> &phi_f = dataleft.phi;
     
-    TPZFMatrix<STATE> &phiR = dataright.phi;
+    TPZFMatrix<STATE> &phi_u = dataright.phi;
     
     //    TPZFNMatrix<660> dphiL, dphiR;
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiLdAxes, dphiL, dataleft.axes);
     //    TPZAxesTools<REAL>::Axes2XYZ(dphiRdAxes, dphiR, dataright.axes);
     
-    int nrowl = phiL.Rows();
-    int nrowr = phiR.Rows();
+    int nrowl = phi_f.Rows();
+    int nrowr = phi_u.Rows();
 #ifdef PZDEBUG
-    if(phiL.Rows()*fNStateVariables+phiR.Rows()*fNStateVariables != ek.Rows())
+    if(phi_f.Rows()*fNStateVariables+phi_u.Rows()*fNStateVariables != ek.Rows())
     {
         DebugStop();
     }
 #endif
-    int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
+    int secondblock = ek.Rows()-phi_u.Rows()*fNStateVariables;
     int il,jl,ir,jr;
-
-//    STATE phiL_normal = InnerVec(phiL,normal);
-//    STATE phiL_tangent = InnerVec(phiL,tangent);
-//    STATE phiR_normal = InnerVec(phiR,normal);
-//    STATE phiR_tangent = InnerVec(phiR,tangent);
-//
-//    STATE vLn_normal = InnerVec(vLn,normal);
-//    STATE vLn_tangent = InnerVec(vLn,tangent);
-//    STATE vRn_normal = InnerVec(vRn,normal);
-//    STATE vRn_tangent = InnerVec(vRn,tangent);
-//
-//
-//
-//    // 3) phi_I_left, phi_J_right
-//    for(il=0; il<nrowl; il++) {
-//
-//        ef(fNStateVariables*il) += weight * fMultiplier * (phiL_normal * vRn_normal);
-//        ef(fNStateVariables*il+1) += weight * fMultiplier * (phiL_tangent * vRn_tangent);
-//
-//        for(jr=0; jr<nrowr; jr++) {
-//
-//                ek(fNStateVariables*il+0,fNStateVariables*jr+0+secondblock) += weight * fMultiplier * (phiL_normal * phiR_normal);
-//                ek(fNStateVariables*il+0,fNStateVariables*jr+1+secondblock) += weight * fMultiplier * (phiL_normal * phiR_tangent);
-//                ek(fNStateVariables*il+1,fNStateVariables*jr+0+secondblock) += weight * fMultiplier * (phiL_tangent * phiR_normal);
-//                ek(fNStateVariables*il+1,fNStateVariables*jr+1+secondblock) += weight * fMultiplier * (phiL_tangent * phiR_tangent);
-//        }
-//    }
-//
-//    //    // 4) phi_I_right, phi_J_left
-//    for(ir=0; ir<nrowr; ir++) {
-//
-//        ef(fNStateVariables*ir+0+secondblock) += weight * fMultiplier * (phiR_normal * vLn_normal);
-//        ef(fNStateVariables*ir+1+secondblock) += weight * fMultiplier * (phiR_tangent * vLn_tangent);
-//
-//        for(jl=0; jl<nrowl; jl++) {
-//                ek(ir*fNStateVariables+0+secondblock,jl*fNStateVariables+0) += weight * fMultiplier * (phiR_normal * phiL_normal);
-//                ek(ir*fNStateVariables+0+secondblock,jl*fNStateVariables+1) += weight * fMultiplier * (phiR_normal * phiL_tangent);
-//                ek(ir*fNStateVariables+1+secondblock,jl*fNStateVariables+0) += weight * fMultiplier * (phiR_tangent * phiL_normal);
-//                ek(ir*fNStateVariables+1+secondblock,jl*fNStateVariables+1) += weight * fMultiplier * (phiR_tangent * phiL_tangent);
-//        }
-//    }
-
-//    STATE vLn_normal = InnerVec(vLn,normal);
-//    STATE vLn_tangent = InnerVec(vLn,tangent);
-//    STATE vRn_normal = InnerVec(vRn,normal);
-//    STATE vRn_tangent = InnerVec(vRn,tangent);
-//
-//    // 3) phi_I_left, phi_J_right
-//    for(il=0; il<nrowl; il++) {
-//
-//            ef(fNStateVariables*il+0) += weight * fMultiplier * (phiL(il) * vRn_normal);
-//            ef(fNStateVariables*il+1) += weight * fMultiplier * (phiL(il) * vRn_tangent);
-//
-//        for(jr=0; jr<nrowr; jr++) {
-//            for (int ist=0; ist<fNStateVariables; ist++) {
-//                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL(il) * phiR(jr));
-//            }
-//        }
-//    }
-//
-//    //    // 4) phi_I_right, phi_J_left
-//    for(ir=0; ir<nrowr; ir++) {
-//
-//            ef(fNStateVariables*ir+0+secondblock) += weight * fMultiplier * (phiR(ir) * vLn_normal);
-//            ef(fNStateVariables*ir+1+secondblock) += weight * fMultiplier * (phiR(ir) * vLn_tangent);
-//
-//        for(jl=0; jl<nrowl; jl++) {
-//            for (int ist=0; ist<fNStateVariables; ist++) {
-//                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
-//            }
-//        }
-//    }
 
     
     // 3) phi_I_left, phi_J_right
@@ -260,13 +190,13 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
 
 
         for (int ist=0; ist<fNStateVariables; ist++) {
-            ef(fNStateVariables*il+ist) += weight * fMultiplier * (phiL(il) * vRn[ist]);
+            ef(fNStateVariables*il+ist) += weight * fMultiplier * (phi_f(il) * u_n[ist]);
         }
 
 
         for(jr=0; jr<nrowr; jr++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL(il) * phiR(jr));
+                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phi_f(il) * phi_u(jr));
             }
         }
     }
@@ -276,12 +206,12 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
 
 
         for (int ist=0; ist<fNStateVariables; ist++) {
-            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phiR(ir) * vLn[ist]);
+            ef(fNStateVariables*ir+ist+secondblock) += weight * fMultiplier * (phi_u(ir) * forceFrac_n[ist]);
         }
 
         for(jl=0; jl<nrowl; jl++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
+                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phi_u(ir) * phi_f(jl));
             }
         }
     }
@@ -299,24 +229,24 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
             std::cout << "Integration point index is not initialized\n";
             DebugStop();
         }
-        TPZManVector<STATE,3> vL    = dataleft.sol[0];
-        TPZManVector<STATE,3> vR    = dataright.sol[0];
+        TPZManVector<STATE,3> delta_forceFrac_n     = dataleft.sol[0];
+        TPZManVector<STATE,3> delta_u_n    = dataright.sol[0];
 
         TMEM &mem = this->GetMemory().get()->operator[](gp_index);
-        TPZManVector<STATE,3> solL = mem.GetLeftSol();
-        TPZManVector<STATE,3> solR = mem.GetRightSol();
+        TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
+        TPZManVector<STATE,3> u_n = mem.Getu_n();
         for(int i=0; i<fNStateVariables; i++)
         {
-            solL[i] += vL[i];
-            solR[i] += vR[i];
+            forceFrac_n[i] += delta_forceFrac_n[i];
+            u_n[i] += delta_u_n[i];
         }
-        mem.SetLeftSol(solL);
-        mem.SetRightSol(solR);
+        mem.SetForceFrac_n(forceFrac_n);
+        mem.Setu_n(u_n);
 
-    }else{
-        TPZFMatrix<STATE>  ek_fake(ef.Rows(),ef.Rows(),0.0);
-        this->ContributeInterface(data, dataleft, dataright, weight, ek_fake, ef);
     }
+    
+    TPZFMatrix<STATE>  ek_fake(ef.Rows(),ef.Rows(),0.0);
+    this->ContributeInterface(data, dataleft, dataright, weight, ek_fake, ef);
     
 }
 

@@ -29,6 +29,13 @@ TPZSimulationData::TPZSimulationData()
     m_is_current_state_Q  = false;
     m_must_accept_solution_Q = false;
     m_is_dual_formulation_Q = true;
+    m_Eyoung = 1;
+    m_poisson = 1;
+    m_alpha = 1;
+    m_interface_id.resize(0);
+    m_interfaceLeft_id.resize(0);
+    m_interfaceRight_id.resize(0);
+    
 }
 
 TPZSimulationData::~TPZSimulationData()
@@ -60,6 +67,13 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
     m_transfer_current_to_last_solution_Q            = other.m_transfer_current_to_last_solution_Q;
     m_transfer_current_to_last_solution_Q = false;
+    m_Eyoung                            = other.m_Eyoung;
+    m_poisson                           = other.m_poisson;
+    m_alpha                             = other.m_alpha;
+    m_interface_id                      = other.m_interface_id;
+    m_interfaceLeft_id                  = other.m_interfaceLeft_id;
+    m_interfaceRight_id                 = other.m_interfaceRight_id;
+    
 }
 
 TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
@@ -86,6 +100,13 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_mat_ids                           = other.m_mat_ids;
         m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
         m_transfer_current_to_last_solution_Q            = other.m_transfer_current_to_last_solution_Q;
+        m_Eyoung                            = other.m_Eyoung;
+        m_poisson                           = other.m_poisson;
+        m_alpha                             = other.m_alpha;
+        m_interface_id                      = other.m_interface_id;
+        m_interfaceLeft_id                  = other.m_interfaceLeft_id;
+        m_interfaceRight_id                 = other.m_interfaceRight_id;
+
     }
     return *this;
 }
@@ -110,6 +131,12 @@ void TPZSimulationData::Print()
     std::cout << " m_vtk_resolution = " << m_vtk_resolution << std::endl;
     std::cout << " m_volumetric_material_id = " << &m_volumetric_material_id << std::endl;
     std::cout << " m_fracture_material_id = " << &m_fracture_material_id << std::endl;
+    std::cout << " m_Eyoung = " << m_Eyoung << std::endl;
+    std::cout << " m_poisson = " << m_poisson << std::endl;
+    std::cout << " m_alpha = " << m_alpha << std::endl;
+    std::cout << " m_interface_id = " << &m_interface_id << std::endl;
+    std::cout << " m_interfaceLeft_id = " << &m_interfaceLeft_id << std::endl;
+    std::cout << " m_interfaceRight_id = " << &m_interfaceRight_id << std::endl;
     std::cout << std::endl;
     
 }

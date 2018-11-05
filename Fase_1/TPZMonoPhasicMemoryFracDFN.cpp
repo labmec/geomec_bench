@@ -86,7 +86,7 @@ void TPZMonoPhasicMemoryFracDFN::Print(std::ostream &out) const{
     out << "\n current absolute permeability = " << m_kappa;
     out << "\n initial porosity = " << m_phi_0;
     out << "\n current porosity = " << m_phi;
-    out << "\n ";
+    out << "\n -------------------------------";
 }
 
 int TPZMonoPhasicMemoryFracDFN::ClassId() const{

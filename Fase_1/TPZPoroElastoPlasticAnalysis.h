@@ -19,7 +19,9 @@
 #include "pzstepsolver.h"
 #include "TPZMatWithMem.h"
 #include "TPZMemoryDFN.h"
+#include "TPZMemoryFracDFN.h"
 #include "pzbuildmultiphysicsmesh.h"
+#include "TPZInterfaceMemory.h"
 
 class TPZPoroElastoPlasticAnalysis : public TPZAnalysis {
     

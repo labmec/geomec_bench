@@ -86,9 +86,28 @@ protected:
     /** @brief Vector that storages only fracture material identifiers (higher dimension elements) */
     std::vector<int> m_fracture_material_id;
     
+    /** @brief Vector taht storages interface identifiers */
+    std::vector<int> m_interface_id;
+
+    /** @brief Vector taht storages left interface identifiers */
+    std::vector<int> m_interfaceLeft_id;
+
+    /** @brief Vector taht storages right interface identifiers */
+    std::vector<int> m_interfaceRight_id;
+    
     /** @brief Material and boundaries identifiers sorted per region */
     TPZManVector<std::pair<int, TPZManVector<int,12>>,12> m_mat_ids;
 
+    /** @brief Young modulus */
+    REAL m_Eyoung;
+
+    /** @brief Poisson coeficient */
+    REAL m_poisson;
+
+    /** @brief Biot coeficient */
+    REAL m_alpha;
+    
+    
 public:
     
     /** @brief default constructor */
@@ -287,6 +306,65 @@ public:
     /** @brief Set the vector that storages only fracture material identifiers (higher dimension elements) */
     void Set_fracture_material_id(std::vector<int> & fracture_material_id){
         m_fracture_material_id = fracture_material_id;
+    }
+    
+    /** @brief Get the vector that storages interface identifiers  */
+    std::vector<int> & Get_interface_id(){
+        return m_interface_id;
+    }
+    
+    /** @brief Set the vector that storages interface identifiers  */
+    void Set_interface_id(std::vector<int> & interface_id){
+        m_interface_id = interface_id;
+    }
+
+    /** @brief Get the vector that storages left interface identifiers  */
+    std::vector<int> & Get_interfaceLeft_id(){
+        return m_interfaceLeft_id;
+    }
+    
+    /** @brief Set the vector that storages left interface identifiers  */
+    void Set_interfaceLeft_id(std::vector<int> & interfaceLeft_id){
+        m_interfaceLeft_id = interfaceLeft_id;
+    }
+    
+    /** @brief Get the vector that storages interface identifiers  */
+    std::vector<int> & Get_interfaceRight_id(){
+        return m_interfaceRight_id;
+    }
+    
+    /** @brief Set the vector that storages interface identifiers  */
+    void Set_interfaceRight_id(std::vector<int> & interfaceRight_id){
+        m_interfaceRight_id = interfaceRight_id;
+    }
+    /** @brief Get Young modulus of material  */
+    REAL & Get_Eyoung(){
+        return m_Eyoung;
+    }
+    
+    /** @brief Set Young modulus of material  */
+    void Set_Eyoung(REAL Eyoung){
+        m_Eyoung = Eyoung;
+    }
+    
+    /** @brief Get Poisson coeficient of material  */
+    REAL & Get_Poisson(){
+        return m_poisson;
+    }
+    
+    /** @brief Set Poisson coeficient of material  */
+    void Set_Poisson(REAL poisson){
+        m_poisson = poisson;
+    }
+    
+    /** @brief Get Biot coeficient of material  */
+    REAL & Get_Biot(){
+        return m_alpha;
+    }
+    
+    /** @brief Set Biot coeficient of material  */
+    void Set_Biot(REAL alpha){
+        m_alpha = alpha;
     }
     
 };

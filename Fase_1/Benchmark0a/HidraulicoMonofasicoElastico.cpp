@@ -188,7 +188,6 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     REAL Ly = 5.*La;
     REAL Lx = 8.*La;
     REAL timeT = 0.;
-    this->SetParameters(Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     finsert_fractures_Q = true;
     
     TPZSimulationData SimData;
@@ -215,6 +214,9 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     
     TPZSimulationData *simulation_data =  new TPZSimulationData;
     simulation_data->Get_volumetric_material_id().push_back(fmatID);
+    simulation_data->Get_interface_id().push_back(fmatInterface);
+    simulation_data->Get_interfaceLeft_id().push_back(fmatInterfaceLeft);
+    simulation_data->Get_interfaceRight_id().push_back(fmatInterfaceRight);
     if(finsert_fractures_Q){
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             simulation_data->Get_fracture_material_id().push_back(fmatFrac[i_frac]);
@@ -223,7 +225,8 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     simulation_data->Set_n_threads(0);
     simulation_data->Set_epsilon_res(0.001);
     simulation_data->Set_epsilon_cor(0.001);
-    simulation_data->Set_n_iterations(1);
+    simulation_data->Set_n_iterations(5);
+    this->SetParameters(simulation_data, Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     
     RunningPoroElasticity(gmesh, pOrder, simulation_data);
 
@@ -396,7 +399,7 @@ void HidraulicoMonofasicoElastico::StiffMatrixLoadVec(TPZPoroElasticMF2d *mymate
     
 }
 
-void HidraulicoMonofasicoElastico::SetParameters(REAL mod_young, REAL mod_poisson, REAL coef_alpha, REAL coef_Se, REAL permeabil_fluido, REAL visc_fluido, REAL fx, REAL fy,REAL sign){
+void HidraulicoMonofasicoElastico::SetParameters(TPZSimulationData *simulation_data, REAL mod_young, REAL mod_poisson, REAL coef_alpha, REAL coef_Se, REAL permeabil_fluido, REAL visc_fluido, REAL fx, REAL fy,REAL sign){
     
     fEyoung = mod_young;
     fpoisson= mod_poisson;
@@ -407,6 +410,10 @@ void HidraulicoMonofasicoElastico::SetParameters(REAL mod_young, REAL mod_poisso
     ffx = fx;
     ffy = fy;
     fsign = sign;
+    simulation_data->Set_Eyoung(fEyoung);
+    simulation_data->Set_Poisson(fpoisson);
+    simulation_data->Set_Biot(falpha);
+    
 }
 
 void HidraulicoMonofasicoElastico::PosProcessMultphysics(TPZVec<TPZCompMesh *> meshvec, TPZCompMesh* mphysics, TPZAnalysis &an, std::string plotfile)

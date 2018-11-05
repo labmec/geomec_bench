@@ -485,7 +485,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZS
     // Criando material:
     //TPZPoroElasticMF2d *material = new TPZPoroElasticMF2d(matID,dim);
     
-    TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatID,fdim,1,1); // Darcy's material with mem
+    TPZDarcy2DMaterialMem<TPZMemoryDFN> *material = new TPZDarcy2DMaterialMem<TPZMemoryDFN> (fmatID,fdim,1,1); // Darcy's material with mem
     //TPZDarcy2DMaterial *material = new TPZDarcy2DMaterial(fmatID,fdim,1,ftheta); // Simple Darcy's material
     TPZFMatrix<REAL> K(fdim,fdim),invK(fdim,fdim);
     K.Zero();
@@ -500,7 +500,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_m(TPZGeoMesh *gmesh, int pOrder, TPZS
     material->SetSimulationData(sim_data);
     
     
-    TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> *materialFrac = new TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN> (fmatFrac,fdimFrac,1,1); // Darcy's material with mem
+    TPZDarcy2DMaterialMem<TPZMemoryDFN> *materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryDFN> (fmatFrac,fdimFrac,1,1); // Darcy's material with mem
     //TPZDarcy2DMaterial *materialFrac = new TPZDarcy2DMaterial(fmatFrac,fdimFrac,1,ftheta); // Simple Darcy's material
     REAL kf = 4.68789e-4;
     REAL Dyf = 6.5e-5;

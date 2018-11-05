@@ -53,6 +53,18 @@ public:
         return out;
     }
     
+    REAL Permeability(STATE k0, STATE phi0, STATE nu, STATE E){
+        
+        REAL sigma_v_n = GetSigma_n().I1()/3.;
+        REAL strain_v_n = (1.-2.*nu)*sigma_v_n/E;
+        REAL phi   = 1. - (1. - phi0) * exp(strain_v_n);
+        REAL varphi = phi/phi0;
+
+        REAL perm = k0*pow(varphi, 60.);
+        
+        return perm;
+    }
+    
     virtual int ClassId() const;
     
     void SetAlpha(REAL alpha){

@@ -8,6 +8,7 @@
  */
 
 #include "TPZDarcy2DMaterialMem.h"
+#include "TPZElastoPlasticMemoryDFN.h"
 #include "pzbndcond.h"
 #include "pzaxestools.h"
 #include "TPZMatWithMem.h"
@@ -570,7 +571,16 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     // Get the pressure at the integrations points
     long gp_index = datavec[0].intGlobPtIndex;
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
-    memory.Setkappa(fk);
+    
+    
+    memory.Setkappa_0(fk);
+    REAL k_0 = memory.kappa_0();
+    REAL phi_0 = memory.phi_0();
+    REAL nu = m_simulation_data->Get_Poisson();
+    REAL E = m_simulation_data->Get_Eyoung();
+    REAL k_n = memory.Permeability(k_0,phi_0,nu,E);
+    memory.Setkappa(k_n);
+
     
     // Time
     //STATE dt = m_simulation_data->dt();
@@ -1363,6 +1373,27 @@ void TPZDarcy2DMaterialMem<TMEM>::Errors(TPZVec<TPZMaterialData> &data, TPZVec<S
     
 }
 
-template class TPZDarcy2DMaterialMem<TPZMonoPhasicMemoryDFN>;
+template <class TMEM>
+void TPZDarcy2DMaterialMem<TMEM>::porosity(long gp_index, REAL &phi_n){
+    
+    TMEM & memory = this->MemItem(gp_index); //this->GetMemory().get()->operator[](gp_index);
+
+    REAL phi_0 = memory.phi_0();
+    REAL nu = m_simulation_data->Get_Poisson();
+    REAL E = m_simulation_data->Get_Eyoung();
+    
+
+    memory.GetSigma_n(); // Verificar essa resposta para memória da fratura
+    REAL sigma_v_n = memory.GetSigma_n().I1()/3.;
+    REAL strain_v_n = (1.-2.*nu)*sigma_v_n/E;
+    phi_n   = 1. - (1. - phi_0) * exp(strain_v_n);
+
+    this->MemItem(gp_index).Setphi(phi_n); // Current phi
+}
+
+template <>
+void TPZDarcy2DMaterialMem<TPZMemoryFracDFN>::porosity(long gp_index, REAL &phi_n){
+}
+
 template class TPZDarcy2DMaterialMem<TPZMemoryDFN>;
 template class TPZDarcy2DMaterialMem<TPZMemoryFracDFN>;

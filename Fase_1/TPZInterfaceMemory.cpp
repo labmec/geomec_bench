@@ -8,11 +8,11 @@
 TPZInterfaceMemory::TPZInterfaceMemory()
 {
 
-  SolL.Resize(3);
-  SolR.Resize(3);
+  m_forceFrac_n.Resize(3);
+  m_u_n.Resize(3);
     for (int i=0; i<3; i++) {
-        SolL[i] = 0.;
-        SolR[i] = 0.;
+        m_forceFrac_n[i] = 0.;
+        m_u_n[i] = 0.;
     }
 
   //this->SetCurrentState();
@@ -25,15 +25,15 @@ TPZInterfaceMemory::~TPZInterfaceMemory()
 }
 
 /** @brief copy constructor */
-TPZInterfaceMemory::TPZInterfaceMemory(const TPZInterfaceMemory &copy) : SolL(copy.SolL), SolR(copy.SolR)
+TPZInterfaceMemory::TPZInterfaceMemory(const TPZInterfaceMemory &copy) : m_forceFrac_n(copy.m_forceFrac_n), m_u_n(copy.m_u_n)
 {
     
 }
 
 /** @brief operator equal */
 TPZInterfaceMemory & TPZInterfaceMemory::operator=(const TPZInterfaceMemory &copy) {
-    SolL = copy.SolL;
-    SolR = copy.SolR;
+    m_forceFrac_n = copy.m_forceFrac_n;
+    m_u_n = copy.m_u_n;
     return *this;
 }
 
@@ -42,21 +42,21 @@ const std::string TPZInterfaceMemory::Name() const{
 }
 
 void TPZInterfaceMemory::Write(TPZStream &buf, int withclassid) const {
-    buf.Write(SolL);
-    buf.Write(SolR);
+    buf.Write(m_forceFrac_n);
+    buf.Write(m_u_n);
 
 }
 
 
 void TPZInterfaceMemory::Read(TPZStream &buf, void *context){
-    buf.Read(SolL);
-    buf.Read(SolR);
+    buf.Read(m_forceFrac_n);
+    buf.Read(m_u_n);
 }
 
 void TPZInterfaceMemory::Print(std::ostream &out) const{
     out << Name();
-    out << "\n current solution at left = " << SolL;
-    out << "\n current solution at right = " << SolR;
+    out << "\n current solution at left, forceFrac_n = " << m_forceFrac_n;
+    out << "\n current solution at right, u_n = " << m_u_n;
     out << "\n ";
 }
 

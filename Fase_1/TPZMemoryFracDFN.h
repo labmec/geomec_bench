@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "TPZElastoPlasticMemoryFracDFN.h"
 #include "TPZMonoPhasicMemoryFracDFN.h"
+#include "TPZElastoPlasticMemoryDFN.h"
 
 class TPZMemoryFracDFN : public TPZMonoPhasicMemoryFracDFN, public TPZElastoPlasticMemoryFracDFN {
     
@@ -24,10 +25,10 @@ private:
     STATE m_Du_0;
 
     /// Last fracture closure
-    TPZManVector<STATE,3> m_Du;
+    STATE m_Du;
     
     /// Current fracture closure
-    TPZManVector<STATE,3> m_Du_n;
+    STATE m_Du_n;
     
     // Point coordenates
     TPZManVector<STATE,3> m_coord;
@@ -64,6 +65,17 @@ public:
         return out;
     }
     
+    REAL Permeability(STATE k0, STATE phi0, STATE nu, STATE E){
+        
+        if(m_Du_0==0){
+            return k0;
+        }else{
+            return k0*exp(-268.*m_Du_n/m_Du_0);
+        }
+
+    }
+    
+    
     virtual int ClassId() const;
     
     void SetAlpha(STATE alpha){
@@ -85,22 +97,22 @@ public:
     }
     
     /// Set the last fracture closure
-    void SetDu(TPZManVector<STATE,3> & uR){
+    void SetDu(STATE uR){
         m_Du = uR;
     }
     
     /// Get the last fracture closure
-    TPZManVector<STATE,3> & GetDu(){
+    STATE & GetDu(){
         return m_Du;
     }
     
     /// Set the current fracture closure
-    void SetDu_n(TPZManVector<STATE,3> & uR){
+    void SetDu_n(STATE & uR){
         m_Du_n = uR;
     }
     
     /// Get the current fracture closure
-    TPZManVector<STATE,3> & GetDu_n(){
+    STATE & GetDu_n(){
         return m_Du_n;
     }
 

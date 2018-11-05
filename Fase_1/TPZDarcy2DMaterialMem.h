@@ -19,7 +19,7 @@
 #include "pzlog.h"
 #include "tpzautopointer.h"
 #include "TPZMaterial.h"
-#include "TPZElastoPlasticMem.h"
+#include "TPZElastoPlasticMemoryDFN.h"
 #include "pzporoelastoplasticmem.h"
 #include "TPZMonoPhasicMemoryDFN.h"
 #include "TPZMemoryDFN.h"
@@ -316,6 +316,9 @@ public:
      * @param bc[in] is the boundary condition material
      */
     virtual void Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> &u_exact, TPZFMatrix<STATE> &du_exact, TPZVec<REAL> &errors);
+    
+    
+    void porosity(long gp_index, REAL &phi_n);
     
 };
 
