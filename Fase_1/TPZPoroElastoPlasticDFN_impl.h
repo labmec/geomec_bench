@@ -168,6 +168,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::Print(std::ostream &out)
     out << "\n Tolerance for internal post processing iterations: " << fTol;
     out << "\n Internal plasticity <T> member:\n";
     fPlasticity.Print(out);
+    TPZMatWithMem<TMEM>::Print(out);
 }
 
 template <class T, class TMEM>

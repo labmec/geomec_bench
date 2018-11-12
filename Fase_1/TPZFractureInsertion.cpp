@@ -283,7 +283,6 @@ void TPZFractureInsertion::InsertFractureNeighbours(std::set<int64_t> pivot_neig
         m_gel_right_indexes.insert(gel_neigh0->Index());
     }
     
-    
 }
 
 

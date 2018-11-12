@@ -179,6 +179,16 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
             REAL norm_res_c = Norm(this->Rhs());
             std::cout << " norm = " << norm_res_c << std::endl;
             
+
+            /// Print Interface Memory vol. elements
+            std::ofstream fileMemVol("MemoryDFN.txt", std::ofstream::app);
+            fileMemVol <<"For porous media :" << std::endl;
+            int mat_ID = m_simulation_data->Get_volumetric_material_id()[0];
+            TPZMaterial * mat_volumetric = this->Mesh()->FindMaterial(mat_ID);
+            TPZMatWithMem<TPZMemoryDFN> * mat_with_volmem = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(mat_volumetric);
+           // mat_with_volmem->GetMemory().Print(fileMemVol);
+            mat_with_volmem->Print(fileMemVol);
+            
             /// Print Interface Memory Left and Right
             
             std::ofstream fileMemInter("MemoryInterfaces.txt", std::ofstream::app);
@@ -236,6 +246,7 @@ void TPZPoroElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
 
 void TPZPoroElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 
+    m_simulation_data->SetInitialStateQ(true);
     SetUpdateMemmory(true);
     AssembleResidual();
     SetUpdateMemmory(false);

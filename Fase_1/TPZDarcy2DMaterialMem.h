@@ -46,6 +46,16 @@ class TPZDarcy2DMaterialMem : public TPZMatWithMem<TMEM>  {
     
     /** @brief Medium permeability. Coeficient which multiplies the gradient operator*/
     REAL fk;
+
+    /** @brief Medium vertical permeability. Coeficient which multiplies the gradient operator*/
+    REAL fkv;
+    
+    /** @brief Medium hotizontal permeability. Coeficient which multiplies the gradient operator*/
+    REAL fkh;
+    
+    
+    /** @brief Medium porosity.*/
+    REAL fPhi;
     
     /** @brief permeability tensor. Coeficient which multiplies the gradient operator*/
     TPZFNMatrix<9,REAL> fTensorK;
@@ -105,6 +115,17 @@ public:
     
     void FillBoundaryConditionDataRequirement(int type,TPZVec<TPZMaterialData> &datavec);
     
+    void SetPermeabilityXY(TPZFMatrix<REAL> perm) {
+        fkh = perm(0,0);
+        fkv = perm(1,1);
+        fTensorK.Zero();
+        fInvK.Zero();
+        for (int i=0; i<fDimension; i++) {
+            fTensorK(i,i) = perm(i,i);
+            fInvK(i,i) = 1./perm(i,i);
+        }
+    }
+    
     void SetPermeability(REAL perm) {
         fk = perm;
         fTensorK.Zero();
@@ -113,6 +134,10 @@ public:
             fTensorK(i,i) = perm;
             fInvK(i,i) = 1./perm;
         }
+    }
+
+    REAL GetPermeability(){
+        return fk;
     }
     
     //Set the permeability tensor and inverser tensor
@@ -128,9 +153,13 @@ public:
     void SetViscosity(REAL visc) {
         fViscosity = visc;
     }
+
+    void SetPorosity(REAL poro) {
+        fPhi = poro;
+    }
     
-    void GetPermeability(REAL &perm) {
-        perm = fk;
+    REAL GetPorosity() {
+        return fPhi;
     }
     
     void SetInternalFlux(REAL flux) {

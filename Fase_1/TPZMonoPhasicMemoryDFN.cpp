@@ -13,10 +13,13 @@ TPZMonoPhasicMemoryDFN::TPZMonoPhasicMemoryDFN(){
     m_p_0       = 0.0;
     m_p         = 0.0;
     m_p_n       = 0.0;
-    m_kappa_0   = 1.0e-13;
-    m_kappa     = 1.0e-13;
-    m_phi_0     = 0.1;
-    m_phi       = 0.1;
+    m_kappa_0.Resize(3,3);
+    m_kappa_0.Zero();
+    m_kappa.Resize(3,3);
+    m_kappa.Zero();
+    m_phi_0     = 0.;
+    m_phi       = 0.;
+    
 }
 
 TPZMonoPhasicMemoryDFN::TPZMonoPhasicMemoryDFN(const TPZMonoPhasicMemoryDFN & other){
@@ -71,10 +74,16 @@ void TPZMonoPhasicMemoryDFN::Read(TPZStream &buf, void *context){
     buf.Read(&m_p_0);
     buf.Read(&m_p);
     buf.Read(&m_p_n);
-    buf.Read(&m_kappa_0);
-    buf.Read(&m_kappa);
     buf.Read(&m_phi_0);
     buf.Read(&m_phi);
+
+    for (int i = 0; i< m_kappa_0.Rows(); i++) {
+        buf.Read(&m_kappa_0(i,i));
+    }
+    for (int i = 0; i < m_kappa.Rows(); i++) {
+        buf.Read(&m_kappa(i,i));
+    }
+
 }
 
 void TPZMonoPhasicMemoryDFN::Print(std::ostream &out) const{

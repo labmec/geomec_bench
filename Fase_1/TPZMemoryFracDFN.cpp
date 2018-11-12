@@ -13,6 +13,12 @@ TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryFracDFN() , TPZElastoP
     m_Du_0 = 0.;
     m_Du = 0.;
     m_Du_n = 0.;
+    m_Vm = 0.;
+    m_coord.resize(3);
+    
+    for (int i = 0; i < m_coord.size(); i++) {
+        m_coord[i] = 0.;
+    }
 
 }
 
@@ -21,6 +27,8 @@ TPZMemoryFracDFN::TPZMemoryFracDFN(const TPZMemoryFracDFN & other): TPZMonoPhasi
     m_Du_0 = other.m_Du_0;
     m_Du = other.m_Du;
     m_Du_n = other.m_Du_n;
+    m_Vm = other.m_Vm;
+    m_coord = other.m_coord;
 }
 
 const TPZMemoryFracDFN & TPZMemoryFracDFN::operator=(const TPZMemoryFracDFN & other) {
@@ -34,6 +42,8 @@ const TPZMemoryFracDFN & TPZMemoryFracDFN::operator=(const TPZMemoryFracDFN & ot
     m_Du_0 = other.m_Du_0;
     m_Du = other.m_Du;
     m_Du_n = other.m_Du_n;
+    m_Vm = other.m_Vm;
+    m_coord = other.m_coord;
     
     return *this;
 }

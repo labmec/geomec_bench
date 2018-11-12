@@ -170,8 +170,8 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     HDivPiola = 1;
     
     TPZMaterial::gBigNumber = 1.e12;
-    REAL Eyoung = 1.0;
-    REAL poisson = 0.0;
+    REAL Eyoung = 16.9e3;
+    REAL poisson = 0.3;
     
     REAL rockrho = 0.;
     REAL gravity = 0.;
@@ -464,19 +464,19 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchRef.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
     Geometry.SetfDimensionlessL(s);
-    Geometry.fPZMaterialId[0]["PointLeft"] = 0;
-    Geometry.fPZMaterialId[0]["PointRight"] = 0;
     Geometry.fPZMaterialId[1]["bottom"] = fmatBCbott;
     Geometry.fPZMaterialId[1]["right"] = fmatBCright;
     Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
     Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
     if (finsert_fractures_Q) {
         Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
+        Geometry.fPZMaterialId[0]["PointLeft"] = fmatPointLeft[0];
+        Geometry.fPZMaterialId[0]["PointRight"] = fmatPointRight[0];
     }
     Geometry.fPZMaterialId[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
@@ -545,7 +545,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, null_dir_dirichlet, val1, val2);
     val2.Zero();
-    val2(1,0)= -100.;
+    val2(1,0)= -84.95;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
     val2.Zero();
     val2(0,0)=1;
@@ -834,20 +834,31 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     K.Zero();
     invK.Zero();
     
-    K(0,0)=3.38801e-7;
-    K(1,1)=2.566e-11;
+    REAL Sf = 0.0338801;
+    
+    K(0,0)=Sf*3.3880079667e-13;
+    K(1,1)=Sf*2.5659997999999995e-17;
+
+    
+    K(0,0)=Sf;
+    K(1,1)=Sf*0.0000757377;
+    
     invK(0,0)=1./K(0,0);
     invK(1,1)=1./K(1,1);
-
+    material->SetPermeabilityXY(K);
+    
     TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact,5);
     material->SetForcingFunctionExact(solp);
     material->SetSimulationData(sim_data);
+    material->SetPorosity(0.0758);
     cmesh->InsertMaterialObject(material);
 
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    STATE Pjusante = 54.9;
-    STATE Pmontante = 55.;
+    STATE DeltaP = 0.;
+   
+    STATE Pjusante = 54.9 - DeltaP;
+    STATE Pmontante = 55.0 - DeltaP;
     
     val1(0,0) = 0.; //botton
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
@@ -871,14 +882,14 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
         TPZDarcy2DMaterialMem<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryFracDFN> (fmatFrac[i_frac],fdimFrac,1,1);
-            REAL kf = 4.68789e-4;
+            REAL kf = Sf*4.65827656e-10;
             REAL Dyf = 6.5e-5;
-            materialFrac->SetPermeability(kf*Dyf);
+            materialFrac->SetPermeability(1374.93*Sf*6.5e-5);
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
             
             // 2 - Condições de contorno
-            val1(0,0) =  Pjusante; // right
+            val1(0,0) =  Pjusante*0.; // right
             TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond4);
 

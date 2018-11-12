@@ -21,6 +21,9 @@ private:
     /// Biot-Willis coefficient
     STATE m_alpha;
 
+    /// Maximum opening of fracture
+    STATE m_Vm;
+    
     /// Initial fracture closure
     STATE m_Du_0;
 
@@ -70,13 +73,24 @@ public:
         if(m_Du_0==0){
             return k0;
         }else{
-            return k0*exp(-268.*m_Du_n/m_Du_0);
+            REAL h = m_Vm - m_Du_n;
+            REAL h_0 = m_Vm - m_Du_0;
+           // return k0*exp(-268.*(h - h_0)/h_0);
+            return k0;
         }
 
     }
     
     
     virtual int ClassId() const;
+    
+    void SetVm(STATE Vm){
+        m_Vm  = Vm;
+    }
+    
+    STATE GetVm(){
+        return m_Vm;
+    }
     
     void SetAlpha(STATE alpha){
         m_alpha  = alpha;

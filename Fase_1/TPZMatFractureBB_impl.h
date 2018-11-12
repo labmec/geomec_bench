@@ -93,7 +93,10 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
             
             STATE valNonLinear = weight * phi_f(i) * (forceFrac_n[ist] * forceFrac_n[ist])/200.;
             STATE valLinear = weight * phi_f(i) * forceFrac_n[ist];
-            ef(fNStateVariables*i+ist) += -valBB;
+            
+            STATE valDu_0 = weight * phi_f(i) * D_u0 * normal[ist];
+            
+            ef(fNStateVariables*i+ist) += -valBB+valDu_0;
         }
         
         //STATE val = (weight * phiVi_normal * forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
@@ -114,7 +117,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
                 STATE valBB = weight * phi_f(i) * phi_f(j) * Kni * Vm * Vm / ( (Kni*Vm+ forceFrac_n[ist]) * (Kni*Vm+ forceFrac_n[ist]) );
                 
                 STATE valNonLinear =  weight * phi_f(i) * phi_f(j) * 2. * (forceFrac_n [ist])/200.;
-                 STATE valLinear =  weight * phi_f(i) * phi_f(j);
+                 //STATE valLinear =  weight * phi_f(i) * phi_f(j);
                  ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += -valBB;
             }
            
@@ -171,11 +174,19 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         STATE a0 = Get_a0(); //Initial opening
         STATE Kni = Get_Kni(); //Initial normal stiffness
         
-        STATE Du_0 = (forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
+        if (m_simulation_data->IsInitialStateQ()) {
+            TMEM &mem = this->GetMemory().get()->operator[](gp_index);
+            STATE Du = (forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
+            mem.SetDu_0(Du);
+        }
+        
+        STATE Du_0 = Vm - a0;
+        STATE Du_n = (forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
         
         TMEM &mem = this->GetMemory().get()->operator[](gp_index);
         
-        mem.SetDu_0(Du_0);
+        mem.SetVm(Vm);
+        mem.SetDu_n(Du_n);
         
         TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
         for(int i=0; i<fNStateVariables; i++)

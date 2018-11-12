@@ -10,10 +10,16 @@
 
 TPZMemoryDFN::TPZMemoryDFN() : TPZMonoPhasicMemoryDFN() , TPZElastoPlasticMemoryDFN() {
     m_alpha = 0.5;
+    m_coord.resize(3);
+    
+    for (int i = 0; i < m_coord.size(); i++) {
+        m_coord[i] = 0.;
+    }
 }
 
 TPZMemoryDFN::TPZMemoryDFN(const TPZMemoryDFN & other): TPZMonoPhasicMemoryDFN(other), TPZElastoPlasticMemoryDFN(other) {
     m_alpha = other.m_alpha;
+    m_coord = other.m_coord;
 }
 
 const TPZMemoryDFN & TPZMemoryDFN::operator=(const TPZMemoryDFN & other) {
@@ -24,6 +30,7 @@ const TPZMemoryDFN & TPZMemoryDFN::operator=(const TPZMemoryDFN & other) {
     }
     
     m_alpha = other.m_alpha;
+    m_coord = other.m_coord;
 
     return *this;
 }
@@ -47,8 +54,17 @@ void TPZMemoryDFN::Read(TPZStream &buf, void *context){
 }
 
 void TPZMemoryDFN::Print(std::ostream &out) const {
+    out << "\n";
+    out << "\n -------------------------------";
+    out << Name();
+    out << "\n Coord of integratrion point = " << m_coord;
+    out << "\n -------------------------------";
+    
     TPZMonoPhasicMemoryDFN::Print(out);
+    out << "\n -------------------------------";
     TPZElastoPlasticMemoryDFN::Print(out);
+    out << "\n -------------------------------";
+
 }
 
 int TPZMemoryDFN::ClassId() const {

@@ -29,6 +29,9 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem() {
   //  TMEM memory;
   //  this->SetDefaultMem(memory);
     fk=1.;
+    fkv=1.;
+    fkh=1.;
+    fPhi = 0.;
     m_simulation_data = NULL;
     fViscosity=1.;
     fTensorK.Resize(fDimension, fDimension);
@@ -59,6 +62,9 @@ TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(int matid, int dimension, int
 //    TMEM memory;
 //    this->SetDefaultMem(memory);
     fk=1.;
+    fkv=1.;
+    fkh=1.;
+    fPhi = 0.;
     fViscosity=1.;
     fDimension = dimension;
     m_simulation_data = NULL;
@@ -86,6 +92,10 @@ template <class TMEM>
 TPZDarcy2DMaterialMem<TMEM>::TPZDarcy2DMaterialMem(const TPZDarcy2DMaterialMem &mat) : fDimension(mat.fDimension),fSpace(mat.fSpace), fTheta(mat.fTheta)
 {
     m_simulation_data   = mat.m_simulation_data;
+    fkv = mat.fkv;
+    fkh = mat.fkh;
+    fk = mat.fk;
+    fPhi = mat.fPhi;
     
 #ifdef LOG4CXX
     if(DarcyLogger->isDebugEnabled())
@@ -112,6 +122,10 @@ TPZDarcy2DMaterialMem<TMEM> & TPZDarcy2DMaterialMem<TMEM>::operator=(const TPZDa
     fSpace=mat.fSpace;
     fTheta=mat.fTheta;
     m_simulation_data   = mat.m_simulation_data;
+    fk = mat.fk;
+    fkv = mat.fkv;
+    fkh = mat.fkh;
+    fPhi = mat.fPhi;
 
     return *this;
 }
@@ -563,7 +577,7 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     
     TPZFNMatrix<10,STATE> gradV_axes = datavec[vindex].dsol[0];
     TPZFNMatrix<40,STATE> div_on_master;
-    
+
     STATE jac_det;
     this->ComputeDivergenceOnMaster(datavec, div_on_master);
     jac_det = datavec[vindex].detjac;
@@ -571,16 +585,20 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     // Get the pressure at the integrations points
     long gp_index = datavec[0].intGlobPtIndex;
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
-    
-    
-    memory.Setkappa_0(fk);
-    REAL k_0 = memory.kappa_0();
+
+
+    memory.Setkappa_0(fTensorK);
+    memory.Setphi_0(fPhi);
+    TPZFNMatrix<9,REAL>  k_0 = memory.kappa_0();
     REAL phi_0 = memory.phi_0();
     REAL nu = m_simulation_data->Get_Poisson();
     REAL E = m_simulation_data->Get_Eyoung();
-    REAL k_n = memory.Permeability(k_0,phi_0,nu,E);
+    TPZFNMatrix<9,REAL> k_n(3,3,0.);
+    
+    for(int i = 0; i < k_0.Rows(); i++){
+        k_n(i,i) = memory.Permeability(k_0(i,i),phi_0,nu,E);
+    }
     memory.Setkappa(k_n);
-
     
     // Time
     //STATE dt = m_simulation_data->dt();
@@ -592,15 +610,16 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     
     TPZFNMatrix<9,REAL> K(3,3),Kinv(3,3);
     K.Zero();
-    K(0,0) = memory.kappa();
-    K(1,1) = memory.kappa();
-    K(2,2) = memory.kappa();
+    K(0,0) = memory.kappa()(0,0);
+    K(1,1) = memory.kappa()(1,1);
+    K(2,2) = memory.kappa()(2,2);
     
+    //K.Print(std::cout);
     
     Kinv.Zero();
-    Kinv(0,0) = 1.0/(memory.kappa());
-    Kinv(1,1) = 1.0/(memory.kappa());
-    Kinv(2,2) = 1.0/(memory.kappa());
+    Kinv(0,0) = 1.0/(memory.kappa()(0,0));
+    Kinv(1,1) = 1.0/(memory.kappa()(1,1));
+    Kinv(2,2) = 1.0/(memory.kappa()(2,2));
     
     int nphiV       = datavec[vindex].fVecShapeIndex.NElements();
     int nphiP       = phiP.Rows();
