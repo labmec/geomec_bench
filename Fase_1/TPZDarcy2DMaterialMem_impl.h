@@ -249,6 +249,101 @@ int TPZDarcy2DMaterialMem<TMEM>::NSolutionVariables(int var) {
     return 0;
 }
 
+template <class TMEM>
+void TPZDarcy2DMaterialMem<TMEM>::Solution(TPZMaterialData &data, int var, TPZVec<STATE> &Solout){
+    int numbersol = data.dsol.size();
+    if (numbersol != 1) {
+        DebugStop();
+    }
+    //this->Solution(data.sol[0], data.dsol[0], data.axes, var, Solout);
+
+    
+    // Get the pressure at the integrations points
+    TPZManVector<STATE,3> v_h;
+    STATE p_h;
+    
+    long gp_index = data.intGlobPtIndex;
+    TMEM & memory = this->GetMemory().get()->operator[](gp_index);
+    
+    memory.GetFlux(v_h);
+    p_h = memory.p_n();
+    
+    TPZFNMatrix<9,STATE> gradu(2,1);
+    Solout.Resize(this->NSolutionVariables(var));
+    
+    switch(var) {
+            
+        case 0: //Pressure
+        {
+            Solout[0] = p_h;
+        }
+            break;
+            
+        case 1: //Velocity
+        {
+            Solout[0] = v_h[0]; // Vx
+            Solout[1] = v_h[1]; // Vy
+        }
+            break;
+        case 2: //f
+        {
+            TPZVec<STATE> f(1,0.);
+            if(this->HasForcingFunction()){
+                this->ForcingFunction()->Execute(data.x, f, gradu);
+            }
+            Solout[0] = f[0]; // fx
+        }
+            break;
+            
+        case 3: //v_exact
+        {
+            TPZVec<STATE> sol;
+            if(this->HasForcingFunctionExact()){
+                this->fForcingFunctionExact->Execute(data.x, sol, gradu); // @omar::check it!
+            }
+            Solout[0] = sol[0]; // vx
+            Solout[1] = sol[1]; // vy
+        }
+            break;
+            
+        case 4: //p_exact
+        {
+            TPZVec<STATE> sol;
+            if(this->HasForcingFunctionExact()){
+                this->fForcingFunctionExact->Execute(data.x, sol, gradu); // @omar::check it!
+            }
+            Solout[0] = sol[2]; // px
+            
+        }
+            break;
+            
+        case 5: //Velocity X
+        {
+            Solout[0] = v_h[0]; // Vx
+            
+        }
+            
+            break;
+            
+        case 6: //Velocity Y
+        {
+            Solout[0] = v_h[1]; // Vy
+        }
+            
+            break;
+            
+        default:
+        {
+            std::cout  << " Var index not implemented " << std::endl;
+            DebugStop();
+        }
+    }
+    
+    
+}
+
+
+
 ////////////////////////////////////////////////////////////////////
 
 template <class TMEM>
@@ -586,7 +681,6 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     long gp_index = datavec[0].intGlobPtIndex;
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
 
-
     memory.Setkappa_0(fTensorK);
     memory.Setphi_0(fPhi);
     TPZFNMatrix<9,REAL>  k_0 = memory.kappa_0();
@@ -604,8 +698,9 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     //STATE dt = m_simulation_data->dt();
     TPZManVector<STATE,3> v    = datavec[vindex].sol[0];
     STATE p_n                  = datavec[pindex].sol[0][0];
-//    STATE p_0      = memory.p_0();
-//    STATE p        = memory.p();
+
+    memory.Setp_n(p_n);
+    memory.SetFlux(v);
     
     
     TPZFNMatrix<9,REAL> K(3,3),Kinv(3,3);
@@ -735,8 +830,13 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     
     unsigned int q_b = 0;
     unsigned int p_b = 1;
+    
+    long gp_index = datavec[0].intGlobPtIndex;
+    TMEM &Mem = this->GetMemory().get()->operator[](gp_index);
+
     if (m_simulation_data->Get_must_accept_solution_Q()) {
-        long gp_index = datavec[0].intGlobPtIndex;
+        
+        
         if(gp_index < 0)
         {
             std::cout << "Integration point index is not initialized\n";
@@ -746,13 +846,17 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         STATE p                  = datavec[p_b].sol[0][0];
 
         if (m_simulation_data->IsInitialStateQ()) {
-            this->GetMemory().get()->operator[](gp_index).Setp_0(p);
+            //DebugStop();
+            //this->GetMemory().get()->operator[](gp_index).Setp_0(p);
         }
-
+    
         if (m_simulation_data->IsCurrentStateQ()) {
-            this->GetMemory().get()->operator[](gp_index).Setp_n(p);
+            Mem.Setp_n(p);
+            Mem.SetFlux(q);
+            
         }else{
-            this->GetMemory().get()->operator[](gp_index).Setp(p);
+            Mem.Setp(p);
+            Mem.SetFlux(q);
         }
 
     }else{

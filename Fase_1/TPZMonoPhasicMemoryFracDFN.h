@@ -42,6 +42,9 @@ private:
     /// lagrangian porosity
     REAL m_phi;
     
+    /// normal flux at current state (each time contribute is called this variable is updated)
+    TPZManVector<STATE,3> m_Flux_n;
+    
 public:
     
     /// Default constructor
@@ -79,6 +82,18 @@ public:
     
     /// set and get methods
     
+    /// Set flux at current REAL
+    void SetFlux(const TPZVec<STATE> &flux)
+    {
+        m_Flux_n = flux;
+    }
+    
+    /// Get flux at current REAL
+    void GetFlux(TPZVec<STATE> &flux)
+    {
+        flux = m_Flux_n;
+    }
+    
     /// Set pore pressure at initial REAL
     void Setp_0(REAL p_0)
     {
@@ -90,7 +105,6 @@ public:
     {
         return m_p_0;
     }
-    
     
     /// Set pore pressure at current REAL
     void Setp(REAL p)

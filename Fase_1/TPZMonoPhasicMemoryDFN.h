@@ -21,14 +21,11 @@ class TPZMonoPhasicMemoryDFN{
     
 private:
     
-    /// pore pressure at initial REAL
-    REAL m_p_0;
+    /// last pore pressure
+    STATE m_p;
     
-    /// pore pressure
-    REAL m_p;
-    
-    /// pore pressure
-    REAL m_p_n;
+    /// current pore pressure (each time contribute is called this variable is updated)
+    STATE m_p_n;
     
     /// absolute permeability at initial REAL
     TPZFNMatrix<9,REAL> m_kappa_0;
@@ -41,6 +38,10 @@ private:
     
     /// lagrangian porosity
     REAL m_phi;
+
+    /// normal flux at current state (each time contribute is called this variable is updated)
+    TPZManVector<STATE,3> m_Flux_n;
+    
     
 public:
     
@@ -78,17 +79,17 @@ public:
     
     
     /// set and get methods
-    
-    /// Set pore pressure at initial REAL
-    void Setp_0(REAL p_0)
+
+    /// Set flux at current REAL
+    void SetFlux(const TPZVec<STATE> &flux)
     {
-        m_p_0 = p_0;
+        m_Flux_n = flux;
     }
     
-    /// Get pore pressure at initial REAL
-    REAL p_0()
+    /// Get flux at current REAL
+    void GetFlux(TPZVec<STATE> &flux)
     {
-        return m_p_0;
+        flux = m_Flux_n;
     }
     
     

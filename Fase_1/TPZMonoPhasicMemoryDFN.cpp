@@ -10,7 +10,6 @@
 
 TPZMonoPhasicMemoryDFN::TPZMonoPhasicMemoryDFN(){
     
-    m_p_0       = 0.0;
     m_p         = 0.0;
     m_p_n       = 0.0;
     m_kappa_0.Resize(3,3);
@@ -24,7 +23,6 @@ TPZMonoPhasicMemoryDFN::TPZMonoPhasicMemoryDFN(){
 
 TPZMonoPhasicMemoryDFN::TPZMonoPhasicMemoryDFN(const TPZMonoPhasicMemoryDFN & other){
     
-    m_p_0       = other.m_p_0;
     m_p         = other.m_p;
     m_p_n       = other.m_p_n;
     m_kappa_0   = other.m_kappa_0;
@@ -40,7 +38,6 @@ const TPZMonoPhasicMemoryDFN & TPZMonoPhasicMemoryDFN::operator=(const TPZMonoPh
         return *this;
     }
     
-    m_p_0       = other.m_p_0;
     m_p         = other.m_p;
     m_p_n       = other.m_p_n;
     m_kappa_0   = other.m_kappa_0;
@@ -60,7 +57,7 @@ const std::string TPZMonoPhasicMemoryDFN::Name() const{
 }
 
 void TPZMonoPhasicMemoryDFN::Write(TPZStream &buf, int withclassid) const {
-    buf.Write(&m_p_0);
+    
     buf.Write(&m_p);
     buf.Write(&m_p_n);
     buf.Write(&m_kappa_0);
@@ -71,7 +68,7 @@ void TPZMonoPhasicMemoryDFN::Write(TPZStream &buf, int withclassid) const {
 
 
 void TPZMonoPhasicMemoryDFN::Read(TPZStream &buf, void *context){
-    buf.Read(&m_p_0);
+    
     buf.Read(&m_p);
     buf.Read(&m_p_n);
     buf.Read(&m_phi_0);
@@ -88,7 +85,6 @@ void TPZMonoPhasicMemoryDFN::Read(TPZStream &buf, void *context){
 
 void TPZMonoPhasicMemoryDFN::Print(std::ostream &out) const{
     out << Name();
-    out << "\n initial pressure = " << m_p_0;
     out << "\n pressure at last state = " << m_p;
     out << "\n pressure at current state = " << m_p_n;
     out << "\n initial absolute permeability = " << m_kappa_0;

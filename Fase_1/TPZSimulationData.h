@@ -137,10 +137,16 @@ public:
     TPZManVector<std::pair<int, TPZManVector<int,12>>,12> & MaterialIds() { return m_mat_ids; }
     
     /** @brief Set initial state */
-    void SetInitialStateQ(bool state) { m_is_initial_state_Q = state; }
+    void SetInitialStateQ(bool state) {
+        m_is_initial_state_Q = state;
+    }
     
     /** @brief Get initial state */
-    bool IsInitialStateQ() {return m_is_initial_state_Q;}
+    bool IsInitialStateQ() {
+        
+        return m_is_initial_state_Q;
+        
+    }
     
     /** @brief Set current time state */
     void SetCurrentStateQ(bool state) { m_is_current_state_Q = state; }

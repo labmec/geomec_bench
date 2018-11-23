@@ -127,6 +127,9 @@ private:
     
     bool finsert_fractures_Q = true;
     
+    TPZFractureInsertion fractureInsert;
+    
+    
 public:
 
     HidraulicoMonofasicoElastico();
@@ -164,7 +167,7 @@ public:
     
     //Fractures structure
     void Plot_over_fractures(TPZCompMesh *cmesh);
-    void BreakConnectivity(TPZCompMesh &cmesh, int matId);
+    void BreakConnectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     void BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     
     //Multiphysics Interfaces

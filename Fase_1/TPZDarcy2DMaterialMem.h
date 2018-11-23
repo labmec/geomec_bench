@@ -197,6 +197,9 @@ public:
     
     void ComputeDivergenceOnMaster(TPZVec<TPZMaterialData> &datavec, TPZFMatrix<STATE> &DivergenceofPhi);
     
+    
+    void Solution(TPZMaterialData &data, int var, TPZVec<STATE> &Solout);
+    
     /** returns the solution associated with the var index based on
      * the finite element approximation */
     void Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout);

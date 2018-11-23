@@ -106,6 +106,13 @@ void TPZDarcyAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZManVe
     }
 
     m_post_processor->SetPostProcessVariables(post_mat_id, m_var_names);
+    int dim = Mesh()->Dimension();
+    int div = 0;
+    TPZStack< std::string> vecnames;
+    std::string plotfile("Benchmark_Mono_DarcyTest.vtk");
+
+    m_post_processor->DefineGraphMesh(dim,m_var_names,vecnames,plotfile);
+
     TPZFStructMatrix structmatrix(m_post_processor->Mesh());
     structmatrix.SetNumThreads(n_threads);
     m_post_processor->SetStructuralMatrix(structmatrix);
@@ -160,6 +167,8 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
            PrintVectorByElement(sout, fRhs);
            PrintVectorByElement(sout, fSolution);
            LOGPZ_DEBUG(logger, sout.str())
+           m_post_processor->TransferSolution();
+           m_post_processor->PostProcess(0);
        }
 #endif
         norm_res = Norm(Rhs());

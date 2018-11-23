@@ -61,8 +61,8 @@ public:
         
 //        REAL sigma_v_n = (GetSigma_n().I1())/3.;
         REAL sigma_v_n= GetSigma_n()(0,0)+GetSigma_n()(1,1);
-        REAL strain_v_n = (1.-2.*nu)*sigma_v_n/E;
-        REAL phi   = 1. - (1. - phi0) * exp(strain_v_n+0.0010114983544321822);
+        REAL strain_v_n = (1.-2.*nu)*(sigma_v_n)/E;
+        REAL phi   = 1. - (1. - phi0) * exp(strain_v_n);
         REAL varphi = phi/phi0;
 
         REAL perm = k0*pow(varphi, 60.);

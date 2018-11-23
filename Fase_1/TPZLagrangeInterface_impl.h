@@ -101,6 +101,8 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZV
         std::cout<<nrowr<<std::endl;
         DebugStop();
     }
+    TPZManVector<STATE> normal1 = data.normal;
+    TPZManVector<STATE> normal2 = dataright[rightdataindex].normal;
     
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
     int il,jl,ir,jr;

@@ -12,6 +12,7 @@
 #include "pzcompelwithmem.h"
 #include <pzgeoel.h>
 #include "pzgeoelbc.h"
+#include "TPZMultiphysicsInterfaceEl.h"
 
 /// Default constructor
 TPZFractureInsertion::TPZFractureInsertion(){
@@ -683,7 +684,7 @@ void TPZFractureInsertion::OpenFractureOnHdiv(TPZCompMesh *cmesh, int mat_id_flu
             
             intel->LoadElementReference();
             
-            intel->SetSideOrient(neigh[1].Side(), 1);
+            intel->SetSideOrient(neigh[1].Side(), -1);
             
             int64_t index;
             
@@ -819,3 +820,190 @@ void TPZFractureInsertion::SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLef
 
 
 
+/// Set interfaces elements between fracture and volumetric elements
+void TPZFractureInsertion::SetMultiphysicsInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight, int mat_id_flux_wrap){
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    gmesh->ResetReference();
+    cmesh->LoadReferences();
+    std::vector<int64_t> fracture_index = GetFractureIndexes();
+    
+    int fracture_id = GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = cmesh->Reference()->ElementVec();
+    int meshdim = cmesh->Dimension();
+    int64_t nelem = elvec.NElements();
+    
+    int64_t index;
+    
+    std::set<int64_t> left_el_indexes = GetLeftIndexes();
+    std::set<int64_t> right_el_indexes = GetRightIndexes();
+    
+    for (int iel = 0; iel < fracture_index.size(); iel++) {
+        TPZGeoEl *gel = elvec[fracture_index[iel]];
+        
+        const int gelMatId = gel->MaterialId();
+#ifdef PZDEBUG
+        if (gelMatId != fracture_id)
+            DebugStop();
+        if (gel->HasSubElement())
+            DebugStop();
+#endif
+        TPZGeoElSide gelside(gel, gel->NSides() - 1);
+        TPZCompElSide celside = gelside.Reference();
+        TPZGeoElSide neighbour = gelside.Neighbour();
+        if (!celside) {
+            DebugStop();
+        }
+        //        TPZGeoElSide neigh = gelside.Neighbour();
+        //        int64_t neigh_index = neigh.Element()->Index();
+        TPZStack<TPZCompElSide> celstack;
+        gelside.EqualLevelCompElementList(celstack, 0, 0);
+        if (celstack.size() != 4) {
+            DebugStop();
+        }
+        
+        TPZManVector<int64_t,3> LeftElIndices(1,0.),RightElIndices(1,0.);
+        LeftElIndices[0]=0;
+        RightElIndices[0]=1;
+        
+        
+        for(int stack_i=0; stack_i <celstack.size(); stack_i++){
+            TPZGeoElSide neigh = celstack[stack_i].Reference();
+            int64_t neigh_index = neigh.Element()->Index();
+            if (neigh.Element()->Dimension()!=2){
+                continue;
+            }
+            
+            TPZGeoElSide wrap_neigh = neigh.Neighbour();
+            if (wrap_neigh.Element()->Dimension() != 1 && wrap_neigh.Element()->MaterialId() != mat_id_flux_wrap){
+                continue;
+            }
+
+            TPZCompElSide Comp_wrapneigh = wrap_neigh.Reference();
+            
+            if(left_el_indexes.find(neigh_index)!=left_el_indexes.end()){
+                
+                TPZGeoElBC gbcleft(gelside,matInterfaceLeft);
+                int64_t index;
+
+                TPZMultiphysicsInterfaceElement *elem_left = new TPZMultiphysicsInterfaceElement(*cmesh,gbcleft.CreatedElement(),index,Comp_wrapneigh,celside);
+                elem_left->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
+                
+                
+            }else if((right_el_indexes.find(neigh_index) != right_el_indexes.end())){
+                
+                TPZGeoElBC gbcright(gelside,matInterfaceRight);
+                int64_t index;
+
+                TPZMultiphysicsInterfaceElement *elem_right = new TPZMultiphysicsInterfaceElement(*cmesh,gbcright.CreatedElement(),index,Comp_wrapneigh,celside);
+                elem_right->SetLeftRightElementIndices(LeftElIndices,RightElIndices);
+                
+            }else{
+                DebugStop();
+            }
+        }
+        
+    }
+    
+    
+    
+}
+
+
+
+void TPZFractureInsertion::AdjustSideOrient(TPZCompMesh *cmesh){
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+    gmesh->ResetReference();
+    cmesh->LoadReferences();
+    std::vector<int64_t> fracture_index = GetFractureIndexes();
+    
+    int fracture_id = GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = gmesh->ElementVec();
+    
+    int meshdim = cmesh->Dimension();
+    int64_t nelem = elvec.NElements();
+    
+    int64_t index;
+    
+    for (int iel = 0; iel < fracture_index.size(); iel++) {
+        TPZGeoEl *gel = elvec[fracture_index[iel]];
+        
+        const int gelMatId = gel->MaterialId();
+#ifdef PZDEBUG
+        if (gelMatId != fracture_id)
+            DebugStop();
+        if (gel->HasSubElement())
+            DebugStop();
+#endif
+        TPZCompEl *cel = gel->Reference();
+        TPZGeoElSide gelside(gel, gel->NSides() - 1);
+        TPZCompElSide celside = gelside.Reference();
+        
+        
+        TPZStack<TPZCompElSide> neigh0, neigh1;
+        int nsides = gel->NSides();
+        
+        TPZGeoElSide gelside0(gel,0);
+        TPZGeoElSide gelside1(gel,1);
+        TPZGeoElSide neighbour0 = gelside0.Neighbour();
+        TPZGeoElSide neighbour1 = gelside1.Neighbour();
+        
+        gelside0.EqualLevelCompElementList(neigh0, 0, 0);
+        gelside1.EqualLevelCompElementList(neigh1, 0, 0);
+        TPZCompElSide celside0 = gelside0.Reference();
+        TPZCompElSide celside1 = gelside1.Reference();
+        
+        TPZCompElSide neigh_elside;
+        
+        for (int i =0; i<neigh1.size(); i++) {
+            if (neigh1[i].Element()->Material()->Id()==m_fracture_id) {
+                neigh_elside=neigh1[i];
+                TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(celside1.Element());
+                intel->SetSideOrient(1, -1);
+            }
+        
+            bool isboundary = m_boundaries_material_ids.find(neigh1[i].Element()->Material()->Id()) != m_boundaries_material_ids.end();
+            bool ispoint = neigh1[i].Element()->Dimension() == 0;
+            if (isboundary && ispoint) {
+                neigh_elside=neigh1[i];
+            }
+        }
+        
+//        TPZGeoElSide neighbour = gelside.Neighbour();
+//        TPZGeoEl *gel_neigh = neighbour.Element();
+//
+//        TPZCompElSide neigh_celside = neighbour.Reference();
+//
+//        for(int cel_side = 0; cel_side< 2; cel_side++){
+//            for(int neigh_side = 0; neigh_side< 2; neigh_side++){
+//                int c_index_cel = cel->ConnectIndex(cel_side);
+//                int c_index_neigh = neigh_celside.Element()->ConnectIndex(neigh_side);
+//                if (c_index_cel == c_index_neigh) {
+//                    TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(celside.Element());
+//                    TPZInterpolatedElement *intel_neigh = dynamic_cast<TPZInterpolatedElement*>(neigh_celside.Element());
+//
+//                    intel->SetSideOrient(cel_side, 1);
+//                    intel_neigh->SetSideOrient(neigh_side, -1);
+//                }
+//
+//            }
+//        }
+        
+        
+//
+//
+//        int one = intel->GetSideOrient(0);
+//        int one2 = intel->GetSideOrient(1);
+        
+        
+        
+        
+        
+        
+        
+    
+        
+    }
+    
+}

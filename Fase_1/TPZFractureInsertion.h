@@ -125,6 +125,10 @@ public:
     /// Set interfaces elements between fracture and volumetric elements
     void SetInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight);
     
+    /// Set multiphysics interfaces elements between fracture and volumetric elements
+    void SetMultiphysicsInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight, int mat_id_flux_wrap);
+    
+    void AdjustSideOrient(TPZCompMesh *cmesh);
 };
 
 
