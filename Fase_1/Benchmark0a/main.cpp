@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     //StopError();
     scenario0a.Run(2);
     
-    
 //    MonofasicoElastico cenario0a;
 //    cenario0a.Run(2);
     return 0;

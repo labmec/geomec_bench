@@ -72,6 +72,9 @@ private:
     /// Return true if neighboour is at left position
     bool neigh_is_left;
     
+    /// Wrap flux id
+    int mat_id_flux_wrap;
+    
 public:
 
     /// @TODO:: OD, Rename TPZFractureInsertion -> TPZFractureDescription
@@ -95,6 +98,12 @@ public:
     /// Get fracture material Identifier
     int & GetFractureMaterialId();
     
+    /// Set wrap Identifier
+    void SetWrapFluxIdentifier(int wrapFlux);
+    
+    /// Get wrap Identifier
+    int & GetWrapFluxId();
+
     /// Get node pivots
     std::vector<TPZGeoElSide> & GetPivotIndexes();
 
@@ -129,6 +138,9 @@ public:
     void SetMultiphysicsInterfaces(TPZCompMesh *cmesh, int matInterfaceLeft, int matInterfaceRight, int mat_id_flux_wrap);
     
     void AdjustSideOrient(TPZCompMesh *cmesh);
+    
+    void VerifySideOrientation(TPZCompMesh *cmesh);
+    
 };
 
 

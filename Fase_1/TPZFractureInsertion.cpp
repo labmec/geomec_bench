@@ -33,6 +33,7 @@ TPZFractureInsertion::TPZFractureInsertion(TPZFractureInsertion & other){
     m_non_pivot_indexes         = other.m_non_pivot_indexes;
     m_gel_left_indexes          = other.m_gel_left_indexes;
     m_gel_right_indexes         = other.m_gel_right_indexes;
+    mat_id_flux_wrap            = other.mat_id_flux_wrap;
 }
 
 /// Set fracture Identifier
@@ -43,6 +44,16 @@ void TPZFractureInsertion::SetFractureIdentifier(int fracture_id){
 /// Get fracture Identifier
 int & TPZFractureInsertion::GetFractureMaterialId(){
     return m_fracture_id;
+}
+
+/// Set wrap Identifier
+void TPZFractureInsertion::SetWrapFluxIdentifier(int wrapFlux){
+    mat_id_flux_wrap = wrapFlux;
+}
+
+/// Get wrap Identifier
+int & TPZFractureInsertion::GetWrapFluxId(){
+    return mat_id_flux_wrap;
 }
 
 /// Get node pivots
@@ -608,7 +619,7 @@ void TPZFractureInsertion::OpenFractureOnHdiv(TPZCompMesh *cmesh, int mat_id_flu
         DebugStop();
     }
 #endif
-    
+    SetWrapFluxIdentifier(mat_id_flux_wrap);
     TPZGeoMesh *gmesh = cmesh->Reference();
     int dim = gmesh->Dimension();
     gmesh->ResetReference();
@@ -684,7 +695,7 @@ void TPZFractureInsertion::OpenFractureOnHdiv(TPZCompMesh *cmesh, int mat_id_flu
             
             intel->LoadElementReference();
             
-            intel->SetSideOrient(neigh[1].Side(), -1);
+            intel->SetSideOrient(neigh[1].Side(), 1);
             
             int64_t index;
             
@@ -970,40 +981,69 @@ void TPZFractureInsertion::AdjustSideOrient(TPZCompMesh *cmesh){
             }
         }
         
-//        TPZGeoElSide neighbour = gelside.Neighbour();
-//        TPZGeoEl *gel_neigh = neighbour.Element();
-//
-//        TPZCompElSide neigh_celside = neighbour.Reference();
-//
-//        for(int cel_side = 0; cel_side< 2; cel_side++){
-//            for(int neigh_side = 0; neigh_side< 2; neigh_side++){
-//                int c_index_cel = cel->ConnectIndex(cel_side);
-//                int c_index_neigh = neigh_celside.Element()->ConnectIndex(neigh_side);
-//                if (c_index_cel == c_index_neigh) {
-//                    TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(celside.Element());
-//                    TPZInterpolatedElement *intel_neigh = dynamic_cast<TPZInterpolatedElement*>(neigh_celside.Element());
-//
-//                    intel->SetSideOrient(cel_side, 1);
-//                    intel_neigh->SetSideOrient(neigh_side, -1);
-//                }
-//
-//            }
-//        }
-        
-        
-//
-//
-//        int one = intel->GetSideOrient(0);
-//        int one2 = intel->GetSideOrient(1);
-        
-        
-        
-        
-        
-        
-        
-    
         
     }
+    
+    VerifySideOrientation(cmesh);
+    
+}
+
+void TPZFractureInsertion::VerifySideOrientation(TPZCompMesh *cmesh){
+    
+    TPZGeoMesh *gmesh = cmesh->Reference();
+
+    int fracture_id = GetFractureMaterialId();
+    TPZAdmChunkVector<TPZGeoEl *> &elvec = gmesh->ElementVec();
+    
+    int Wrap_Flux_ID = GetWrapFluxId();
+    
+    for (int iel = 0 ; iel< gmesh->NElements(); iel++) {
+        TPZGeoEl *gel = elvec[iel];
+        int dim_gel = gel->Dimension();
+        if (dim_gel!=gmesh->Dimension()) {
+            continue;
+        }
+        
+        for (int i_side = 0 ; i_side < gel->NSides() ; i_side++) {
+            
+            TPZGeoElSide gelside(gel, i_side);
+            
+            if (gelside.Dimension()==dim_gel-1) {
+                TPZStack<TPZCompElSide> neigh;
+                gelside.EqualLevelCompElementList(neigh, 0, 0);
+                for (int i_n =0; i_n<neigh.size(); i_n++) {
+
+                    if (neigh[i_n].Element()->Material()->Id()!=Wrap_Flux_ID) {
+                        continue;
+                    }
+                    
+                    if (neigh[i_n].Element()->NConnects()!=1) {
+                        DebugStop();
+                    }
+                    
+                    TPZCompElSide celside =  gelside.Reference();
+                    
+                    TPZInterpolatedElement *intel_vol = dynamic_cast<TPZInterpolatedElement*>(celside.Element());
+                    int SideOrient_vol = intel_vol->GetSideOrient(celside.Side()) ;
+                    
+                    TPZInterpolatedElement *intel_wrap = dynamic_cast<TPZInterpolatedElement*>(neigh[i_n].Element());
+                    int SideOrient_wrap = intel_wrap->GetSideOrient(neigh[i_n].Side());
+                    
+                    if (SideOrient_vol != SideOrient_wrap) {
+                        DebugStop();
+                    }
+                    
+                    
+                }
+
+            
+            }
+        
+
+        }
+        
+    }
+    
+    
     
 }

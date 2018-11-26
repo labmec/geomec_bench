@@ -6,6 +6,7 @@
 //
 
 #include "TPZDarcyAnalysis.h"
+#include "pzbndcond.h"
 #include "pzlog.h"
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("DarcyAnalysis"));
@@ -158,7 +159,22 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
         norm_dx  = Norm(dx);
         m_X_n += dx;
         LoadCurrentState();
+        
         AssembleResidual();
+
+        // Test: Changing boundary condition into Dirichlet
+//        std::map<int, TPZMaterial * >::iterator matit;
+//        for(matit = fCompMesh->MaterialVec().begin(); matit != fCompMesh->MaterialVec().end(); matit++)
+//        {
+//
+//            TPZMaterial *mat = matit->second;
+//            if(mat->Id()==503){
+//                TPZBndCond *bc = dynamic_cast<TPZBndCond *> (mat);
+//                bc->SetType(0);
+//            }
+//        }
+//        AssembleResidual();
+        
 #ifdef LOG4CXX
        if(logger->isDebugEnabled())
        {
@@ -178,6 +194,12 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
         m_k_iterations = i;
         m_error = norm_res;
         m_dx_norm = norm_dx;
+        
+        
+
+        
+        
+        
         
         if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
