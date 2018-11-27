@@ -131,53 +131,63 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
         m_X = Solution();
     }
     
-    m_simulation_data->SetCurrentStateQ(true);
+    m_simulation_data->SetCurrentStateQ(false);
+    AcceptPseudoTimeStepSolution();
     
+    
+    m_simulation_data->SetCurrentStateQ(true);
+    AcceptPseudoTimeStepSolution();
     //    // Reset du to zero
     //    Solution().Zero();
     //    LoadSolution(Solution());
     
-    TPZFMatrix<STATE> dx(Solution());
-    dx.Zero();
+    TPZFMatrix<STATE> desloc(Solution());
+    
     bool residual_stop_criterion_Q = false;
     bool correction_stop_criterion_Q = false;
-    REAL norm_res, norm_dx;
+    REAL norm_res, norm_desloc;
     REAL r_norm = m_simulation_data->Get_epsilon_res();
     REAL dx_norm = m_simulation_data->Get_epsilon_cor();
     int n_it = m_simulation_data->Get_n_iterations();
     
     for (int i = 1; i <= n_it; i++) {
         this->ExecuteNewtonInteration();
-        dx += Solution();
-        norm_dx  = Norm(Solution());
-        LoadSolution(dx);
+        desloc = Solution();
+        norm_desloc  = Norm(Solution());
+        //LoadSolution(desloc);
+        m_X_n += desloc;
+        LoadCurrentState();
         AssembleResidual();
         norm_res = Norm(this->Rhs());
         residual_stop_criterion_Q   = norm_res < r_norm;
-        correction_stop_criterion_Q = norm_dx  < dx_norm;
+        correction_stop_criterion_Q = norm_desloc  < dx_norm;
         
         m_k_iterations = i;
         m_error = norm_res;
-        m_dx_norm = norm_dx;
+        m_dx_norm = norm_desloc;
         
         
-        if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
+        if (residual_stop_criterion_Q && correction_stop_criterion_Q) {
 #ifdef PZDEBUG
             std::cout << "TPZPoroElastoPlasticAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
             std::cout << "TPZPoroElastoPlasticAnalysis:: Number of iterations = " << i << std::endl;
-            std::cout << "TPZPoroElastoPlasticAnalysis:: Correction norm = " << norm_dx << std::endl;
+            std::cout << "TPZPoroElastoPlasticAnalysis:: Correction norm = " << norm_desloc << std::endl;
 #endif
             this->AcceptPseudoTimeStepSolution();
 #ifdef PZDEBUG
-            Solution().Zero();
-            LoadSolution();
-            AssembleResidual();
-            {
-            std::ofstream fileRhs("SaidaRHS.txt");
-            PrintVectorByElement(fileRhs, this->Rhs());
-            }
-            REAL norm_res_c = Norm(this->Rhs());
-            std::cout << " norm = " << norm_res_c << std::endl;
+            
+            //Solution().Zero();
+            //LoadSolution();
+            //m_X_n = Solution();
+//            LoadCurrentState();
+//            //AssembleResidual();
+//            AssembleResidual();
+//            {
+//            std::ofstream fileRhs("SaidaRHS.txt");
+//            PrintVectorByElement(fileRhs, this->Rhs());
+//            }
+//            REAL norm_res_c = Norm(this->Rhs());
+//            std::cout << " norm = " << norm_res_c << std::endl;
             
 
             /// Print Interface Memory vol. elements
@@ -267,7 +277,7 @@ void TPZPoroElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 
 void TPZPoroElastoPlasticAnalysis::LoadCurrentState(){
     LoadSolution(m_X_n);
-    DebugStop();
+    //DebugStop();
 }
 
 void TPZPoroElastoPlasticAnalysis::LoadLastState(){

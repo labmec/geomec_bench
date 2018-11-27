@@ -40,14 +40,14 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     std::ofstream fileMemFrac("MemoryFrac.txt", std::ofstream::app);
     //memory.Print(fileMemFrac);
     
-    TPZManVector<STATE,3> delta_forceFrac_n    = memory.GetForceFrac_n();
+   // TPZManVector<STATE,3> delta_forceFrac_n    = memory.GetForceFrac_n();
     TPZManVector<STATE,3> forceFrac_n    = data.sol[0];
     TPZManVector<STATE,3> normal = data.normal;
     
-    for(int i=0; i<2; i++)
-    {
-        forceFrac_n[i] += delta_forceFrac_n[i];
-    }
+//    for(int i=0; i<2; i++)
+//    {
+//        forceFrac_n[i] += delta_forceFrac_n[i];
+//    }
 
     fileMemFrac << "Coordenadas = " << data.x << std::endl;
     fileMemFrac << "forceFrac = " << forceFrac_n << std::endl;
@@ -165,10 +165,10 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
             
             DebugStop();
         }
-        TPZManVector<STATE,3> delta_forceFrac = data.sol[0];
+        TPZManVector<STATE,3> forceFrac = data.sol[0];
         TPZManVector<STATE,3> normal = data.normal;
         
-        STATE forceFrac_normal = InnerVec(delta_forceFrac,normal);
+        STATE forceFrac_normal = InnerVec(forceFrac,normal);
         
         STATE Vm = Get_Vm(); //Max opening
         STATE a0 = Get_a0(); //Initial opening
@@ -188,12 +188,12 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         mem.SetVm(Vm);
         mem.SetDu_n(Du_n);
         
-        TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
-        for(int i=0; i<fNStateVariables; i++)
-        {
-            forceFrac_n[i] += delta_forceFrac[i];
-        }
-        mem.SetForceFrac_n(forceFrac_n);
+//        TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
+//        for(int i=0; i<fNStateVariables; i++)
+//        {
+//            forceFrac_n[i] += delta_forceFrac[i];
+//        }
+        mem.SetForceFrac_n(forceFrac);
         
     }else{
         TPZFMatrix<STATE>  ek_fake(ef.Rows(),ef.Rows(),0.0);

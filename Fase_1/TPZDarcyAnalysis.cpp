@@ -197,10 +197,6 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
         
         
 
-        
-        
-        
-        
         if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
             std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;

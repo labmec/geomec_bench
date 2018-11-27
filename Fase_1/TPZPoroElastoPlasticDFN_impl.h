@@ -197,7 +197,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, T
         int solsize = data.sol[0].size();
         for(int i=0; i<solsize; i++)
         {
-            this->MemItem(intPt).Getu_n()[i] += data.sol[0][i];
+            this->MemItem(intPt).Getu_n()[i] = data.sol[0][i];
         }
     }
     
@@ -230,7 +230,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData
         int solsize = data.sol[0].size();
         for(int i=0; i<solsize; i++)
         {
-            this->MemItem(intPt).Getu_n()[i] += data.sol[0][i];
+            this->MemItem(intPt).Getu_n()[i] = data.sol[0][i];
         }
     }
     
@@ -416,11 +416,11 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL 
     TPZBndCondWithMem<TPZMemoryBCDFN> & bc_with_memory = dynamic_cast<TPZBndCondWithMem<TPZMemoryBCDFN> &>(bc);
     int gp_index = data.intGlobPtIndex;
     
-    TPZManVector<STATE,3> delta_u    = data.sol[0];
-    TPZManVector<STATE,3> u_n(bc_with_memory.MemItem(gp_index).Getu_n());
-    for (int i = 0; i < fDimension; i++) {
-        u_n[i] += delta_u[i];
-    }
+    TPZManVector<STATE,3> u_n    = data.sol[0];
+  //  TPZManVector<STATE,3> u_n(bc_with_memory.MemItem(gp_index).Getu_n());
+  //  for (int i = 0; i < fDimension; i++) {
+  //      u_n[i] += delta_u[i];
+  //  }
     
     if (m_simulation_data->Get_must_accept_solution_Q()) {
         bc_with_memory.MemItem(gp_index).Setu_n(u_n);

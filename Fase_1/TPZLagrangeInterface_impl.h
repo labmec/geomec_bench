@@ -147,11 +147,11 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
     
     // forceFrac
     
-    TPZManVector<STATE,3> forceFrac_n    = memory.GetForceFrac_n();
-    TPZManVector<STATE,3> u_n    = memory.Getu_n();
+//    TPZManVector<STATE,3> forceFrac_n    = memory.GetForceFrac_n();
+//    TPZManVector<STATE,3> u_n    = memory.Getu_n();
     
-    TPZManVector<STATE,3> delta_forceFrac_n    = dataleft.sol[0];
-    TPZManVector<STATE,3> delta_u_n    = dataright.sol[0];
+    TPZManVector<STATE,3> forceFrac_n    = dataleft.sol[0];
+    TPZManVector<STATE,3> u_n    = dataright.sol[0];
     
     data.fNeedsNormal = true;
     //Normal
@@ -162,11 +162,12 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
     tangent[1]=-normal[0];
    
     
-    for(int i=0; i<fNStateVariables; i++)
-    {
-        forceFrac_n[i] += delta_forceFrac_n[i];
-        u_n[i] += delta_u_n[i];
-    }
+//    for(int i=0; i<fNStateVariables; i++)
+//    {
+//        forceFrac_n[i] += delta_forceFrac_n[i];
+//        u_n[i] += delta_u_n[i];
+//    }
+
     TPZFMatrix<STATE> &phi_f = dataleft.phi;
     
     TPZFMatrix<STATE> &phi_u = dataright.phi;
@@ -231,17 +232,17 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
             std::cout << "Integration point index is not initialized\n";
             DebugStop();
         }
-        TPZManVector<STATE,3> delta_forceFrac_n     = dataleft.sol[0];
-        TPZManVector<STATE,3> delta_u_n    = dataright.sol[0];
+        TPZManVector<STATE,3> forceFrac_n     = dataleft.sol[0];
+        TPZManVector<STATE,3> u_n    = dataright.sol[0];
 
         TMEM &mem = this->GetMemory().get()->operator[](gp_index);
-        TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
-        TPZManVector<STATE,3> u_n = mem.Getu_n();
-        for(int i=0; i<fNStateVariables; i++)
-        {
-            forceFrac_n[i] += delta_forceFrac_n[i];
-            u_n[i] += delta_u_n[i];
-        }
+//        TPZManVector<STATE,3> forceFrac_n = mem.GetForceFrac_n();
+//        TPZManVector<STATE,3> u_n = mem.Getu_n();
+//        for(int i=0; i<fNStateVariables; i++)
+//        {
+//            forceFrac_n[i] += delta_forceFrac_n[i];
+//            u_n[i] += delta_u_n[i];
+//        }
         mem.SetForceFrac_n(forceFrac_n);
         mem.Setu_n(u_n);
 

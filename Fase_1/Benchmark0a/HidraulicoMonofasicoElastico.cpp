@@ -839,14 +839,13 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     invK.Zero();
     
     //REAL Sf = 0.0338801;
-    REAL Sf = 1.;
+    REAL Sf = 1.e+10;
     
     K(0,0)=Sf*3.3880079667e-13;
     K(1,1)=Sf*2.5659997999999995e-17;
-
     
-    K(0,0)=1.;
-    K(1,1)=1.;
+    //K(0,0)=1.;
+    //K(1,1)=1.;
     
     invK(0,0)=1./K(0,0);
     invK(1,1)=1./K(1,1);
@@ -888,7 +887,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryFracDFN> (fmatFrac[i_frac],fdimFrac,1,1);
             REAL kf = Sf*4.65827656e-10;
-            kf = 1.;
+            //kf = 1.;
 //            REAL Dyf = 6.5e-5;
             materialFrac->SetPermeability(kf);
             materialFrac->SetSimulationData(sim_data);
