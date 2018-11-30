@@ -18,6 +18,7 @@
 #include "TPZMemoryFracDFN.h"
 #include "TPZElasticCriterion.h"
 
+
 class TPZSegregatedAnalysisDFN {
     
 private:
@@ -64,6 +65,12 @@ public:
     
     /// Execute the transient evolution using Fixed Stress Split Iteration
     void ExecuteTimeEvolution();
+
+    // Update parameters
+    void SetInitialParameters();
+    
+    // Update parameters
+    void UpdateParameters();
     
     /// Update solution state x = x_n
     void UpdateState();

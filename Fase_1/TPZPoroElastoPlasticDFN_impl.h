@@ -416,6 +416,9 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL 
     TPZBndCondWithMem<TPZMemoryBCDFN> & bc_with_memory = dynamic_cast<TPZBndCondWithMem<TPZMemoryBCDFN> &>(bc);
     int gp_index = data.intGlobPtIndex;
     
+    
+    STATE p = bc_with_memory.GetMemory().get()->operator[](gp_index).p_n();
+    
     TPZManVector<STATE,3> u_n    = data.sol[0];
   //  TPZManVector<STATE,3> u_n(bc_with_memory.MemItem(gp_index).Getu_n());
   //  for (int i = 0; i < fDimension; i++) {
@@ -453,6 +456,16 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL 
             break;
             
         case 1: // Neumann condition
+            
+            if(bc.HasForcingFunction())
+            {
+                TPZManVector<STATE> vbc(3);
+                TPZFMatrix<STATE> gradu;
+                bc.ForcingFunction()->Execute(data.x,vbc,gradu);
+                v2[0] = vbc[0];
+                v2[1] = vbc[1];
+            }
+            
             for (in = 0; in < phi.Rows(); in++) {
                 ef(nstate * in + 0, 0) -= v2[0] * phi(in, 0) * weight;
                 ef(nstate * in + 1, 0) -= v2[1] * phi(in, 0) * weight;

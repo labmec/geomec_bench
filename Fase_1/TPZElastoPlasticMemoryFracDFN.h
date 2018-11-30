@@ -79,6 +79,17 @@ public:
     TPZManVector<REAL,3> & GetForceFrac_n(){
         return m_forceFrac_n;
     }
+
+    /// Set the initial stress state
+    void SetForceFrac_0(TPZManVector<REAL,3> & ForceFrac_0){
+        m_forceFrac_0 = ForceFrac_0;
+    }
+    
+    /// Get the initial stress state
+    TPZManVector<REAL,3> & GetForceFrac_0(){
+        return m_forceFrac_0;
+    }
+    
     
     /// Set the current displacement field
     void Setu_n(TPZManVector<REAL,3> & u_n){

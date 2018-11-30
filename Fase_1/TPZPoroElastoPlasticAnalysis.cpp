@@ -256,12 +256,12 @@ void TPZPoroElastoPlasticAnalysis::PostProcessTimeStep(std::string & file){
 
 void TPZPoroElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 
-    m_simulation_data->SetInitialStateQ(true);
+    //m_simulation_data->SetInitialStateQ(true);
     SetUpdateMemmory(true);
     AssembleResidual();
     SetUpdateMemmory(false);
     
-//    m_simulation_data->Set_must_accept_solution_Q(false);    
+//    m_simulation_data->Set_must_accept_solution_Q(false);
 //    bool state = m_simulation_data->IsCurrentStateQ();
 //    if (state) {
 //        m_simulation_data->Set_must_accept_solution_Q(true);

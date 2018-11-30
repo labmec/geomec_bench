@@ -345,17 +345,18 @@ HidraulicoMonofasicoElastico::~HidraulicoMonofasicoElastico()
     
 }
 
-void HidraulicoMonofasicoElastico::F_source(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu){
+void HidraulicoMonofasicoElastico::FunctionStress(const TPZVec<REAL> &x, TPZVec<STATE> &f, TPZFMatrix<STATE>& gradu){
     
-    f.resize(1);
+    f.resize(2);
     const REAL Pi=M_PI;
     
     REAL xv = x[0];
     REAL yv = x[1];
     
-    STATE f_x = 0.;
+    STATE f_y = -(85.-0.1*xv/200.);
     
-    f[0] = f_x;
+    f[0] = 0.;
+    f[1] = f_y;
     
 }
 
@@ -546,8 +547,14 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, null_dir_dirichlet, val1, val2);
     val2.Zero();
+    
     val2(1,0)= -84.95;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
+    TPZAutoPointer<TPZFunction<STATE> > Sigma_t;
+    Sigma_t = new TPZDummyFunction<STATE>(FunctionStress,5);
+    BCond2->SetForcingFunction(0, Sigma_t);
+    
+    
     val2.Zero();
     val2(0,0)=1;
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, null_dir_dirichlet, val1, val2);
@@ -567,9 +574,19 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
         TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate_frac);
-            materialFrac->Set_a0(6.5e-5);
+            
+            std::map<REAL, REAL> Vm_frac, a0_frac, Kni_frac;
+            Vm_frac[fmatFrac[i_frac]] = 4.36236e-4;
+            a0_frac[fmatFrac[i_frac]] = 6.5e-5;
+            Kni_frac[fmatFrac[i_frac]] = 12041.;
+            sim_data->Set_Vm(Vm_frac);
+            sim_data->Set_a0(a0_frac);
+            sim_data->Set_Kni(Kni_frac);
+            
             materialFrac->Set_Vm(4.36236e-4);
+            materialFrac->Set_a0(6.5e-5);
             materialFrac->Set_Kni(12041.);
+            
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
         }
@@ -849,17 +866,16 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     invK(0,0)=1./K(0,0);
     invK(1,1)=1./K(1,1);
-    material->SetPermeabilityXY(K);
     
-    TPZAutoPointer<TPZFunction<STATE> > solp = new TPZDummyFunction<STATE> (Sol_exact,5);
-    material->SetForcingFunctionExact(solp);
+    sim_data->Set_PermeabilityTensor_0(K);
+    sim_data->Set_Porosity_0(0.0758);
     material->SetSimulationData(sim_data);
-    material->SetPorosity(0.0758);
+
     cmesh->InsertMaterialObject(material);
 
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    STATE DeltaP = 0.;
+    STATE DeltaP = 5.;
    
     STATE Pjusante = 54.9 - DeltaP;
     STATE Pmontante = 55.0 - DeltaP;
@@ -889,7 +905,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             REAL kf = Sf*4.65827656e-10;
             //kf = 1.;
 //            REAL Dyf = 6.5e-5;
-            materialFrac->SetPermeability(kf);
+            sim_data->Set_Permeability_0(kf);
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
             

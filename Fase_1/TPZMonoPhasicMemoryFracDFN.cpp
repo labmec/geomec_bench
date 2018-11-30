@@ -20,7 +20,6 @@ TPZMonoPhasicMemoryFracDFN::TPZMonoPhasicMemoryFracDFN(){
     m_kappa_0.Zero();
     m_kappa.Resize(3,3);
     m_kappa.Zero();
-    
 }
 
 TPZMonoPhasicMemoryFracDFN::TPZMonoPhasicMemoryFracDFN(const TPZMonoPhasicMemoryFracDFN & other){

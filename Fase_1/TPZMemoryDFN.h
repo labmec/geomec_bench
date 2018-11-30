@@ -60,15 +60,20 @@ public:
     REAL Permeability(REAL k0, REAL phi0, REAL nu, REAL E){
         
 //        REAL sigma_v_n = (GetSigma_n().I1())/3.;
-        //REAL sigma_v_n= GetSigma_n()(0,0)+GetSigma_n()(1,1);
-        REAL sigma_v_n= 5.;
+        REAL sigma_v_n= GetSigma_n()(0,0)+GetSigma_n()(1,1);
+        REAL sigma_xx_n = GetSigma_n()(0,0);
+        REAL sigma_xx_0 = GetSigma_0()(0,0);
+        REAL sigma_yy_n = GetSigma_n()(1,1);
+        REAL sigma_yy_0 = GetSigma_0()(1,1);
+        
+        sigma_v_n= -sigma_v_n-42.759979653204908;
         REAL strain_v_n = (1.-2.*nu)*(sigma_v_n)/E;
         REAL phi   = 1. - (1. - phi0) * exp(strain_v_n);
         REAL varphi = phi/phi0;
 
         REAL perm = k0*pow(varphi, 60.);
         
-        return k0;
+        return perm;
     }
     
     virtual int ClassId() const;

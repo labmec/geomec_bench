@@ -23,6 +23,8 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
 {
     protected:
     
+    int fFracID;
+    
     // Number of state variables
     int fNStateVariables;
     
@@ -47,18 +49,18 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     
     public :
     // Simple constructor
-    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM>(), fNStateVariables(0.), fDimension(0.), fMultiplier(0.), m_a0(0.), m_Vm(0.), m_Kni(0.)
+    TPZMatFractureBB() : TPZRegisterClassId(&TPZMatFractureBB::ClassId), TPZMatWithMem<TMEM>(), fFracID(0.), fNStateVariables(0.), fDimension(0.), fMultiplier(0.), m_a0(0.), m_Vm(0.), m_Kni(0.)
     {
         m_simulation_data = NULL;
     }
     // Constructor with the index of the material object within the vector
-    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.), m_a0(0.), m_Vm(0.), m_Kni(0.)
+    TPZMatFractureBB(int nummat, int dimension, int nstate) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(nummat), fFracID(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.), m_a0(0.), m_Vm(0.), m_Kni(0.)
     {
         m_simulation_data = NULL;
     }
     
     // Copy constructor
-    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier), m_a0(copy.m_a0), m_Vm(copy.m_Vm), m_Kni(copy.m_Kni)
+    TPZMatFractureBB(const TPZMatFractureBB &copy) : TPZRegisterClassId(&TPZMatFractureBB::ClassId),TPZMatWithMem<TMEM>(copy), fNStateVariables(copy.fNStateVariables), fFracID(copy.fFracID), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier), m_a0(copy.m_a0), m_Vm(copy.m_Vm), m_Kni(copy.m_Kni)
     {
         m_simulation_data = copy.m_simulation_data;
     }
@@ -73,6 +75,7 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
         if(&copy == this){
             return *this;
         }
+        fFracID = copy.fFracID;
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
@@ -88,6 +91,18 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     ~TPZMatFractureBB()
     {
         
+    }
+
+    // Set fracture ID
+    void Set_FracID(int fracID)
+    {
+        fFracID = fracID;
+    }
+    
+    // Return fracture ID
+    int Frac_ID()
+    {
+        return fFracID;
     }
     
     // Returns the integrable dimension of the material

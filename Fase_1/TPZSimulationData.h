@@ -107,6 +107,23 @@ protected:
     /** @brief Biot coeficient */
     REAL m_alpha;
     
+    /** @brief Initial porous media permeability tensor. Coeficient which multiplies the gradient operator*/
+    TPZFNMatrix<9,REAL> m_TensorK0;
+    
+    /** @brief Initial permeability. Coeficient which multiplies the gradient operator*/
+    REAL m_k0;
+    
+    /** @brief Initial porosity.*/
+    REAL m_phi0;
+    
+    /** Fracture max closure for each fracture mat id */
+    std::map<REAL,REAL> m_Vm;
+
+    /** Fracture initial opening for each fracture mat id */
+    std::map<REAL,REAL> m_a0;
+    
+    /** Fracture normal stiffiness for each fracture mat id */
+    std::map<REAL,REAL> m_Kni;
     
 public:
     
@@ -372,6 +389,69 @@ public:
     void Set_Biot(REAL alpha){
         m_alpha = alpha;
     }
+    
+    /** @brief Set the initial Porous media permeability tensor */
+    void Set_PermeabilityTensor_0(TPZFNMatrix<9,REAL> TensorK0){
+        m_TensorK0 = TensorK0;
+    }
+    
+    /** @brief Get the initial Porous media permeability tensor */
+    TPZFNMatrix<9,REAL> Get_PermeabilityTensor_0(){
+        return m_TensorK0;
+    }
+
+    /** @brief Set the initial permeability */
+    void Set_Permeability_0(REAL k0){
+        m_k0 = k0;
+    }
+    
+    /** @brief Get the initial permeability */
+    REAL Get_Permeability_0(){
+        return m_k0;
+    }
+    
+    /// Set lagrangian porosity at intial REAL
+    void Set_Porosity_0(REAL phi_0)
+    {
+        m_phi0 = phi_0;
+    }
+    
+    /// Get lagrangian porosity at intial REAL
+    REAL Get_Porosity_0()
+    {
+        return m_phi0;
+    }
+    
+    // Set max closure for each fracture
+    void Set_Vm(std::map<REAL, REAL> Vm_frac){
+        m_Vm = Vm_frac;
+    }
+    
+    // Get max closure for each fracture
+    std::map<REAL,REAL> Get_Vm(){
+        return m_Vm;
+    }
+    
+    // Set initial opening for each fracture
+    void Set_a0(std::map<REAL, REAL> a0_frac){
+        m_a0 = a0_frac;
+    }
+
+    // Get initial opening for each fracture
+    std::map<REAL,REAL> Get_a0(){
+        return m_a0;
+    }
+
+    // Set normal stiffness for each fracture
+    void Set_Kni(std::map<REAL, REAL> kni_frac){
+        m_Kni = kni_frac;
+    }
+
+    // Get normal stiffness for each fracture
+    std::map<REAL,REAL> Get_Kni(){
+        return m_Kni;
+    }
+    
     
 };
 

@@ -680,41 +680,22 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     // Get the pressure at the integrations points
     long gp_index = datavec[0].intGlobPtIndex;
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
-
-    memory.Setkappa_0(fTensorK);
-    memory.Setphi_0(fPhi);
-    TPZFNMatrix<9,REAL>  k_0 = memory.kappa_0();
-    REAL phi_0 = memory.phi_0();
-    REAL nu = m_simulation_data->Get_Poisson();
-    REAL E = m_simulation_data->Get_Eyoung();
-    TPZFNMatrix<9,REAL> k_n(3,3,0.);
     
-    for(int i = 0; i < k_0.Rows(); i++){
-        k_n(i,i) = memory.Permeability(k_0(i,i),phi_0,nu,E);
-    }
-    memory.Setkappa(k_n);
-    
-    // Time
-    //STATE dt = m_simulation_data->dt();
     TPZManVector<STATE,3> v    = datavec[vindex].sol[0];
     STATE p_n                  = datavec[pindex].sol[0][0];
-
-    memory.Setp_n(p_n);
-    memory.SetFlux(v);
-    
+//    memory.Setp_n(p_n);
+//    memory.SetFlux(v);
     
     TPZFNMatrix<9,REAL> K(3,3),Kinv(3,3);
-    K.Zero();
-    K(0,0) = memory.kappa()(0,0);
-    K(1,1) = memory.kappa()(1,1);
-    K(2,2) = memory.kappa()(2,2);
+    K.Zero(), Kinv.Zero();
+    int Nkappa = memory.kappa().Rows();
+    
+    for(int i = 0; i< Nkappa; i++){
+        K(i,i) = memory.kappa()(i,i);
+        Kinv(i,i) = 1.0/(memory.kappa()(i,i));
+    }
     
     //K.Print(std::cout);
-    
-    Kinv.Zero();
-    Kinv(0,0) = 1.0/(memory.kappa()(0,0));
-    Kinv(1,1) = 1.0/(memory.kappa()(1,1));
-    Kinv(2,2) = 1.0/(memory.kappa()(2,2));
     
     int nphiV       = datavec[vindex].fVecShapeIndex.NElements();
     int nphiP       = phiP.Rows();
@@ -751,7 +732,6 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         LOGPZ_DEBUG(DarcyLogger, sout.str().c_str());
     }
 #endif
-    
     
     
     for (int i = 0; i < nphiV; i++)
@@ -902,7 +882,11 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
     // Getting the linear combination or finite element approximations
     
     TPZManVector<STATE> v_h = datavec[vindex].sol[0];
-    TPZManVector<STATE> p_h = datavec[pindex].sol[0];
+    
+//    TPZManVector<STATE> p_h = datavec[pindex].sol[0];
+//    TPZBndCondWithMem<TPZMemoryBCDFN> & bc_with_memory = dynamic_cast<TPZBndCondWithMem<TPZMemoryBCDFN> &>(bc);
+//    int gp_index = datavec[0].intGlobPtIndex;
+//    bc_with_memory.GetMemory().get()->operator[](gp_index).Setp_n()
     
     TPZFNMatrix<220,REAL> dphiVx(fDimension,dphiV.Cols());
     TPZAxesTools<REAL>::Axes2XYZ(dphiV, dphiVx, datavec[vindex].axes);

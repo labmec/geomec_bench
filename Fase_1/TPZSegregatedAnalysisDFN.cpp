@@ -151,9 +151,12 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     REAL dx_norm = m_simulation_data->Get_epsilon_cor();
     bool error_stop_criterion_Q = false;
     bool dx_stop_criterion_Q = false;
+    this->SetInitialParameters();
+    
     for (int it = 0; it < n_time_steps; it++) {
         for (int k = 1; k <= n_max_fss_iterations; k++) {
             this->ExecuteOneTimeStep();
+            this->UpdateParameters();
             error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
             dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
             this->PostProcessTimeStep(file_elastoplast_test, file_darcy_test);
@@ -169,6 +172,139 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     }
 
 }
+
+void TPZSegregatedAnalysisDFN::SetInitialParameters(){
+    
+    // Updating volumetric parameters :
+    
+    int matid = m_simulation_data->Get_elasticity_matid();
+    
+    TPZMaterial * material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
+    TPZMaterial * material_darcy = m_darcy_analysis->Mesh()->FindMaterial(matid);
+    
+    if (!material_elastoplast || !material_darcy) {
+        DebugStop();
+    }
+    
+    TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_darcy);
+    
+    long N_ipoints = mat_with_memory_darcy->GetMemory().get()->NElements();
+    for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+        TPZMemoryDFN & memory = mat_with_memory_darcy->GetMemory().get()->operator[](ip_index);
+        TPZFNMatrix<9,REAL>  k_0 = m_simulation_data->Get_PermeabilityTensor_0();
+        REAL phi0 = m_simulation_data->Get_Porosity_0();
+        memory.Setkappa_0(k_0);
+        memory.Setkappa(k_0);
+        memory.Setphi_0(phi0);
+    }
+    
+    // Updating Fracture parameters :
+    
+    for (int imat_frac = 0; imat_frac < m_simulation_data->Get_fracture_material_id().size(); imat_frac++) {
+        int frac_matid = m_simulation_data->Get_fracture_material_id()[imat_frac];
+        
+        TPZMaterial * frac_material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(frac_matid);
+        TPZMaterial * frac_material_darcy = m_darcy_analysis->Mesh()->FindMaterial(frac_matid);
+        
+        
+        
+        if (!frac_material_elastoplast || !frac_material_darcy) {
+            DebugStop();
+        }
+        
+        TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_darcy);
+        
+        long N_ipoints = matfrac_with_memory_darcy->GetMemory().get()->NElements();
+        
+        for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+            TPZMemoryFracDFN & memory_frac = matfrac_with_memory_darcy->GetMemory().get()->operator[](ip_index);
+            TPZFNMatrix<9,REAL>  k_0(3,3,0.);
+            k_0(0,0) = m_simulation_data->Get_Permeability_0();
+            
+            REAL Vm = m_simulation_data->Get_Vm().find(frac_matid)->second; //Max fracture closure
+            REAL a0 = m_simulation_data->Get_a0().find(frac_matid)->second;
+         
+            REAL Du_0 = Vm-a0; //Initial Opening;
+            
+            memory_frac.SetVm(Vm);
+            memory_frac.SetDu_0(Du_0);
+            memory_frac.Setkappa_0(k_0);
+            memory_frac.Setkappa(k_0);
+        }
+        
+        
+    }
+    
+}
+
+
+
+void TPZSegregatedAnalysisDFN::UpdateParameters(){
+    
+    // Updating volumetric parameters :
+    
+    int matid = m_simulation_data->Get_elasticity_matid();
+    
+    TPZMaterial * material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
+    TPZMaterial * material_darcy = m_darcy_analysis->Mesh()->FindMaterial(matid);
+    
+    if (!material_elastoplast || !material_darcy) {
+        DebugStop();
+    }
+    
+    TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_elastoplast);
+    TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_darcy);
+    
+    long N_ipoints = mat_with_memory_darcy->GetMemory().get()->NElements();
+    
+    for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+        TPZMemoryDFN & memory = mat_with_memory_darcy->GetMemory().get()->operator[](ip_index);
+        TPZFNMatrix<9,REAL>  k_0 = memory.kappa_0();
+        REAL phi_0 = memory.phi_0();
+        REAL nu = m_simulation_data->Get_Poisson();
+        REAL E = m_simulation_data->Get_Eyoung();
+        TPZFNMatrix<9,REAL> k_n(3,3,0.);
+        for(int i = 0; i < k_0.Rows(); i++){
+            k_n(i,i) = memory.Permeability(k_0(i,i),phi_0,nu,E);
+        }
+        memory.Setkappa(k_n);
+    }
+    
+    // Updating Fracture parameters :
+    
+    for (int imat_frac = 0; imat_frac < m_simulation_data->Get_fracture_material_id().size(); imat_frac++) {
+        int frac_matid = m_simulation_data->Get_fracture_material_id()[imat_frac];
+        
+        TPZMaterial * frac_material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(frac_matid);
+        TPZMaterial * frac_material_darcy = m_darcy_analysis->Mesh()->FindMaterial(frac_matid);
+        
+        if (!frac_material_elastoplast || !frac_material_darcy) {
+            DebugStop();
+        }
+        
+        TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_elastoplast);
+        TPZMatWithMem<TPZMemoryFracDFN> * matfrac_with_memory_darcy = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(frac_material_darcy);
+
+        long N_ipoints = matfrac_with_memory_darcy->GetMemory().get()->NElements();
+        
+        for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+            TPZMemoryFracDFN & memory_frac = matfrac_with_memory_darcy->GetMemory().get()->operator[](ip_index);
+            TPZFNMatrix<9,REAL>  k_0 = memory_frac.kappa_0();
+            
+            TPZFNMatrix<9,REAL> k_n(k_0.Rows(),k_0.Cols(),0.);
+            for(int i = 0; i < k_0.Rows(); i++){
+                k_n(i,i) = memory_frac.Permeability(k_0(i,i));
+            }
+            memory_frac.Setkappa(k_n);
+        }
+        
+
+    }
+    
+}
+
+
+
 
 void TPZSegregatedAnalysisDFN::UpdateState(){
     m_darcy_analysis->UpdateState();

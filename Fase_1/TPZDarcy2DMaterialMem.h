@@ -22,6 +22,7 @@
 #include "TPZElastoPlasticMemoryDFN.h"
 #include "pzporoelastoplasticmem.h"
 #include "TPZMonoPhasicMemoryDFN.h"
+#include "TPZMemoryBCDFN.h"
 #include "TPZMemoryDFN.h"
 #include "TPZMemoryFracDFN.h"
 #include "TPZSimulationData.h"
@@ -279,6 +280,10 @@ public:
      * @since April 16, 2007
      */
     virtual void ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc);
+    
+    virtual void ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef, TPZBndCond &bc){
+        DebugStop();
+    }
     
     /**
      * It computes a contribution to the stiffness matrix and load vector at one BC interface integration point.
