@@ -92,8 +92,8 @@ public:
             REAL h = m_Vm - m_Du_n;
             REAL h_0 = m_Vm - m_Du_0;
             REAL perm = k0*exp(268.*(h-h_0)/h_0);
+            //return perm;
             return k0;
-            //return k0;
         }
         
     }

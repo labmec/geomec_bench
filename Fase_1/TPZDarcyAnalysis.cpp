@@ -61,15 +61,15 @@ void TPZDarcyAnalysis::ConfigurateAnalysis(DecomposeType decomposition, TPZManVe
     switch (decomposition) {
         case ELU:
         {
-#ifdef USING_MKL
-            TPZSpStructMatrix struct_mat(Mesh());
-            struct_mat.SetNumThreads(n_threads);
-            this->SetStructuralMatrix(struct_mat);
-#else
+//#ifdef USING_MKL
+//            TPZSpStructMatrix struct_mat(Mesh());
+//            struct_mat.SetNumThreads(n_threads);
+//            this->SetStructuralMatrix(struct_mat);
+//#else
             TPZSkylineNSymStructMatrix struct_mat(Mesh());
             struct_mat.SetNumThreads(n_threads);
             this->SetStructuralMatrix(struct_mat);
-#endif
+//#endif
         }
             break;
         case ELDLt:

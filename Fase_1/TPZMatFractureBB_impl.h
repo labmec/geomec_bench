@@ -101,7 +101,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
             STATE valNonLinear = weight * phi_f(i) * (forceFrac_n[ist] * forceFrac_n[ist])/200.;
             STATE valLinear = weight * phi_f(i) * forceFrac_n[ist];
             
-            STATE valDu_0 = weight * phi_f(i) * D_un * normal[ist];
+            STATE valDu_0 = weight * phi_f(i) * D_u0 * normal[ist];
             
             ef(fNStateVariables*i+ist) += -valBB+valDu_0;
         }

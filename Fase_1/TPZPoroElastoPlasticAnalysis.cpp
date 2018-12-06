@@ -58,8 +58,8 @@ void TPZPoroElastoPlasticAnalysis::ConfigurateAnalysis(DecomposeType decompositi
             break;
         case ELDLt:
         {
-            TPZSymetricSpStructMatrix struct_mat(Mesh());
-//            TPZSkylineStructMatrix struct_mat(Mesh());
+//            TPZSymetricSpStructMatrix struct_mat(Mesh());
+            TPZSkylineStructMatrix struct_mat(Mesh());
             struct_mat.SetNumThreads(number_threads);
             this->SetStructuralMatrix(struct_mat);
         }
