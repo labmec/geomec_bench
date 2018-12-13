@@ -89,11 +89,15 @@ public:
         }else{
  
             
-            REAL h = m_Vm - m_Du_n;
-            REAL h_0 = m_Vm - m_Du_0;
+            REAL h = m_Vm + m_Du_0 - m_Du_n;
+            REAL h_0 = m_Vm ;
             REAL perm = k0*exp(268.*(h-h_0)/h_0);
+            
+            if(perm < 1e-9){
+                return 1e-9;
+            }
             //return perm;
-            return k0;
+            return perm;
         }
         
     }

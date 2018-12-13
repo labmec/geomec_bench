@@ -223,8 +223,11 @@ void TPZSegregatedAnalysisDFN::SetInitialParameters(){
             
             REAL Vm = m_simulation_data->Get_Vm().find(frac_matid)->second; //Max fracture closure
             REAL a0 = m_simulation_data->Get_a0().find(frac_matid)->second;
-         
-            REAL Du_0 = Vm-a0; //Initial Opening;
+            REAL Kni = m_simulation_data->Get_Kni().find(frac_matid)->second;
+            
+            REAL Du_0 = Vm-a0; // initial closure
+            
+            Du_0 = (-30.*Vm)/(-30.-Kni*Vm);
             
             memory_frac.SetVm(Vm);
             memory_frac.SetDu_0(Du_0);

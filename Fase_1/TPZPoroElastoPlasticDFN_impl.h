@@ -106,7 +106,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
     
     memory.GetPlasticState_n() = plastloc.GetState();
     
-    plastloc.ApplyStrainComputeSigma(memory.GetPlasticState_n().fEpsT, memory.GetSigma());
+    plastloc.ApplyStrainComputeSigma(memory.GetPlasticState_n().m_eps_t, memory.GetSigma());
     
     this->SetDefaultMem(memory);
     
@@ -184,7 +184,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrain(TPZMaterialData & data, T
     TPZTensor<REAL> EpsT, Sigma;
     
     EpsT.CopyFrom(DeltaStrain);
-    EpsT.Add(plasticloc.GetState().fEpsT, 1.);
+    EpsT.Add(plasticloc.GetState().m_eps_t, 1.);
     
     plasticloc.ApplyStrainComputeSigma(EpsT, Sigma);
     Sigma.CopyTo(Stress);
@@ -217,7 +217,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::ApplyDeltaStrainComputeDep(TPZMaterialData
     TPZTensor<REAL> EpsT, Sigma;
     
     EpsT.CopyFrom(DeltaStrain);
-    EpsT.Add(plasticloc.GetState().fEpsT, 1.);
+    EpsT.Add(plasticloc.GetState().m_eps_t, 1.);
     
     plasticloc.ApplyStrainComputeSigma(EpsT, Sigma, &Dep);
     Sigma.CopyTo(Stress);
@@ -600,8 +600,8 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::Solution(TPZMaterialData &data, int var, T
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
     Solout.Resize( this->NSolutionVariables(var));
     
-    TPZTensor<REAL> epsilon_t = memory.GetPlasticState_n().fEpsT;
-    TPZTensor<REAL> epsilon_p = memory.GetPlasticState_n().fEpsP;
+    TPZTensor<REAL> epsilon_t = memory.GetPlasticState_n().m_eps_t;
+    TPZTensor<REAL> epsilon_p = memory.GetPlasticState_n().m_eps_p;
     
     switch (var) {
         case 0:

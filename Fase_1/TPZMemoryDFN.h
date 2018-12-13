@@ -61,7 +61,11 @@ public:
         
         REAL Sigma_kk_ef = GetSigma_n()[0]+GetSigma_n()[3]+GetSigma_n()[5];
         
-        REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E+0.0013171562035842917;
+        REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E + 0.0013171510898339536;
+        
+        //REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E+0.0013171562035842917;
+  
+        //strain_v_n = 0.00000798717690920986;
         REAL phi   = 1. - (1. - phi0) * exp(-strain_v_n);
         //REAL phi   = 1. - (1. - phi0) * exp(u_v);
         REAL varphi = phi/phi0;

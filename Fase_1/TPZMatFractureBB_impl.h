@@ -31,7 +31,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     TMEM & memory = this->GetMemory().get()->operator[](gp_index);
     memory.SetCoord(data.x);
     STATE  D_u0 = memory.GetDu_0(); //Initial closure;
-    STATE  D_un = memory.GetDu_n();
+    //STATE  D_un = memory.GetDu_n();
     REAL Vm = memory.GetVm(); //Max opening
     REAL Kni = m_simulation_data->Get_Kni().find(fFracID)->second;
     
@@ -80,33 +80,22 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     STATE phiVi_normal = 0., phiVj_normal = 0.;
     
     for(int i=0; i<nrow; i++) {
-
-    // int iphi = data.fShapeIndex[i].second;
-    // int ivec = data.fVecShapeIndex[i].first;
-
-        //ef(fNStateVariables*i+1) += weight * (phi(i,0) * 100.);
+        
         for (int e = 0; e < 2; e++) {
             phiVi[e] = phi_f(i,0)*normal[e];
         }
         phiVi_normal = InnerVec(phiVi, normal);
         
-        // ef(fNStateVariables*i+1) += -weight * (phiVi_normal * 0.);
-        // ef(fNStateVariables*i) += -weight * (phiVi_normal * D_u0);
 
         for(int ist=0; ist<2; ist++)
         {
 
             STATE valBB = weight * phi_f(i) * forceFrac_n[ist] * Vm /(forceFrac_n[ist] + Kni*Vm);
             
-            STATE valNonLinear = weight * phi_f(i) * (forceFrac_n[ist] * forceFrac_n[ist])/200.;
-            STATE valLinear = weight * phi_f(i) * forceFrac_n[ist];
-            
             STATE valDu_0 = weight * phi_f(i) * D_u0 * normal[ist];
             
             ef(fNStateVariables*i+ist) += -valBB+valDu_0;
         }
-        
-        //STATE val = (weight * phiVi_normal * forceFrac_normal * Vm)/(forceFrac_normal+Kni*Vm);
         
 
             
@@ -122,8 +111,6 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
                 {
 
                     STATE valBB = weight * phi_f(i) * phi_f(j) * Kni * Vm * Vm / ( (Kni*Vm+ forceFrac_n[ist]) * (Kni*Vm+ forceFrac_n[ist]) );
-                
-                    STATE valNonLinear =  weight * phi_f(i) * phi_f(j) * 2. * (forceFrac_n [ist])/200.;
                  
                     ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += -valBB;
                 }
@@ -173,6 +160,8 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 //
 //            mem.SetDu_0(Du_0);
 //        }
+        
+        REAL a_n = Vm + D_u0 - (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         
         STATE Du_n = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         

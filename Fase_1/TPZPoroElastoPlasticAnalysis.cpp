@@ -201,28 +201,30 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
             
             /// Print Interface Memory Left and Right
             
-            std::ofstream fileMemInter("MemoryInterfaces.txt", std::ofstream::app);
-            fileMemInter <<"For Interfaces left :" << std::endl;
-            int interLeft_ID = m_simulation_data->Get_interfaceLeft_id()[0];
-            TPZMaterial * mat_interLeft = this->Mesh()->FindMaterial(interLeft_ID);
-            TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * mat_with_interLeft = dynamic_cast<TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * >(mat_interLeft);
-            mat_with_interLeft->Print(fileMemInter);
+            if(m_simulation_data->Get_insert_fractures_Q()){
+                std::ofstream fileMemInter("MemoryInterfaces.txt", std::ofstream::app);
+                fileMemInter <<"For Interfaces left :" << std::endl;
+                int interLeft_ID = m_simulation_data->Get_interfaceLeft_id()[0];
+                TPZMaterial * mat_interLeft = this->Mesh()->FindMaterial(interLeft_ID);
+                TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * mat_with_interLeft = dynamic_cast<TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * >(mat_interLeft);
+                mat_with_interLeft->Print(fileMemInter);
+                
+                fileMemInter <<"For Interfaces right :"<< i << std::endl;
+                int interRight_ID = m_simulation_data->Get_interfaceRight_id()[0];
+                TPZMaterial * mat_interRight = this->Mesh()->FindMaterial(interRight_ID);
+                TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * mat_with_interRight = dynamic_cast<TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * >(mat_interRight);
+                mat_with_interRight->Print(fileMemInter);
             
-            fileMemInter <<"For Interfaces right :"<< i << std::endl;
-            int interRight_ID = m_simulation_data->Get_interfaceRight_id()[0];
-            TPZMaterial * mat_interRight = this->Mesh()->FindMaterial(interRight_ID);
-            TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * mat_with_interRight = dynamic_cast<TPZMatWithMem<TPZInterfaceMemory, TPZDiscontinuousGalerkin> * >(mat_interRight);
-            mat_with_interRight->Print(fileMemInter);
-        
-            /// Print Fracture Memory
-            std::ofstream fileMemFrac("MemoryFrac.txt", std::ofstream::app);
-            int n_fracs = m_simulation_data->Get_fracture_material_id().size();
-            for(int i = 0; i< n_fracs; i++) {
-                fileMemFrac <<"For fracture number = "<< i << std::endl;
-                int frac_ID = m_simulation_data->Get_fracture_material_id()[i];
-                TPZMaterial * material_frac = this->Mesh()->FindMaterial(frac_ID);
-                TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac);
-                mat_with_memory_frac->Print(fileMemFrac);
+                /// Print Fracture Memory
+                std::ofstream fileMemFrac("MemoryFrac.txt", std::ofstream::app);
+                int n_fracs = m_simulation_data->Get_fracture_material_id().size();
+                for(int i = 0; i< n_fracs; i++) {
+                    fileMemFrac <<"For fracture number = "<< i << std::endl;
+                    int frac_ID = m_simulation_data->Get_fracture_material_id()[i];
+                    TPZMaterial * material_frac = this->Mesh()->FindMaterial(frac_ID);
+                    TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac);
+                    mat_with_memory_frac->Print(fileMemFrac);
+                }
             }
 //            memory.Print(fileMemFrac);
             

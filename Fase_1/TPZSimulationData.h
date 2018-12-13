@@ -71,6 +71,9 @@ protected:
     /** @brief Directive that states the use of dual (true) or pirmal (false) formulation for monophacic flow  */
     bool m_is_dual_formulation_Q;
     
+    /** @brief Verify if fracture has to inserted */
+    bool m_insert_fractures_Q;
+    
     /** @brief Name for the Gmsh geometry file being used */
     std::string m_geometry_file;
     
@@ -181,6 +184,14 @@ public:
     
     /** @brief Get the the use of dual (true) or pirmal (false) formulation for monophacic flow  */
     bool Get_is_dual_formulation_Q() { return m_is_dual_formulation_Q; }
+    
+    /** @brief Verify if fracture has to be inserted */
+    void Set_insert_fractures_Q(bool insert_fractures_Q){
+        m_insert_fractures_Q = insert_fractures_Q;
+    }
+    
+    /** @brief Verify if fracture has to be inserted   */
+    bool Get_insert_fractures_Q() { return m_insert_fractures_Q; }
     
     /** @brief Set the spatial refinemenet level */
     void Set_h_level(int h_level){

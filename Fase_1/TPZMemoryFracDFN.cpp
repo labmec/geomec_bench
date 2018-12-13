@@ -76,6 +76,7 @@ void TPZMemoryFracDFN::Print(std::ostream &out) const {
     out << "\n Initial fracture closure = " << m_Du_0;
     out << "\n Last fracture closure = " << m_Du;
     out << "\n Current fracture closure = " << m_Du_n;
+    out << "\n Fracture overture = " << m_Vm + m_Du_0 - m_Du_n;
     out << "\n -------------------------------";
     TPZMonoPhasicMemoryFracDFN::Print(out);
     TPZElastoPlasticMemoryFracDFN::Print(out);
