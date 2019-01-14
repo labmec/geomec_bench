@@ -62,6 +62,9 @@ protected:
     
     bool m_is_current_state_Q;
     
+    /** @brief Verify if the problem is monophasic */
+    bool m_is_mono_Q;
+    
     /** @brief Directive that states if the last memory solution is being transferred to the current memory solution */
     bool m_transfer_current_to_last_solution_Q;
     
@@ -163,10 +166,19 @@ public:
     
     /** @brief Get initial state */
     bool IsInitialStateQ() {
-        
         return m_is_initial_state_Q;
-        
     }
+    
+    /** @brief Set Monophasic Problem */
+    void SetMonoPhasicQ(bool is_mono_Q) {
+        m_is_mono_Q = is_mono_Q;
+    }
+    
+    /** @brief Verify if is a monophasic problem */
+    bool IsMonoPhasicQ() {
+        return m_is_mono_Q;
+    }
+    
     
     /** @brief Set current time state */
     void SetCurrentStateQ(bool state) { m_is_current_state_Q = state; }

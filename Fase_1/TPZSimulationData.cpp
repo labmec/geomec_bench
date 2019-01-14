@@ -30,6 +30,7 @@ TPZSimulationData::TPZSimulationData()
     m_must_accept_solution_Q = false;
     m_is_dual_formulation_Q = true;
     m_insert_fractures_Q = true;
+    m_is_mono_Q = false;
     m_Eyoung = 1;
     m_poisson = 1;
     m_alpha = 1;
@@ -72,6 +73,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_darcy_ID                          = other.m_darcy_ID;
     m_is_initial_state_Q                = other.m_is_initial_state_Q;
     m_is_current_state_Q                = other.m_is_current_state_Q;
+    m_is_mono_Q                         = other.m_is_mono_Q;
     m_mat_ids                           = other.m_mat_ids;
     m_is_dual_formulation_Q             = other.m_is_dual_formulation_Q;
     m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
@@ -113,6 +115,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_darcy_ID                          = other.m_darcy_ID;
         m_is_initial_state_Q                = other.m_is_initial_state_Q;
         m_is_current_state_Q                = other.m_is_current_state_Q;
+        m_is_mono_Q                         = other.m_is_mono_Q;
         m_mat_ids                           = other.m_mat_ids;
         m_must_accept_solution_Q            = other.m_must_accept_solution_Q;
         m_insert_fractures_Q                = other.m_insert_fractures_Q;
@@ -158,6 +161,7 @@ void TPZSimulationData::Print()
     std::cout << " m_poisson = " << m_poisson << std::endl;
     std::cout << " m_alpha = " << m_alpha << std::endl;
     std::cout << " m_insert_fractures_Q = " << m_insert_fractures_Q << std::endl;
+    std::cout << " m_is_mono_Q = " << m_is_mono_Q << std::endl;
     std::cout << " m_interface_id = " << &m_interface_id << std::endl;
     std::cout << " m_interfaceLeft_id = " << &m_interfaceLeft_id << std::endl;
     std::cout << " m_interfaceRight_id = " << &m_interfaceRight_id << std::endl;

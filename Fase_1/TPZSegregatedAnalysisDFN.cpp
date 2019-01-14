@@ -127,12 +127,16 @@ void TPZSegregatedAnalysisDFN::ConfigurateAnalysis(DecomposeType decompose_E, De
 
 void TPZSegregatedAnalysisDFN::ExecuteOneTimeStep(){
     m_darcy_analysis->ExecuteOneTimeStep();
-    m_elastoplast_analysis->ExecuteOneTimeStep();
+    if(!m_simulation_data->IsMonoPhasicQ()){
+        m_elastoplast_analysis->ExecuteOneTimeStep();
+    }
 }
 
 void TPZSegregatedAnalysisDFN::PostProcessTimeStep(std::string & geo_file, std::string & res_file){
     m_darcy_analysis->PostProcessTimeStep(res_file);
-    m_elastoplast_analysis->PostProcessTimeStep(geo_file);
+    if(!m_simulation_data->IsMonoPhasicQ()){
+        m_elastoplast_analysis->PostProcessTimeStep(geo_file);
+    }
 }
 
 void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
@@ -156,7 +160,9 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     for (int it = 0; it < n_time_steps; it++) {
         for (int k = 1; k <= n_max_fss_iterations; k++) {
             this->ExecuteOneTimeStep();
-            this->UpdateParameters();
+            if(!m_simulation_data->IsMonoPhasicQ()){
+                this->UpdateParameters();
+            }
             error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
             dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
             this->PostProcessTimeStep(file_elastoplast_test, file_darcy_test);
