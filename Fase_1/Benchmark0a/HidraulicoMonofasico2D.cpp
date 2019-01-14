@@ -476,7 +476,7 @@ TPZGeoMesh *HidraulicoMonofasico2D::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchRef.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench0b.msh";
     
     TPZGmshReader Geometry;
     REAL s = 1.0;

@@ -466,7 +466,7 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBenchRef.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench0b.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -879,7 +879,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
 
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    STATE DeltaP = 45.;
+    STATE DeltaP = 0.;
    
     STATE Pjusante = 54.9 - DeltaP;
     STATE Pmontante = 55.0 - DeltaP;
@@ -916,12 +916,12 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             cmesh->InsertMaterialObject(materialFrac);
             
             // 2 - Condições de contorno
-            val1(0,0) =  0.; // right
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fneumann, val1, val2);
+            val1(0,0) =  54.95; // right
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond4);
 
-            val1(0,0) = 0.; // left
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fneumann, val1, val2);
+            val1(0,0) = 54.95; // left
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond5);
         }
         
