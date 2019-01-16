@@ -894,20 +894,20 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_M(TPZManVector<TPZCompMesh* , 2 >  &m
     STATE Pjusante = 54.9 - DeltaP;
     STATE Pmontante = 55.0 - DeltaP;
     
-    val1(0,0) = Pjusante; //botton
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fdirichlet, val1, val2);
+    val1(0,0) = 0.; //botton
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
     cmesh->InsertMaterialObject(BCond0);
     
-    val1(0,0) = Pmontante; //top
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fdirichlet, val1, val2);
+    val1(0,0) = 0.; //top
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
     cmesh->InsertMaterialObject(BCond1);
     
-    val1(0,0) = 0.; // right
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, fneumann, val1, val2);
+    val1(0,0) = Pjusante; // right
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond2);
     
-    val1(0,0) = 0.; // left
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, fneumann, val1, val2);
+    val1(0,0) = Pmontante; // left
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond3);
     val1(0,0) = 0.0;
     
@@ -926,12 +926,12 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_M(TPZManVector<TPZCompMesh* , 2 >  &m
             cmesh->InsertMaterialObject(materialFrac);
             
             // 2 - Condições de contorno
-            val1(0,0) =  0.; // right
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fneumann, val1, val2);
+            val1(0,0) =  54.925; // right
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond4);
             
-            val1(0,0) = 0.; // left
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fneumann, val1, val2);
+            val1(0,0) = 54.975; // left
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fdirichlet, val1, val2);
             cmesh->InsertMaterialObject(BCond5);
         }
         

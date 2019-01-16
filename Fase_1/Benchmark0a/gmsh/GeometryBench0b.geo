@@ -18,6 +18,9 @@ nx = 17;
 ny = 3;
 pr = 1;
 
+nf = 9;
+pf = 1;
+
 // Coordenadas dos pontos
 
   //Domínio Omega
@@ -43,6 +46,7 @@ pr = 1;
 
   Transfinite Line{1,3} = nx Using Progression pr;
   Transfinite Line{2,4} = ny Using Progression pr;
+  Transfinite Line{5} = nf Using Progression pf;
   //Transfinite Line{1} = nx Using Progression pr;
 
 
@@ -52,7 +56,7 @@ pr = 1;
   Line{5} In Surface {1};
   Point{5,6} In Surface {1};
 
-  //Transfinite Surface {1};
+ // Transfinite Surface {1};
 
   If(IsquadQ)
     Recombine Surface {1};

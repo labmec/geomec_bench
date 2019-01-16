@@ -157,10 +157,14 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     bool dx_stop_criterion_Q = false;
     this->SetInitialParameters();
     
-    for (int it = 0; it < n_time_steps; it++) {
+    for (int it = 0; it < n_time_steps; it++) { //??
         for (int k = 1; k <= n_max_fss_iterations; k++) {
             this->ExecuteOneTimeStep();
+            
             if(!m_simulation_data->IsMonoPhasicQ()){
+                if (k==1) {
+                    this->SetInitialStress();
+                }
                 this->UpdateParameters();
             }
             error_stop_criterion_Q = (m_darcy_analysis->Get_error() < r_norm) && (m_elastoplast_analysis->Get_error() < r_norm);
@@ -178,6 +182,24 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     }
 
 }
+
+void TPZSegregatedAnalysisDFN::SetInitialStress(){
+    
+    // Updating volumetric parameters :
+    
+    int matid = m_simulation_data->Get_elasticity_matid();
+    
+    TPZMaterial * material_elastoplast = m_elastoplast_analysis->Mesh()->FindMaterial(matid);
+    
+    TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_elastoplast);
+    
+    long N_ipoints = mat_with_memory_elastoplast->GetMemory().get()->NElements();
+    for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+        TPZMemoryDFN & memory = mat_with_memory_elastoplast->GetMemory().get()->operator[](ip_index);
+        memory.SetSigma_0(memory.GetSigma_n());
+    }
+}
+
 
 void TPZSegregatedAnalysisDFN::SetInitialParameters(){
     

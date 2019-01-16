@@ -66,7 +66,10 @@ public:
     /// Execute the transient evolution using Fixed Stress Split Iteration
     void ExecuteTimeEvolution();
 
-    // Update parameters
+    // Set initial stress
+    void SetInitialStress();
+    
+    // Set initial parameters
     void SetInitialParameters();
     
     // Update parameters

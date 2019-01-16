@@ -61,8 +61,12 @@ public:
         
         REAL Sigma_kk_ef = GetSigma_n()[0]+GetSigma_n()[3]+GetSigma_n()[5];
         
-        REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E + 0.0013171510898339536;
+        REAL Sigma_kk_0 = GetSigma_0()[0]+GetSigma_0()[3]+GetSigma_0()[5];
+        REAL strain_v_0 = (1.-2.*nu)*(Sigma_kk_0)/E;
         
+        REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E+0.0013171510898339536;
+        
+        //0.0013171510898339536
         //REAL strain_v_n = (1.-2.*nu)*(Sigma_kk_ef)/E+0.0013171562035842917;
   
         //strain_v_n = 0.00000798717690920986;
