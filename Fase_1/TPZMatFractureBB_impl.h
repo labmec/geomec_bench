@@ -54,10 +54,11 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
     fileMemFrac << "Coordenadas = " << data.x << std::endl;
     fileMemFrac << "forceFrac = " << forceFrac_n << std::endl;
+
     
     STATE forceFrac_normal = InnerVec(forceFrac_n, normal);
     STATE p_n = memory.p_n();
-    STATE forceFrac_normal_Ef = forceFrac_normal - p_n; //alpha multiplica p
+    STATE forceFrac_normal_Ef = -forceFrac_normal - p_n; //alpha multiplica p
     
     for (int i =0 ; i<forceFrac_n.size(); i++) {
         forceFrac_n[i] = forceFrac_normal_Ef * normal[i];
@@ -171,7 +172,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         REAL Kni = m_simulation_data->Get_Kni();
 
         STATE p_n = mem.p_n();
-        STATE forceFrac_normal_Ef = forceFrac_normal - p_n;
+        STATE forceFrac_normal_Ef = -forceFrac_normal - p_n;
         
         if (m_simulation_data->IsInitialStateQ()) {
             
@@ -183,7 +184,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
                 forceFrac0[i]=m_simulation_data->Get_Stress0()(i,i)*normal[i];
             }
             STATE forceFrac_normal0 = InnerVec(forceFrac0,normal);
-            //forceFrac_normal0 = -30.;
+            //forceFrac_normal0 = -128.41549701748323;
             STATE Du_0 = (forceFrac_normal0 * Vm)/(forceFrac_normal0-Kni*Vm); //Valor da tensão imposta
            // Du_0 = 0.;
 
