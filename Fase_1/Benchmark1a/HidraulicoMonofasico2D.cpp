@@ -585,10 +585,11 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZS
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZMatFractureBB<TPZMemoryFracDFN>(fmatFrac[i_frac],fdimFrac,nstate_frac);
             
-            std::map<REAL, REAL> Vm_frac, a0_frac, Kni_frac;
+            std::map<REAL, REAL> Vm_frac, a0_frac;
             Vm_frac[fmatFrac[i_frac]] = 6.5e-5;
             a0_frac[fmatFrac[i_frac]] = 6.5e-5;
-            Kni_frac[fmatFrac[i_frac]] = 12041.;
+            REAL Kni_frac = 12041.;
+            
             sim_data->Set_Vm(Vm_frac);
             sim_data->Set_a0(a0_frac);
             sim_data->Set_Kni(Kni_frac);
@@ -596,7 +597,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZS
             //   materialFrac->Set_Vm(4.36236e-4);
             materialFrac->Set_Vm(6.5e-5);
             materialFrac->Set_a0(6.5e-5);
-            materialFrac->Set_Kni(12041.);
+            materialFrac->Set_Kni(Kni_frac);
             
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
@@ -916,7 +917,9 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_M(TPZManVector<TPZCompMesh* , 2 >  &m
         TPZDarcy2DMaterialMem<TPZMemoryFracDFN> *materialFrac;
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryFracDFN> (fmatFrac[i_frac],fdimFrac,1,1);
-            REAL kf = Sf*4.65827656e-10;
+            
+            std::map<REAL, REAL> kf;
+            kf[fmatFrac[0]] = Sf*4.65827656e-10;
             //kf=0.0000000000000000000016917234185235216;
             //            kf = .03;
             

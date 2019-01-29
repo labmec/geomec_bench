@@ -9,6 +9,10 @@
 #include "TPZLagrangeInterface.h"
 #include "pzaxestools.h"
 
+#ifdef LOG4CXX
+static LoggerPtr InterfaceLogger(Logger::getLogger("Benchmark.Interface"));
+#endif
+
 
 template <class TMEM>
 int TPZLagrangeInterface<TMEM>::ClassId() const{
@@ -57,6 +61,17 @@ void TPZLagrangeInterface<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, RE
             ek(ip + phrq,jq) += fMultiplier*weight*phiP(ip,0)*phiQ(jq,0);
         }
     }
+    
+#ifdef LOG4CXX2
+    if (InterfaceLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << "<<< TPZLagrangeInterface<TMEM>::Contribute ***";
+        sout << " Resultant rhs vector:\n" << ef;
+        sout << " Resultant stiff vector:\n" << ek;
+        LOGPZ_DEBUG(InterfaceLogger, sout.str().c_str());
+    }
+#endif
+    
 }
 
 template <class TMEM>
@@ -133,6 +148,15 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZV
         }
     }
 
+#ifdef LOG4CXX
+    if (InterfaceLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << "<<< TPZLagrangeInterface<TMEM>::Contribute ***";
+        sout << " Resultant rhs vector:\n" << ef;
+        sout << " Resultant stiff vector:\n" << ek;
+        LOGPZ_DEBUG(InterfaceLogger, sout.str().c_str());
+    }
+#endif
     
 }
 
@@ -219,6 +243,17 @@ void TPZLagrangeInterface<TMEM>::ContributeInterface(TPZMaterialData &data, TPZM
         }
     }
 
+#ifdef LOG4CXX
+    if (InterfaceLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << "<<< TPZLagrangeInterface<TMEM>::Contribute ***";
+        sout << " Resultant rhs vector:\n" << ef;
+        sout << " Resultant stiff vector:\n" << ek;
+        LOGPZ_DEBUG(InterfaceLogger, sout.str().c_str());
+    }
+#endif
+    
+    
 }
 
 template <class TMEM>

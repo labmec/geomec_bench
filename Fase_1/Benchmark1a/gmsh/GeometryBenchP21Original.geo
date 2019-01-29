@@ -14,9 +14,11 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 18;
-ny = 8;
+nx = 5;
+ny = 3;
 pr = 1;
+
+nf = 4;
 
 // Coordenadas dos pontos
 
@@ -125,20 +127,20 @@ pr = 1;
   Transfinite Line{l1,l2,l4,l6,l7,l8,l13,l14,l15,l16,l17,l19,l20,l22,l24} = nx Using Progression pr;
   Transfinite Line{l3,l5,l9,l10,l11,l12,l18,l21,l23,l25} = ny Using Progression pr;
 
-  Transfinite Line{f1} = ny Using Progression pr;
-  Transfinite Line{f2} = ny Using Progression pr;
-  Transfinite Line{f3} = ny Using Progression pr;    
-  Transfinite Line{f4} = ny Using Progression pr;
-  Transfinite Line{f5} = ny Using Progression pr;
-  Transfinite Line{f6} = ny Using Progression pr;
-  Transfinite Line{f7} = nx Using Progression pr;
-  Transfinite Line{f8} = ny Using Progression pr;  
-  Transfinite Line{f9} = ny Using Progression pr;    
-  Transfinite Line{f10} = ny Using Progression pr;
-  Transfinite Line{f11} = ny Using Progression pr;
-  Transfinite Line{f12} = ny Using Progression pr;
-  Transfinite Line{f13} = ny Using Progression pr;
-  Transfinite Line{f14} = ny Using Progression pr;
+  Transfinite Line{f1} = nf Using Progression pr;
+  Transfinite Line{f2} = nf Using Progression pr;
+  Transfinite Line{f3} = nf Using Progression pr;    
+  Transfinite Line{f4} = nf Using Progression pr;
+  Transfinite Line{f5} = nf Using Progression pr;
+  Transfinite Line{f6} = nf Using Progression pr;
+  Transfinite Line{f7} = nf Using Progression pr;
+  Transfinite Line{f8} = nf Using Progression pr;  
+  Transfinite Line{f9} = nf Using Progression pr;    
+  Transfinite Line{f10} = nf Using Progression pr;
+  Transfinite Line{f11} = nf Using Progression pr;
+  Transfinite Line{f12} = nf Using Progression pr;
+  Transfinite Line{f13} = nf Using Progression pr;
+  Transfinite Line{f14} = nf Using Progression pr;
 
 
 // Definição da superfície 
@@ -161,6 +163,21 @@ pr = 1;
   Line{f13} In Surface{1};
   Line{f14} In Surface{1};
 
+  Point{p5,p6} In Surface {1};
+  Point{p7,p8} In Surface {1};
+  Point{p9,p10} In Surface {1};
+  Point{p11,p12} In Surface {1};
+  Point{p13,p14} In Surface {1};
+  Point{p15,p16} In Surface {1};
+  Point{p17,p18} In Surface {1};
+  Point{p19,p20} In Surface {1};
+  Point{p21,p22} In Surface {1};
+  Point{p23,p24} In Surface {1};
+  Point{p25,p26} In Surface {1};
+  Point{p27,p28} In Surface {1};
+  Point{p29,p30} In Surface {1};
+  Point{p31,p32} In Surface {1};
+
   //Transfinite Surface {1};
 
   If(IsquadQ)
@@ -176,33 +193,65 @@ pr = 1;
   Physical Line("left") = {l25};
   
   Physical Line("f1") = {f1};
-
   Physical Line("f2") = {f2};
-
   Physical Line("f3") = {f3};
-
   Physical Line("f4") = {f4};
-
   Physical Line("f5") = {f5};
-
   Physical Line("f6") = {f6};
-
   Physical Line("f7") = {f7};
-
   Physical Line("f8") = {f8};
-
   Physical Line("f9") = {f9};
-
   Physical Line("f10") = {f10};
-
   Physical Line("f11") = {f11};
-
   Physical Line("f12") = {f12};
-
   Physical Line("f13") = {f13};
-
   Physical Line("f14") = {f14};      
   
+
+  Physical Point("PointRight0") = {5};
+  Physical Point("PointLeft0") = {6};
+
+  Physical Point("PointRight1") = {7};
+  Physical Point("PointLeft1") = {8};
+
+  Physical Point("PointRight2") = {9};
+  Physical Point("PointLeft2") = {10};
+
+  Physical Point("PointRight3") = {11};
+  Physical Point("PointLeft3") = {12};
+
+  Physical Point("PointRight4") = {13};
+  Physical Point("PointLeft4") = {14};
+
+  Physical Point("PointRight5") = {15};
+  Physical Point("PointLeft5") = {16};
+
+  Physical Point("PointRight6") = {17};
+  Physical Point("PointLeft6") = {18};
+
+  Physical Point("PointRight7") = {19};
+  Physical Point("PointLeft7") = {20};
+
+  Physical Point("PointRight8") = {21};
+  Physical Point("PointLeft8") = {22};
+
+  Physical Point("PointRight9") = {23};
+  Physical Point("PointLeft9") = {24};
+
+  Physical Point("PointRight10") = {25};
+  Physical Point("PointLeft10") = {26};
+
+  Physical Point("PointRight11") = {27};
+  Physical Point("PointLeft11") = {28};
+
+  Physical Point("PointRight12") = {29};
+  Physical Point("PointLeft12") = {30};
+
+  Physical Point("PointRight13") = {31};
+  Physical Point("PointLeft13") = {32};
+
+
+
   Coherence Mesh;
 
 

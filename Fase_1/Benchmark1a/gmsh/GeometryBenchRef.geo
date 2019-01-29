@@ -59,8 +59,8 @@ pr = 1;
 
  // Line{7} in Surface{6};
 
-  Transfinite Surface {6} = {1,2,6,5};
-  Transfinite Surface {7} = {5,6,3,4};
+  Transfinite Surface {6};
+  Transfinite Surface {7};
 
   If(IsquadQ)
 

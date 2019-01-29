@@ -971,7 +971,7 @@ void TPZFractureInsertion::AdjustSideOrient(TPZCompMesh *cmesh){
             if (neigh1[i].Element()->Material()->Id()==m_fracture_id) {
                 neigh_elside=neigh1[i];
                 TPZInterpolatedElement *intel = dynamic_cast<TPZInterpolatedElement*>(celside1.Element());
-                intel->SetSideOrient(1, -1);
+                intel->SetSideOrient(1,- 1);
             }
         
             bool isboundary = m_boundaries_material_ids.find(neigh1[i].Element()->Material()->Id()) != m_boundaries_material_ids.end();

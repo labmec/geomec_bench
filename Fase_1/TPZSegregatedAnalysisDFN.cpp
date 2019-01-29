@@ -157,6 +157,17 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
     bool dx_stop_criterion_Q = false;
     this->SetInitialParameters();
     
+    {
+        
+   //     std::ofstream filecE("MalhaC_E_AfterAdjust.txt"); //Impressão da malha computacional da velocidade (formato txt)
+   //     m_elastoplast_analysis->Mesh()->Print(filecE);
+    }
+    {
+        std::ofstream filecM("MalhaC_M_AfterAdjust.txt"); //Impressão da malha computacional da velocidade (formato txt)
+        m_darcy_analysis->Mesh()->Print(filecM);
+    }
+    
+    
     for (int it = 0; it < n_time_steps; it++) { //??
         for (int k = 1; k <= n_max_fss_iterations; k++) {
             this->ExecuteOneTimeStep();
@@ -171,7 +182,7 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
             dx_stop_criterion_Q = (m_darcy_analysis->Get_dx_norm() < dx_norm) && (m_elastoplast_analysis->Get_dx_norm() < dx_norm);
             this->PostProcessTimeStep(file_elastoplast_test, file_darcy_test);
             
-            if ((error_stop_criterion_Q && (k > n_enforced_fss_iterations)) || dx_stop_criterion_Q) {
+            if ((error_stop_criterion_Q && (k > n_enforced_fss_iterations)) && dx_stop_criterion_Q) {
                 this->PostProcessTimeStep(file_elastoplast, file_darcy);
                 std::cout << "TPZSegregatedAnalysisDFN:: Iterative process converged with residue norm for Darcy = " << m_darcy_analysis->Get_error() << std::endl;
                 std::cout << "TPZSegregatedAnalysisDFN:: Iterative process converged with residue norm for Elastoplasticity = " << m_elastoplast_analysis->Get_error() << std::endl;
@@ -196,7 +207,8 @@ void TPZSegregatedAnalysisDFN::SetInitialStress(){
     long N_ipoints = mat_with_memory_elastoplast->GetMemory().get()->NElements();
     for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
         TPZMemoryDFN & memory = mat_with_memory_elastoplast->GetMemory().get()->operator[](ip_index);
-        memory.SetSigma_0(memory.GetSigma_n());
+        TPZTensor<REAL> sigma_0 = m_simulation_data->Get_Stress0(); //Initial conditions
+        memory.SetSigma_0(sigma_0);
     }
 }
 
@@ -247,18 +259,20 @@ void TPZSegregatedAnalysisDFN::SetInitialParameters(){
         for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
             TPZMemoryFracDFN & memory_frac = matfrac_with_memory_darcy->GetMemory().get()->operator[](ip_index);
             TPZFNMatrix<9,REAL>  k_0(3,3,0.);
-            k_0(0,0) = m_simulation_data->Get_Permeability_0();
+            k_0(0,0) = m_simulation_data->Get_Permeability_0().find(frac_matid)->second;
+            k_0(1,1) = m_simulation_data->Get_Permeability_0().find(frac_matid)->second;
+            k_0(2,2) = m_simulation_data->Get_Permeability_0().find(frac_matid)->second;
             
             REAL Vm = m_simulation_data->Get_Vm().find(frac_matid)->second; //Max fracture closure
             REAL a0 = m_simulation_data->Get_a0().find(frac_matid)->second;
-            REAL Kni = m_simulation_data->Get_Kni().find(frac_matid)->second;
+            REAL Kni = m_simulation_data->Get_Kni();
             
             REAL Du_0 = Vm-a0; // initial closure
             
-            Du_0 = (-30.*Vm)/(-30.-Kni*Vm);
+           // Du_0 = (-17.2*Vm)/(-17.2-Kni*Vm);
             
             memory_frac.SetVm(Vm);
-            memory_frac.SetDu_0(Du_0);
+           // memory_frac.SetDu_0(Du_0);
             memory_frac.Setkappa_0(k_0);
             memory_frac.Setkappa(k_0);
         }

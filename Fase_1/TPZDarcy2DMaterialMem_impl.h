@@ -195,7 +195,22 @@ void TPZDarcy2DMaterialMem<TMEM>::FillDataRequirementsInterface(TPZMaterialData 
 template <class TMEM>
 void TPZDarcy2DMaterialMem<TMEM>::Print(std::ostream &out) {
     out << "\t Base class print:\n";
-    out << " name of material : " << this->Name() << "\n";
+    out << "Name of material : " << this->Name() << "\n";
+    out << "Material dimension : "<<fDimension<< "\n";
+    out << "Aproximation Space for velocity : "<< fSpace<< "\n";
+    out << "Forcing function : " << ff<< "\n";
+    out << "Viscosity : " << fViscosity << "\n";
+    out << "Medium permeability : " << fk << "\n";
+    out << "Medium vertical permeability : "<< fkv << "\n";
+    out << "Medium hotizontal permeability : "<<fkh << "\n";
+    out << "Medium porosity : " << fPhi << "\n";
+    out << "Permeability tensor : " << fTensorK << "\n";
+    out << "Inverse of the permeability tensor : " << fInvK << "\n";
+    out << "Theta : "<<  fTheta << "\n";
+    out << "Permeability Function : " << fPermeabilityFunction << "\n";
+    out << "Simulation data : "<< m_simulation_data<< "\n";
+    
+    TPZMatWithMem<TMEM>::Print(out);
     TPZMaterial::Print(out);
 }
 
@@ -585,7 +600,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ComputeDivergenceOnMaster(TPZVec<TPZMaterialDa
             ivectorindex = datavec[ublock].fVecShapeIndex[iq].first;
             ishapeindex = datavec[ublock].fVecShapeIndex[iq].second;
             
-            for (int k = 0; k < fDimension; k++) {
+            for (int k = 0; k < 3; k++) {
                 VectorOnXYZ(k,0) = datavec[ublock].fNormalVec(k,ivectorindex);
             }
             
@@ -608,7 +623,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ComputeDivergenceOnMaster(TPZVec<TPZMaterialDa
             
             /* Computing the divergence for constant jacobian elements */
             REAL dot = 0.0;
-            for (int i = 0;  i < fDimension; i++) {
+            for (int i = 0;  i < 3; i++) {
                 dot += datavec[ublock].fNormalVec(i,ivectorindex)*GradphiuH1(i,ishapeindex);
             }
             DivergenceofPhi(iq,0) = dot;
@@ -693,6 +708,12 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     for(int i = 0; i< Nkappa; i++){
         K(i,i) = memory.kappa()(i,i);
         Kinv(i,i) = 1.0/(memory.kappa()(i,i));
+        
+        
+        if(K(i,i)==0.){
+            Kinv(i,i)=0.;
+        }
+        
     }
     
     //K.Print(std::cout);
@@ -703,12 +724,13 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
     // Defining local variables
     TPZFNMatrix<3,STATE> Kinv_V(3,1),Kdldp_inv_q(3,1),Kinv_phiVj(3,1);
     
-    for (int i = 0; i < Dimension(); i++) {
+    for (int i = 0; i < 3; i++) {
         STATE val = 0.0;
-        for (int j =0; j < Dimension(); j++) {
+        for (int j =0; j < 3; j++) {
             val    += Kinv(i,j)*v[j];
         }
         Kinv_V(i,0)     = val;
+
     }
     
     // Integration point contribution
@@ -719,7 +741,7 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         return;
     }
     
-#ifdef LOG4CXX
+#ifdef LOG4CXX2
     if (DarcyLogger->isDebugEnabled()) {
         std::stringstream sout;
         sout << ">>> TPZMatElastoPlastic<T,TMEM>::Contribute ***";
@@ -743,12 +765,16 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         
         STATE Kinv_dot_V = 0.0;
         
-        for (int e = 0; e < Dimension(); e++) {
+        for (int e = 0; e < 3; e++) {
             phiVi(e,0) = phiV(iphi,0)*datavec[vindex].fNormalVec(e,ivec);
             Kinv_dot_V    += Kinv_V(e,0)*phiVi(e,0);
         }
         
         ef(i) +=  weight * (Kinv_dot_V - (1.0/jac_det) * (p_n) * div_on_master(i,0) );
+       
+        if( ef(i)!= ef(i)){
+            DebugStop();
+        }
         
         
         for(int j = 0; j < nphiV; j++){
@@ -757,10 +783,10 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
             int jvec = datavec[vindex].fVecShapeIndex[j].first;
             
             STATE Kinv_phiVj_dot_phiVi = 0.0;
-            for (int e=0; e< Dimension() ; e++) {
+            for (int e=0; e< 3 ; e++) {
                 phiVj(e,0) = phiV(jphi,0)*datavec[vindex].fNormalVec(e,jvec);
                 STATE dot = 0.0;
-                for (int f = 0; f < Dimension(); f++) {
+                for (int f = 0; f < 3; f++) {
                     dot += Kinv(e,f)*phiVj(f,0);
                 }
                 Kinv_phiVj(e,0) = dot;
@@ -792,7 +818,7 @@ void TPZDarcy2DMaterialMem<TMEM>::Contribute(TPZVec<TPZMaterialData> &datavec, R
         
     }
     
-#ifdef LOG4CXX
+#ifdef LOG4CXX2
     if (DarcyLogger->isDebugEnabled()) {
         std::stringstream sout;
         sout << "<<< TPZDarcy2DMaterialMem<TMEM>::Contribute ***";
@@ -942,6 +968,7 @@ void TPZDarcy2DMaterialMem<TMEM>::ContributeBC(TPZVec<TPZMaterialData> &datavec,
         case 5: //Ponto pressao
         {
             
+            return;
             DebugStop();
             
             p_D = bc.Val2()(0,0);

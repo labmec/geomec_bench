@@ -113,11 +113,14 @@ protected:
     /** @brief Biot coeficient */
     REAL m_alpha;
     
+    /** @brief Initial stress state. Firts simulation scenario*/
+    TPZFNMatrix<9,REAL> m_Stress0;
+    
     /** @brief Initial porous media permeability tensor. Coeficient which multiplies the gradient operator*/
     TPZFNMatrix<9,REAL> m_TensorK0;
     
     /** @brief Initial permeability. Coeficient which multiplies the gradient operator*/
-    REAL m_k0;
+    std::map<REAL, REAL> m_k0;
     
     /** @brief Initial porosity.*/
     REAL m_phi0;
@@ -129,7 +132,9 @@ protected:
     std::map<REAL,REAL> m_a0;
     
     /** Fracture normal stiffiness for each fracture mat id */
-    std::map<REAL,REAL> m_Kni;
+    REAL m_Kni;
+    
+    
     
 public:
     
@@ -413,6 +418,16 @@ public:
         m_alpha = alpha;
     }
     
+    /** @brief Set the initial stress state tensor */
+    void Set_Stress0(TPZFNMatrix<9,REAL> Stress0){
+        m_Stress0 = Stress0;
+    }
+    
+    /** @brief Get the initial stress state tensor */
+    TPZFNMatrix<9,REAL> Get_Stress0(){
+        return m_Stress0;
+    }
+    
     /** @brief Set the initial Porous media permeability tensor */
     void Set_PermeabilityTensor_0(TPZFNMatrix<9,REAL> TensorK0){
         m_TensorK0 = TensorK0;
@@ -424,12 +439,12 @@ public:
     }
 
     /** @brief Set the initial permeability */
-    void Set_Permeability_0(REAL k0){
+    void Set_Permeability_0(std::map<REAL, REAL> k0){
         m_k0 = k0;
     }
     
     /** @brief Get the initial permeability */
-    REAL Get_Permeability_0(){
+    std::map<REAL, REAL> Get_Permeability_0(){
         return m_k0;
     }
     
@@ -466,12 +481,12 @@ public:
     }
 
     // Set normal stiffness for each fracture
-    void Set_Kni(std::map<REAL, REAL> kni_frac){
+    void Set_Kni(REAL kni_frac){
         m_Kni = kni_frac;
     }
 
     // Get normal stiffness for each fracture
-    std::map<REAL,REAL> Get_Kni(){
+    REAL Get_Kni(){
         return m_Kni;
     }
     

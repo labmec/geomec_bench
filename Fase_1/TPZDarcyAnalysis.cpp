@@ -9,8 +9,7 @@
 #include "pzbndcond.h"
 #include "pzlog.h"
 #ifdef LOG4CXX
-static LoggerPtr logger(Logger::getLogger("DarcyAnalysis"));
-
+static LoggerPtr logger(Logger::getLogger("Benchmark.DarcyAnalysis"));
 #endif
 TPZDarcyAnalysis::TPZDarcyAnalysis() : TPZAnalysis(){
     
@@ -145,6 +144,25 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
     // Accept time solution here means writing one of the vectors of the object into the memory
     this->AcceptTimeStepSolution();
     
+    
+    std::ofstream plotDarcyEK("DarcyStiffness.txt");
+    std::ofstream plotDarcyEF("DarcyRhs.txt");
+    
+#ifdef LOG4CXX
+    if(logger->isDebugEnabled())
+    {
+        std::stringstream sout;
+        fRhs.Print("Rhs =",sout);
+        //EFormatted, EInputFormat, EMathematicaInput, EMatlabNonZeros, EMatrixMarket
+      //  fSolver->Matrix()->Print("ek = ",plotDarcyEK,EMathematicaInput);
+        fRhs.Print("ef = ",plotDarcyEF,EMathematicaInput);
+        
+        PrintVectorByElement(sout, fRhs);
+        PrintVectorByElement(sout, fSolution);
+        LOGPZ_DEBUG(logger, sout.str())
+    }
+#endif
+    
     TPZFMatrix<STATE> dx;
     bool residual_stop_criterion_Q = false;
     bool correction_stop_criterion_Q = false;
@@ -155,6 +173,7 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
     
     for (int i = 1; i <= n_it; i++) {
         this->ExecuteNewtonInteration();
+        
         dx = Solution();
         norm_dx  = Norm(dx);
         m_X_n += dx;
@@ -174,19 +193,25 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
 //            }
 //        }
 //        AssembleResidual();
+
         
 #ifdef LOG4CXX
        if(logger->isDebugEnabled())
        {
            std::stringstream sout;
            fRhs.Print("Rhs =",sout);
+           {
+           std::ofstream plotDarcyEK("DarcyStiffness.txt");
+           std::ofstream plotDarcyEF("DarcyRhs.txt");
+           fSolver->Matrix()->Print("ek = ",plotDarcyEK,EMathematicaInput);
+           fRhs.Print("ef = ",plotDarcyEF,EMathematicaInput);
+           }
            PrintVectorByElement(sout, fRhs);
            PrintVectorByElement(sout, fSolution);
            LOGPZ_DEBUG(logger, sout.str())
-           m_post_processor->TransferSolution();
-           m_post_processor->PostProcess(0);
        }
 #endif
+        
         norm_res = Norm(Rhs());
         residual_stop_criterion_Q   = norm_res < r_norm;
         correction_stop_criterion_Q = norm_dx  < dx_norm;
@@ -197,7 +222,7 @@ void TPZDarcyAnalysis::ExecuteOneTimeStep(){
         
         
 
-        if (residual_stop_criterion_Q ||  correction_stop_criterion_Q) {
+        if (residual_stop_criterion_Q &&  correction_stop_criterion_Q) {
 #ifdef PZDEBUG
             std::cout << "TPMRSMonoPhasicAnalysis:: Nonlinear process converged with residue norm = " << norm_res << std::endl;
             std::cout << "TPMRSMonoPhasicAnalysis:: Number of iterations = " << i << std::endl;

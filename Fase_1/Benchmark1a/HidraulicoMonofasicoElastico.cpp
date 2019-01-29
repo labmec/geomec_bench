@@ -196,6 +196,7 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     finsert_fractures_Q = true;
     
     TPZSimulationData *simulation_data = new TPZSimulationData;
+    //simulation_data->SetMonoPhasicQ(true);
     simulation_data->Set_insert_fractures_Q(finsert_fractures_Q);
     simulation_data->Get_volumetric_material_id().push_back(fmatID);
     
@@ -210,7 +211,7 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     simulation_data->Set_n_threads(0);
     simulation_data->Set_epsilon_res(0.001);
     simulation_data->Set_epsilon_cor(0.001);
-    simulation_data->Set_n_iterations(10);
+    simulation_data->Set_n_iterations(15);
     this->SetParameters(simulation_data, Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     
     ofstream saidaerro("ErroLoula.txt");
@@ -472,7 +473,7 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     //std::string dirname = PZSOURCEDIR;
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark1a/gmsh/GeometryBench2Ftest.msh";
+    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark1a/gmsh/GeometryBench3Domain01.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -482,12 +483,50 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
     Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
     if (finsert_fractures_Q) {
-        Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
-        Geometry.fPZMaterialId[1]["frac2"] = fmatFrac[1];
-        Geometry.fPZMaterialId[0]["PointLeft0"] = fmatPointLeft[0];
+        Geometry.fPZMaterialId[1]["f1"] = fmatFrac[0];
+        Geometry.fPZMaterialId[1]["f2"] = fmatFrac[1];
+        Geometry.fPZMaterialId[1]["f3"] = fmatFrac[2];
+        Geometry.fPZMaterialId[1]["f4"] = fmatFrac[3];
+        Geometry.fPZMaterialId[1]["f5"] = fmatFrac[4];
+        Geometry.fPZMaterialId[1]["f6"] = fmatFrac[5];
+        Geometry.fPZMaterialId[1]["f7"] = fmatFrac[6];
+        Geometry.fPZMaterialId[1]["f8"] = fmatFrac[7];
+        Geometry.fPZMaterialId[1]["f9"] = fmatFrac[8];
+        Geometry.fPZMaterialId[1]["f10"] = fmatFrac[9];
+        Geometry.fPZMaterialId[1]["f11"] = fmatFrac[10];
+        Geometry.fPZMaterialId[1]["f12"] = fmatFrac[11];
+        Geometry.fPZMaterialId[1]["f13"] = fmatFrac[12];
+        Geometry.fPZMaterialId[1]["f14"] = fmatFrac[13];
+        
         Geometry.fPZMaterialId[0]["PointRight0"] = fmatPointRight[0];
-        Geometry.fPZMaterialId[0]["PointLeft1"] = fmatPointLeft[1];
+        Geometry.fPZMaterialId[0]["PointLeft0"] = fmatPointLeft[0];
         Geometry.fPZMaterialId[0]["PointRight1"] = fmatPointRight[1];
+        Geometry.fPZMaterialId[0]["PointLeft1"] = fmatPointLeft[1];
+        Geometry.fPZMaterialId[0]["PointRight2"] = fmatPointRight[2];
+        Geometry.fPZMaterialId[0]["PointLeft2"] = fmatPointLeft[2];
+        Geometry.fPZMaterialId[0]["PointRight3"] = fmatPointRight[3];
+        Geometry.fPZMaterialId[0]["PointLeft3"] = fmatPointLeft[3];
+        Geometry.fPZMaterialId[0]["PointRight4"] = fmatPointRight[4];
+        Geometry.fPZMaterialId[0]["PointLeft4"] = fmatPointLeft[4];
+        Geometry.fPZMaterialId[0]["PointRight5"] = fmatPointRight[5];
+        Geometry.fPZMaterialId[0]["PointLeft5"] = fmatPointLeft[5];
+        Geometry.fPZMaterialId[0]["PointRight6"] = fmatPointRight[6];
+        Geometry.fPZMaterialId[0]["PointLeft6"] = fmatPointLeft[6];
+        Geometry.fPZMaterialId[0]["PointRight7"] = fmatPointRight[7];
+        Geometry.fPZMaterialId[0]["PointLeft7"] = fmatPointLeft[7];
+        Geometry.fPZMaterialId[0]["PointRight8"] = fmatPointRight[8];
+        Geometry.fPZMaterialId[0]["PointLeft8"] = fmatPointLeft[8];
+        Geometry.fPZMaterialId[0]["PointRight9"] = fmatPointRight[9];
+        Geometry.fPZMaterialId[0]["PointLeft9"] = fmatPointLeft[9];
+        Geometry.fPZMaterialId[0]["PointRight10"] = fmatPointRight[10];
+        Geometry.fPZMaterialId[0]["PointLeft10"] = fmatPointLeft[10];
+        Geometry.fPZMaterialId[0]["PointRight11"] = fmatPointRight[11];
+        Geometry.fPZMaterialId[0]["PointLeft11"] = fmatPointLeft[11];
+        Geometry.fPZMaterialId[0]["PointRight12"] = fmatPointRight[12];
+        Geometry.fPZMaterialId[0]["PointLeft12"] = fmatPointLeft[12];
+        Geometry.fPZMaterialId[0]["PointRight13"] = fmatPointRight[13];
+        Geometry.fPZMaterialId[0]["PointLeft13"] = fmatPointLeft[13];
+
     }
     Geometry.fPZMaterialId[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
@@ -563,6 +602,10 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     Sigma_t = new TPZDummyFunction<STATE>(FunctionStress,5);
     BCond2->SetForcingFunction(0, Sigma_t);
     
+    TPZFMatrix<STATE> Stress0(3,3,0.);
+    Stress0(0,0) =-12.857;
+    Stress0(1,1) =-30.;
+    sim_data->Set_Stress0(Stress0);
     
     val2.Zero();
     val2(0,0)=1;
@@ -582,9 +625,8 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
      
         TPZMatFractureBB<TPZMemoryFracDFN> *materialFrac;
         
-        std::map<REAL, REAL> Vm_frac, a0_frac, Kni_frac;
-        
-        Kni_frac[fmatFrac[0]] = 12041.;
+        std::map<REAL, REAL> Vm_frac, a0_frac;
+        REAL Kni_frac = 12041.;
         
         Vm_frac[fmatFrac[0]] = 9.3e-5;
         Vm_frac[fmatFrac[1]] = 2.5e-5;
@@ -613,7 +655,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
 
             materialFrac->Set_Vm(Vm_frac[fmatFrac[i_frac]]);
             materialFrac->Set_a0(a0_frac[fmatFrac[i_frac]]);
-            materialFrac->Set_Kni(Kni_frac[fmatFrac[0]]);
+            materialFrac->Set_Kni(Kni_frac);
             
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
@@ -889,7 +931,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     invK.Zero();
     
     //REAL Sf = 0.0338801;
-    REAL Sf = 1.e+13;
+    REAL Sf = 1.e+16;
     
     K(0,0)=Sf*3.3880079667e-13;
     K(1,1)=Sf*2.5659997999999995e-17;
@@ -911,7 +953,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
 
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    STATE DeltaP = 45.;
+    STATE DeltaP = 0.;
    
     STATE Pjusante = 54.9 - DeltaP;
     STATE Pmontante = 55.0 - DeltaP;
@@ -935,28 +977,31 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     
     if (finsert_fractures_Q) {
         // 2 - Material Fraturas
+        REAL Dyf = 6.5e-5;
         
-        TPZVec<REAL> kf(fnFrac,0.);
-        kf[0] = 7.2e-10;
-        kf[1] = 5.2e-11;
-//        kf[2] = 1.4e-8;
-//        kf[3] = 6.5e-11;
-//        kf[4] = 1.9e-10;
-//        kf[5] = 2.2e-8;
-//        kf[6] = 1.4e-13;
-//        kf[7] = 1.3e-8;
-//        kf[8] = 1.9e-9;
-//        kf[9] = 5.4e-14;
-//        kf[10] = 1.0e-13;
-//        kf[11] = 2.4e-11;
-//        kf[12] = 1.6e-10;
-//        kf[13] = 1.2e-9;
+        std::map<REAL, REAL> kf;
+        REAL Kni_frac = 12041.;
+        
+        kf[fmatFrac[0]] = Sf*7.2e-10*Dyf;
+        kf[fmatFrac[1]] = Sf*5.2e-11*Dyf;
+        //        kf[fmatFrac[2]] = 1.4e-8;
+        //        kf[fmatFrac[3]] = 6.5e-11;
+        //        kf[fmatFrac[4]] = 1.9e-10;
+        //        kf[fmatFrac[5]] = 2.2e-8;
+        //        kf[fmatFrac[6]] = 1.4e-13;
+        //        kf[fmatFrac[7]] = 1.3e-8;
+        //        kf[fmatFrac[8]] = 1.9e-9;
+        //        kf[fmatFrac[9]] = 5.4e-14;
+        //        kf[fmatFrac[10]] = 1.0e-13;
+        //        kf[fmatFrac[11]] = 2.4e-11;
+        //        kf[fmatFrac[12]] = 1.6e-10;
+        //        kf[fmatFrac[13]] = 1.2e-9;
+
+        sim_data->Set_Permeability_0(kf);
         
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
             TPZDarcy2DMaterialMem<TPZMemoryFracDFN> *materialFrac = new TPZDarcy2DMaterialMem<TPZMemoryFracDFN> (fmatFrac[i_frac],fdimFrac,1,1);
             
-            //REAL Dyf = 6.5e-5;
-            sim_data->Set_Permeability_0(Sf*kf[i_frac]);
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
             

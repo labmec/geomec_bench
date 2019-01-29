@@ -7,6 +7,12 @@
 
 
 #include "TPZPoroElastoPlasticAnalysis.h"
+#include "pzbndcond.h"
+#include "pzlog.h"
+#ifdef LOG4CXX
+static LoggerPtr loggerElast(Logger::getLogger("Benchmark.ElastAnalysis"));
+#endif
+
 
 TPZPoroElastoPlasticAnalysis::TPZPoroElastoPlasticAnalysis() : TPZAnalysis(){
     
@@ -132,9 +138,10 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
     }
     
     m_simulation_data->SetCurrentStateQ(false);
+    m_simulation_data->SetInitialStateQ(true);
     AcceptPseudoTimeStepSolution();
     
-    
+    m_simulation_data->SetInitialStateQ(false);
     m_simulation_data->SetCurrentStateQ(true);
     AcceptPseudoTimeStepSolution();
     //    // Reset du to zero
@@ -142,6 +149,28 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
     //    LoadSolution(Solution());
     
     TPZFMatrix<STATE> desloc(Solution());
+    
+    std::ofstream plotElasticEK("ElastStiffness.txt");
+    std::ofstream plotElasticEF("ElastRhs.txt");
+#ifdef LOG4CXX
+    if(loggerElast->isDebugEnabled())
+    {
+        std::stringstream sout;
+        fRhs.Print("Rhs =",sout);
+        
+      //  fSolver->Matrix()->Print("ek = ",plotElasticEK,EMathematicaInput);
+        fRhs.Print("ef = ",plotElasticEF,EMathematicaInput);
+        
+        PrintVectorByElement(sout, fRhs);
+        PrintVectorByElement(sout, fSolution);
+        LOGPZ_DEBUG(loggerElast, sout.str())
+        m_post_processor->TransferSolution();
+        m_post_processor->PostProcess(0);
+    }
+#endif
+    
+    
+    
     
     bool residual_stop_criterion_Q = false;
     bool correction_stop_criterion_Q = false;
@@ -158,6 +187,29 @@ void TPZPoroElastoPlasticAnalysis::ExecuteOneTimeStep(bool must_accept_solution_
         m_X_n += desloc;
         LoadCurrentState();
         AssembleResidual();
+    
+        
+        std::ofstream plotElasticEK("ElastStiffness.txt");
+        std::ofstream plotElasticEF("ElastRhs.txt");
+#ifdef LOG4CXX
+        if(loggerElast->isDebugEnabled())
+        {
+            std::stringstream sout;
+            fRhs.Print("Rhs =",sout);
+            
+            fSolver->Matrix()->Print("ek = ",plotElasticEK,EMathematicaInput);
+            fRhs.Print("ef = ",plotElasticEF,EMathematicaInput);
+            
+            PrintVectorByElement(sout, fRhs);
+            PrintVectorByElement(sout, fSolution);
+            LOGPZ_DEBUG(loggerElast, sout.str())
+            m_post_processor->TransferSolution();
+            m_post_processor->PostProcess(0);
+        }
+#endif
+        std::string file_elastoplast_test("Elastoplasticity_teste_before.vtk");
+        this->PostProcessTimeStep(file_elastoplast_test);
+        
         norm_res = Norm(this->Rhs());
         residual_stop_criterion_Q   = norm_res < r_norm;
         correction_stop_criterion_Q = norm_desloc  < dx_norm;
@@ -260,7 +312,7 @@ void TPZPoroElastoPlasticAnalysis::AcceptPseudoTimeStepSolution(){
 
     //m_simulation_data->SetInitialStateQ(true);
     SetUpdateMemmory(true);
-    AssembleResidual();
+    AssembleResidual();  //oioioioio
     SetUpdateMemmory(false);
     
 //    m_simulation_data->Set_must_accept_solution_Q(false);

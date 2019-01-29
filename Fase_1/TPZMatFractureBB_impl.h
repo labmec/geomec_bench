@@ -9,6 +9,10 @@
 #include "TPZMatFractureBB.h"
 #include "pzaxestools.h"
 
+#ifdef LOG4CXX
+static LoggerPtr BartonBandisLogger(Logger::getLogger("Benchmark.BartonBandis"));
+#endif
+
 template <class TMEM>
 void TPZMatFractureBB<TMEM>::Write(TPZStream &buf, int withclassid)
 {
@@ -33,8 +37,8 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     STATE  D_u0 = memory.GetDu_0(); //Initial closure;
     //STATE  D_un = memory.GetDu_n();
     REAL Vm = memory.GetVm(); //Max opening
-    REAL Kni = m_simulation_data->Get_Kni().find(fFracID)->second;
-    
+    REAL Kni = m_simulation_data->Get_Kni();
+    //Kni = 12041;
     
     std::ofstream fileMemFrac("MemoryFrac.txt", std::ofstream::app);
     //memory.Print(fileMemFrac);
@@ -53,12 +57,11 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     
     STATE forceFrac_normal = InnerVec(forceFrac_n, normal);
     STATE p_n = memory.p_n();
-    STATE forceFrac_normal_Ef = forceFrac_normal - p_n;
+    STATE forceFrac_normal_Ef = forceFrac_normal - p_n; //alpha multiplica p
     
     for (int i =0 ; i<forceFrac_n.size(); i++) {
         forceFrac_n[i] = forceFrac_normal_Ef * normal[i];
     }
-    
     
     
     TPZFMatrix<REAL> &phi_f = data.phi;
@@ -90,9 +93,10 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         for(int ist=0; ist<2; ist++)
         {
 
-            STATE valBB = weight * phi_f(i) * forceFrac_n[ist] * Vm /(forceFrac_n[ist] + Kni*Vm);
-            
-            STATE valDu_0 = weight * phi_f(i) * D_u0 * normal[ist];
+            STATE valBB = weight * phi_f(i,0)*normal[ist] * forceFrac_normal_Ef * Vm /(forceFrac_normal_Ef + Kni*Vm);
+            //valBB =0.;
+            STATE valDu_0 = weight * phi_f(i,0)*normal[ist]  * D_u0 ;
+            //valDu_0 = 0.;
             
             ef(fNStateVariables*i+ist) += -valBB+valDu_0;
         }
@@ -110,9 +114,16 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
                 for(int ist=0; ist<2; ist++)
                 {
 
-                    STATE valBB = weight * phi_f(i) * phi_f(j) * Kni * Vm * Vm / ( (Kni*Vm+ forceFrac_n[ist]) * (Kni*Vm+ forceFrac_n[ist]) );
-                 
-                    ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += -valBB;
+                    for(int jst=0;jst<2;jst++){
+                        STATE valBB = weight * phi_f(i,0)*normal[ist] * phi_f(j,0)*normal[jst] * Kni * Vm * Vm / ( (Kni*Vm+ forceFrac_normal_Ef) * (Kni*Vm+ forceFrac_normal_Ef) );
+                        //valBB =0.;
+                        ek(fNStateVariables*i+ist,fNStateVariables*j+ist) += -valBB;
+                    }
+
+                    
+//                    if(valBB!=valBB){
+//                        DebugStop();
+//                    }
                 }
            
 
@@ -120,6 +131,16 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         
         }
 
+    
+#ifdef LOG4CXX
+    if (BartonBandisLogger->isDebugEnabled()) {
+        std::stringstream sout;
+        sout << "<<< TPZMatFractureBB<TMEM>::Contribute ***";
+        sout << " Resultant rhs vector:\n" << ef;
+        sout << " Resultant stiff vector:\n" << ek;
+        LOGPZ_DEBUG(BartonBandisLogger, sout.str().c_str());
+    }
+#endif
 
     
 }
@@ -147,25 +168,31 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         TMEM &mem = this->GetMemory().get()->operator[](gp_index);
         STATE  D_u0 = mem.GetDu_0(); //Initial closure;
         REAL Vm = mem.GetVm(); //Max opening
-        REAL Kni = m_simulation_data->Get_Kni().find(fFracID)->second;
+        REAL Kni = m_simulation_data->Get_Kni();
 
         STATE p_n = mem.p_n();
         STATE forceFrac_normal_Ef = forceFrac_normal - p_n;
         
-//        if (m_simulation_data->IsInitialStateQ()) {
-//
-//            STATE Du_0 = Vm - a0;
-//            forceFrac_normal_Ef = (Kni*Vm*Du_0)/(Vm-Du_0);
-//            //STATE Du_0 = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
-//
-//            mem.SetDu_0(Du_0);
-//        }
+        if (m_simulation_data->IsInitialStateQ()) {
+            
+            
+           // mem.sigma_0();
+            int size = m_simulation_data->Get_Stress0().Rows();
+            TPZManVector<STATE,3> forceFrac0(3,0.);
+            for(int i = 0 ; i<size; i++){
+                forceFrac0[i]=m_simulation_data->Get_Stress0()(i,i)*normal[i];
+            }
+            STATE forceFrac_normal0 = InnerVec(forceFrac0,normal);
+            //forceFrac_normal0 = -30.;
+            STATE Du_0 = (forceFrac_normal0 * Vm)/(forceFrac_normal0-Kni*Vm); //Valor da tensão imposta
+           // Du_0 = 0.;
+
+            mem.SetDu_0(Du_0);
+        }
         
         REAL a_n = Vm + D_u0 - (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         
         STATE Du_n = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
-        
-        //mem.SetDu_0(Du_n);
         mem.SetDu_n(Du_n);
         mem.SetForceFrac_n(forceFrac);
         

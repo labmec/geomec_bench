@@ -12,7 +12,7 @@
 
 
 #ifdef LOG4CXX
-static LoggerPtr elastoplasticLogger(Logger::getLogger("pz.material.pzElastoPlasticDFN"));
+static LoggerPtr elastoplasticLogger(Logger::getLogger("Benchmark.Elast"));
 static LoggerPtr updatelogger(Logger::getLogger("pz.material.pzElastoPlastic.update"));
 static LoggerPtr ceckconvlogger(Logger::getLogger("checkconvmaterial"));
 #endif
@@ -57,7 +57,7 @@ TPZPoroElastoPlasticDFN<T,TMEM>::TPZPoroElastoPlasticDFN(int id, int dim) : TPZM
     if (elastoplasticLogger->isDebugEnabled())
     {
         std::stringstream sout;
-        sout << ">>> TPZMatElastoPlastic<T,TMEM>(int id) constructor called with id = " << id << " ***";
+        sout << ">>> TPZPoroElastoPlasticDFN<T,TMEM>(int id) constructor called with id = " << id << " ***";
         LOGPZ_DEBUG(elastoplasticLogger,sout.str().c_str());
     }
 #endif
@@ -75,7 +75,7 @@ fPlasticity(mat.fPlasticity), fTol(mat.fTol), fAlpha(mat.fAlpha)
     if(elastoplasticLogger->isDebugEnabled())
     {
         std::stringstream sout;
-        sout << ">>> TPZMatElastoPlastic<T,TMEM>() copy constructor called ***";
+        sout << ">>> TPZPoroElastoPlasticDFN<T,TMEM>() copy constructor called ***";
         LOGPZ_DEBUG(elastoplasticLogger,sout.str().c_str());
     }
 #endif
@@ -89,7 +89,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
     if(elastoplasticLogger->isDebugEnabled())
     {
         std::stringstream sout;
-        sout << ">>> TPZMatElastoPlastic<T,TMEM>::SetUpPlasticity ***";
+        sout << ">>> TPZPoroElastoPlasticDFN<T,TMEM>::SetUpPlasticity ***";
         sout << "\n with plasticity argument:\n";
         plasticity.Print(sout);
         LOGPZ_DEBUG(elastoplasticLogger,sout.str().c_str());
@@ -114,7 +114,7 @@ void TPZPoroElastoPlasticDFN<T,TMEM>::SetPlasticity(T & plasticity)
     if(elastoplasticLogger->isDebugEnabled())
     {
         std::stringstream sout;
-        sout << "<< TPZMatElastoPlastic<T,TMEM>::SetUpPlasticity ***";
+        sout << "<< TPZPoroElastoPlasticDFN<T,TMEM>::SetUpPlasticity ***";
         sout << "\n with computed stresses:\n";
         sout << memory.GetSigma();
         LOGPZ_DEBUG(elastoplasticLogger,sout.str().c_str());
@@ -284,7 +284,7 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL we
 #ifdef LOG4CXX
     if (elastoplasticLogger->isDebugEnabled()) {
         std::stringstream sout;
-        sout << ">>> TPZMatElastoPlastic<T,TMEM>::Contribute ***";
+        sout << ">>> TPZPoroElastoPlasticDFN<T,TMEM>::Contribute ***";
         sout << "\nIntegration Local Point index = " << data.intGlobPtIndex;
         sout << "\nIntegration Global Point index = " << data.intGlobPtIndex;
         sout << "\ndata.axes = " << data.axes;
@@ -342,6 +342,12 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL we
         ef(in * nstate + 0,0) += (-1.)* weight * fAlpha * p * Grad_vx_i(0,0);
         ef(in * nstate + 1,0) += (-1.)* weight * fAlpha * p * Grad_vy_i(1,0);
         
+        REAL valor = ef(in * nstate + 0,0);
+        
+        if(valor!=valor){
+            DebugStop();
+        }
+        
         // Elasticity :
         val = ForceLoc[0] * phi(in, 0);
         val += Stress(_XX_, 0) * dphiXY(0, in);
@@ -352,6 +358,7 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL we
         val += Stress(_XY_, 0) * dphiXY(0, in);
         val += Stress(_YY_, 0) * dphiXY(1, in);
         ef(in * nstate + 1, 0) += weight * val;
+        
         
         for (int jn = 0; jn < nphi_u; jn++) {
             for (int ud = 0; ud < 2; ud++) {
@@ -387,15 +394,21 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::Contribute(TPZMaterialData &data, REAL we
             val += 2. * Dep(_YY_, _YY_) * Deriv(1, 1);
             val *= 0.5;
             ek(in * nstate + 1, jn * nstate + 1) += weight * val;
+            
         }
     }
     
+    
+    std::ofstream plotElasticEK("ElastEK.txt");
+    std::ofstream plotElasticEF("ElastEF.txt");
 #ifdef LOG4CXX
     if (elastoplasticLogger->isDebugEnabled()) {
         std::stringstream sout;
-        sout << "<<< TPZMatElastoPlastic2D<T,TMEM>::Contribute ***";
+        sout << "<<< TPZPoroElastoPlasticDFN<T,TMEM>::Contribute ***";
         sout << " Resultant rhs vector:\n" << ef;
         sout << " Resultant stiff vector:\n" << ek;
+        ek.Print("ek = ",plotElasticEK,EMathematicaInput);
+        ef.Print("ef = ",plotElasticEF,EMathematicaInput);
         LOGPZ_DEBUG(elastoplasticLogger, sout.str().c_str());
     }
 #endif
@@ -574,7 +587,7 @@ void TPZPoroElastoPlasticDFN<T, TMEM>::ContributeBC(TPZMaterialData &data, REAL 
 #ifdef LOG4CXX
             if (elastoplasticLogger->isDebugEnabled()) {
                 std::stringstream sout;
-                sout << "<<< TPZMatElastoPlastic2D<T,TMEM>::ContributeBC *** WRONG BOUNDARY CONDITION TYPE = " << bc.Type();
+                sout << "<<< TPZPoroElastoPlasticDFN<T,TMEM>::ContributeBC *** WRONG BOUNDARY CONDITION TYPE = " << bc.Type();
                 LOGPZ_ERROR(elastoplasticLogger, sout.str().c_str());
             }
 #endif

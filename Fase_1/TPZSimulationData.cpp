@@ -37,15 +37,19 @@ TPZSimulationData::TPZSimulationData()
     m_interface_id.resize(0);
     m_interfaceLeft_id.resize(0);
     m_interfaceRight_id.resize(0);
+    m_Stress0.Resize(3, 3);
+    for (int i=0; i<3; i++) {
+        m_Stress0(i,i) = 0.;
+    }
     m_TensorK0.Resize(3, 3);
     for (int i=0; i<3; i++) {
         m_TensorK0(i,i) = 1.;
     }
-    m_k0 = 1.;
+    m_k0.clear();
     m_phi0 = 0.;
     m_Vm.clear();
     m_a0.clear();
-    m_Kni.clear();
+    m_Kni = 0.;
     
 }
 
@@ -86,6 +90,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_interface_id                      = other.m_interface_id;
     m_interfaceLeft_id                  = other.m_interfaceLeft_id;
     m_interfaceRight_id                 = other.m_interfaceRight_id;
+    m_Stress0                          = other.m_Stress0;
     m_TensorK0                          = other.m_TensorK0;
     m_k0                                = other.m_k0;
     m_phi0                             = other.m_phi0;
@@ -126,6 +131,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_interface_id                      = other.m_interface_id;
         m_interfaceLeft_id                  = other.m_interfaceLeft_id;
         m_interfaceRight_id                 = other.m_interfaceRight_id;
+        m_Stress0                           = other.m_Stress0;
         m_TensorK0                          = other.m_TensorK0;
         m_k0                                = other.m_k0;
         m_phi0                             = other.m_phi0;
@@ -165,6 +171,7 @@ void TPZSimulationData::Print()
     std::cout << " m_interface_id = " << &m_interface_id << std::endl;
     std::cout << " m_interfaceLeft_id = " << &m_interfaceLeft_id << std::endl;
     std::cout << " m_interfaceRight_id = " << &m_interfaceRight_id << std::endl;
+    std::cout << " m_Stress0 = " << &m_Stress0 << std::endl;
     std::cout << " m_TensorK0 = " << &m_TensorK0 << std::endl;
     std::cout << " m_k0 = " << &m_k0 << std::endl;
     std::cout << " m_phi_0 = " << &m_phi0 << std::endl;
