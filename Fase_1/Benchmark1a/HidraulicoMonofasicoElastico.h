@@ -68,6 +68,8 @@ private:
     vector<int> fmatFrac;
     vector<int> fmatPointLeft;
     vector<int> fmatPointRight;
+    
+    std::map<REAL, REAL> fFracOrient;
     int fnFrac;
     
     //int fmatFrac;

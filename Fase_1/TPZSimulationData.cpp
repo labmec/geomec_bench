@@ -46,6 +46,7 @@ TPZSimulationData::TPZSimulationData()
         m_TensorK0(i,i) = 1.;
     }
     m_k0.clear();
+    m_fracOrient.clear();
     m_phi0 = 0.;
     m_Vm.clear();
     m_a0.clear();
@@ -93,6 +94,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_Stress0                          = other.m_Stress0;
     m_TensorK0                          = other.m_TensorK0;
     m_k0                                = other.m_k0;
+    m_fracOrient                        = other.m_fracOrient;
     m_phi0                             = other.m_phi0;
     m_Vm                               = other.m_Vm;
     m_a0                               = other.m_a0;
@@ -134,6 +136,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_Stress0                           = other.m_Stress0;
         m_TensorK0                          = other.m_TensorK0;
         m_k0                                = other.m_k0;
+        m_fracOrient                        = other.m_fracOrient;
         m_phi0                             = other.m_phi0;
         m_Vm                               = other.m_Vm;
         m_a0                               = other.m_a0;
@@ -174,6 +177,7 @@ void TPZSimulationData::Print()
     std::cout << " m_Stress0 = " << &m_Stress0 << std::endl;
     std::cout << " m_TensorK0 = " << &m_TensorK0 << std::endl;
     std::cout << " m_k0 = " << &m_k0 << std::endl;
+    std::cout << " m_FracOrient = " << &m_fracOrient << std::endl;
     std::cout << " m_phi_0 = " << &m_phi0 << std::endl;
     std::cout << " m_Vm = " << &m_Vm<< std::endl;
     std::cout << " m_a0 = " << &m_a0<< std::endl;

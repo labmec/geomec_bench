@@ -141,7 +141,7 @@ public:
     
     void VerifySideOrientation(TPZCompMesh *cmesh);
     
-    void VerifyLeftRightPoints(int LeftP, int RightP);
+    REAL VerifyLeftRightPoints(int LeftP, int RightP);
     
 };
 

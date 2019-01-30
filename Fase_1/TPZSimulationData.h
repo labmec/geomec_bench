@@ -122,6 +122,9 @@ protected:
     /** @brief Initial permeability. Coeficient which multiplies the gradient operator*/
     std::map<REAL, REAL> m_k0;
     
+    /** @brief Fracture orientation. Define fracture direction*/
+    std::map<REAL, REAL> m_fracOrient;
+    
     /** @brief Initial porosity.*/
     REAL m_phi0;
     
@@ -446,6 +449,16 @@ public:
     /** @brief Get the initial permeability */
     std::map<REAL, REAL> Get_Permeability_0(){
         return m_k0;
+    }
+
+    /** @brief Set fracture orientation */
+    void Set_FractureOrient(std::map<REAL, REAL> orient){
+        m_fracOrient = orient;
+    }
+    
+    /** @brief Get fracture orientation */
+    std::map<REAL, REAL> Get_FractureOrient(){
+        return m_fracOrient;
     }
     
     /// Set lagrangian porosity at intial REAL

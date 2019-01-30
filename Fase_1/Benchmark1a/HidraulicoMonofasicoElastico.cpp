@@ -108,6 +108,8 @@ HidraulicoMonofasicoElastico::HidraulicoMonofasicoElastico()
     fmatInterfaceRight.resize(fnFrac);
     fmatFluxWrap.resize(fnFrac);
     fractureInsert.resize(fnFrac);
+    fFracOrient.clear();
+    
     
     for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
         fmatFrac[i_frac] = 6+i_frac;
@@ -946,6 +948,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     invK(1,1)=1./K(1,1);
     
     sim_data->Set_PermeabilityTensor_0(K);
+    sim_data->Set_FractureOrient(fFracOrient);
     sim_data->Set_Porosity_0(0.0758);
     material->SetSimulationData(sim_data);
 
@@ -1165,11 +1168,13 @@ void HidraulicoMonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, std::ve
         boundaries_ids.insert(fmatPointRight[i_frac]);
     }
     
+    REAL FracOrient = 0;
+    
     for (unsigned int i_f = 0; i_f <  fracture_ids.size(); i_f++) {
         TPZFractureInsertion fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
         fracture.OpenFractureOnHdiv(&cmesh,fmatFluxWrap[i_f]);
         fracture.AdjustSideOrient(&cmesh);
-        fracture.VerifyLeftRightPoints(fmatPointLeft[i_f],fmatPointRight[i_f]);
+        fFracOrient[fracture_ids[i_f]] = fracture.VerifyLeftRightPoints(fmatPointLeft[i_f],fmatPointRight[i_f]);
     }
 }
 

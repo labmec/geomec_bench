@@ -1049,7 +1049,7 @@ void TPZFractureInsertion::VerifySideOrientation(TPZCompMesh *cmesh){
 }
 
 
-void TPZFractureInsertion::VerifyLeftRightPoints(int LeftP, int RightP){
+REAL TPZFractureInsertion::VerifyLeftRightPoints(int LeftP, int RightP){
     
     int64_t n_gel = m_geometry->NElements();
     TPZGeoEl *gelPleft, *gelPright;
@@ -1073,4 +1073,15 @@ void TPZFractureInsertion::VerifyLeftRightPoints(int LeftP, int RightP){
     if (cooL(0,0)>cooR(0,0)) {
         DebugStop();
     }
+    //Define frature orientation:
+    if(cooL(1,0)>cooR(1,0)){
+        return -1.;
+    }else if (cooL(1,0)<cooR(1,0)){
+        return 1.;
+    }else{
+        return 0.;
+    }
+    
+    
+    
 }

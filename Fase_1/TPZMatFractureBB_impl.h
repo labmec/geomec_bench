@@ -250,12 +250,18 @@ STATE TPZMatFractureBB<TMEM>::InnerVec(TPZManVector<STATE,3>  &S, TPZManVector<S
 template <class TMEM>
 void TPZMatFractureBB<TMEM>::Correctnormal(TPZManVector<STATE,3>  &normal)
 {
+    REAL FracOrient = m_simulation_data->Get_FractureOrient().find(Frac_ID())->second;
     
-    
-    if(normal[1]>0.){
+    if(FracOrient==-1 && normal[1]<0.){
         normal[0]=-normal[0];
         normal[1]=-normal[1];
     }
+    
+    if(FracOrient==1 && normal[1]>0.){
+        normal[0]=-normal[0];
+        normal[1]=-normal[1];
+    }
+    
 }
 
 template class TPZMatFractureBB<TPZMemoryFracDFN>;
