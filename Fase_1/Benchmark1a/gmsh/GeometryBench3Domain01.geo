@@ -14,7 +14,7 @@ L = 200;
 Lf = 200;
 
 n_bc = 2;
-nx = 3;
+nx = 5;
 ny = 3;
 pr = 1;
 
@@ -67,9 +67,9 @@ pf = 1;
   Plane Surface(2) = {2};
   Plane Surface(3) = {3};
 
-  Transfinite Surface {1};
-  Transfinite Surface {2};
-  Transfinite Surface {3};
+//  Transfinite Surface {1};
+//  Transfinite Surface {2};
+/  Transfinite Surface {3};
 
   If(IsquadQ)
     Recombine Surface {1};

@@ -25,6 +25,7 @@ void TPZMatFractureBB<TMEM>::Read(TPZStream &buf, void *context)
     TPZMaterial::Read(buf, context);
 }
 
+
 template <class TMEM>
 void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
 
@@ -46,6 +47,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
    // TPZManVector<STATE,3> delta_forceFrac_n    = memory.GetForceFrac_n();
     TPZManVector<STATE,3> forceFrac_n    = data.sol[0];
     TPZManVector<STATE,3> normal = data.normal;
+    Correctnormal(normal);
     
 //    for(int i=0; i<2; i++)
 //    {
@@ -58,7 +60,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
     
     STATE forceFrac_normal = InnerVec(forceFrac_n, normal);
     STATE p_n = memory.p_n();
-    STATE forceFrac_normal_Ef = -forceFrac_normal - p_n; //alpha multiplica p
+    STATE forceFrac_normal_Ef = forceFrac_normal - p_n; //alpha multiplica p
     
     for (int i =0 ; i<forceFrac_n.size(); i++) {
         forceFrac_n[i] = forceFrac_normal_Ef * normal[i];
@@ -149,7 +151,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 template <class TMEM>
 void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZFMatrix<STATE> &ef){
    
-    //return;
+    
     
     if (m_simulation_data->Get_must_accept_solution_Q()) {
         long gp_index = data.intGlobPtIndex;
@@ -163,6 +165,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         }
         TPZManVector<STATE,3> forceFrac = data.sol[0];
         TPZManVector<STATE,3> normal = data.normal;
+        Correctnormal(normal);
         
         STATE forceFrac_normal = InnerVec(forceFrac,normal);
 
@@ -172,7 +175,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
         REAL Kni = m_simulation_data->Get_Kni();
 
         STATE p_n = mem.p_n();
-        STATE forceFrac_normal_Ef = -forceFrac_normal - p_n;
+        STATE forceFrac_normal_Ef = forceFrac_normal - p_n;
         
         if (m_simulation_data->IsInitialStateQ()) {
             
@@ -190,8 +193,6 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
             mem.SetDu_0(Du_0);
         }
-        
-        REAL a_n = Vm + D_u0 - (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         
         STATE Du_n = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         mem.SetDu_n(Du_n);
@@ -246,5 +247,15 @@ STATE TPZMatFractureBB<TMEM>::InnerVec(TPZManVector<STATE,3>  &S, TPZManVector<S
     
 }
 
+template <class TMEM>
+void TPZMatFractureBB<TMEM>::Correctnormal(TPZManVector<STATE,3>  &normal)
+{
+    
+    
+    if(normal[1]>0.){
+        normal[0]=-normal[0];
+        normal[1]=-normal[1];
+    }
+}
 
 template class TPZMatFractureBB<TPZMemoryFracDFN>;

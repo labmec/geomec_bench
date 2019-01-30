@@ -187,6 +187,9 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
     // Inner vec
     STATE InnerVec(TPZManVector<STATE,3>  &S, TPZManVector<STATE,3>  &T);
     
+    // Correct normal
+    void Correctnormal(TPZManVector<STATE,3>  &S);
+    
     
 public:
 
