@@ -30,11 +30,11 @@ pf = 1;
   Point(4) = {0, h, 0};
 
   //Fratura 1
-  //Point(5) = {58, 0, 0};
-  //Point(6) = {65, 10, 0};  
+  Point(5) = {58, 0, 0};
+  Point(6) = {65, 10, 0};  
 
-  Point(5) = {59.56005859375, 0, 0}; 
-  Point(6) = {57.26318359375, 10, 0};  
+  //Point(5) = {59.56005859375, 0, 0}; 
+  //Point(6) = {57.26318359375, 10, 0};  
 
 
   //Fratura 2
@@ -91,8 +91,8 @@ pf = 1;
   Physical Line("f1") = {9};
   Physical Line("f2") = {10};
 
-  Physical Point("PointRight0") = {5};
-  Physical Point("PointLeft0") = {6};
+  Physical Point("PointRight0") = {6};
+  Physical Point("PointLeft0") = {5};
 
   Physical Point("PointRight1") = {8};
   Physical Point("PointLeft1") = {7};

@@ -51,8 +51,9 @@ nf = 4;
   Point(17) = {191.47509765625, 0, 0};
   Point(18) = {188.8212890625,  10, 0};
 
-  Point(19) = {157.5068359375,  1.970703125, 0};
+//  Point(19) = {157.5068359375,  1.970703125, 0};
 //  Point(19) = {157.3876953125,  1, 0};
+
   Point(20) = {157.3876953125,  0, 0};
 
 
@@ -113,7 +114,7 @@ nf = 4;
   Line(30) = {13,14};
   Line(31) = {15,16};
   Line(32) = {17,18};
-  Line(33) = {20,19};
+//  Line(33) = {19,20};
   Line(34) = {21,22};
   Line(35) = {23,24};
   Line(36) = {25,26};
@@ -124,7 +125,7 @@ nf = 4;
   Transfinite Line{1} = 5 Using Progression pr;
   Transfinite Line{2} = 6 Using Progression pr;
   Transfinite Line{3} = 4 Using Progression pr;
-  Transfinite Line{4} = 7 Using Progression pr;
+  Transfinite Line{4} = 11 Using Progression pr;
   Transfinite Line{5} = 4 Using Progression pr;
   Transfinite Line{6} = 8 Using Progression pr;
   Transfinite Line{7} = 8 Using Progression pr;
@@ -139,7 +140,7 @@ nf = 4;
   Transfinite Line{16} = 5 Using Progression pr;
   Transfinite Line{17} = 15 Using Progression pr;
   Transfinite Line{18} = 4 Using Progression pr;
-  Transfinite Line{19} = 6 Using Progression pr;
+  Transfinite Line{19} = 7 Using Progression pr;
   Transfinite Line{20} = 5 Using Progression pr;
   Transfinite Line{21} = 4 Using Progression pr;
   Transfinite Line{22} = 5 Using Progression pr;
@@ -153,12 +154,12 @@ nf = 4;
   Transfinite Line{28} = nf Using Progression pr;    
   Transfinite Line{29} = nf Using Progression pr;
   Transfinite Line{30} = nf Using Progression pr;
-  Transfinite Line{31} = nf Using Progression pr;
+  Transfinite Line{31} = 5 Using Progression pr;
   Transfinite Line{32} = 5 Using Progression pr;
-  Transfinite Line{33} = 5 Using Progression pr;  
+//  Transfinite Line{33} = 3 Using Progression pr;  
   Transfinite Line{34} = nf Using Progression pr;    
   Transfinite Line{35} = 5 Using Progression pr;
-  Transfinite Line{36} = nf Using Progression pr;
+  Transfinite Line{36} = 5 Using Progression pr;
   Transfinite Line{37} = 3 Using Progression pr;
   Transfinite Line{38} = nf Using Progression pr;
   Transfinite Line{39} = 3 Using Progression pr;
@@ -186,7 +187,7 @@ nf = 4;
 
   Line{27} In Surface{2};
   Line{30} In Surface{4};
-  Line{33} In Surface{6};
+//  Line{33} In Surface{6};
   Line{34} In Surface{6};
   Line{37} In Surface{8};
   Line{38} In Surface{8};
@@ -194,7 +195,7 @@ nf = 4;
 
   Point{7,8} In Surface {2};
   Point{13,14} In Surface {4};
-  Point{19,20} In Surface {6};
+//  Point{19,20} In Surface {6};
   Point{21,22} In Surface {6};
   Point{27,28} In Surface {8};
   Point{29,30} In Surface {8};
@@ -224,20 +225,20 @@ nf = 4;
   Physical Line("right") = {13};
   Physical Line("left") = {25};
   
-  Physical Line("f1") = {26};
+  Physical Line("f1") = {26}; 
   Physical Line("f2") = {27};
   Physical Line("f3") = {28};
   Physical Line("f4") = {29};
   Physical Line("f5") = {30};
   Physical Line("f6") = {31};
   Physical Line("f7") = {32};
-  Physical Line("f8") = {33};
-  Physical Line("f9") = {34};
-  Physical Line("f10") = {35};
-  Physical Line("f11") = {36};
-  Physical Line("f12") = {37};
-  Physical Line("f13") = {38};
-  Physical Line("f14") = {39};      
+//  Physical Line("f8") = {33};
+  Physical Line("f8") = {34};
+  Physical Line("f9") = {35}; 
+  Physical Line("f10") = {36};
+  Physical Line("f11") = {37};
+  Physical Line("f12") = {38};
+  Physical Line("f13") = {39};      
   
 
   Physical Point("PointRight0") = {5};
@@ -261,26 +262,26 @@ nf = 4;
   Physical Point("PointRight6") = {17};
   Physical Point("PointLeft6") = {18};
 
-  Physical Point("PointRight7") = {19};
-  Physical Point("PointLeft7") = {20};
+//  Physical Point("PointRight7") = {19};
+//  Physical Point("PointLeft7") = {20};
 
-  Physical Point("PointRight8") = {21};
-  Physical Point("PointLeft8") = {22};
+  Physical Point("PointRight7") = {21};
+  Physical Point("PointLeft7") = {22};
 
-  Physical Point("PointRight9") = {23};
-  Physical Point("PointLeft9") = {24};
+  Physical Point("PointRight8") = {23};
+  Physical Point("PointLeft8") = {24};
 
-  Physical Point("PointRight10") = {25};
-  Physical Point("PointLeft10") = {26};
+  Physical Point("PointRight9") = {25};
+  Physical Point("PointLeft9") = {26};
 
-  Physical Point("PointRight11") = {27};
-  Physical Point("PointLeft11") = {28};
+  Physical Point("PointRight10") = {27};
+  Physical Point("PointLeft10") = {28};
 
-  Physical Point("PointRight12") = {29};
-  Physical Point("PointLeft12") = {30};
+  Physical Point("PointRight11") = {29};
+  Physical Point("PointLeft11") = {30};
 
-  Physical Point("PointRight13") = {31};
-  Physical Point("PointLeft13") = {32};
+  Physical Point("PointRight12") = {31};
+  Physical Point("PointLeft12") = {32};
 
 
 

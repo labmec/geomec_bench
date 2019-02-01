@@ -96,6 +96,10 @@ public:
             if(perm < 1e-9){
                 return 1e-9;
             }
+            
+            if(perm > 1e6){
+                return 1e6;
+            }
             //return perm;
             return perm;
         }

@@ -1079,7 +1079,7 @@ void HidraulicoMonofasicoElastico::BreakConnectivity(TPZCompMesh &cmesh, std::ve
         TPZFractureInsertion fracture(cmesh.Reference(),fracture_ids[i_f],boundaries_ids);
         fracture.OpenFractureOnHdiv(&cmesh,fmatFluxWrap);
         fracture.AdjustSideOrient(&cmesh);
-        fracture.VerifyLeftRightPoints(fmatPointLeft[i_f],fmatPointRight[i_f],0.);
+        fracture.VerifyLeftRightPoints(fmatPointLeft[i_f],fmatPointRight[i_f]);
     }
 }
 

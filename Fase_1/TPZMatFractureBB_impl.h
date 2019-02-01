@@ -176,7 +176,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
         STATE p_n = mem.p_n();
         STATE forceFrac_normal_Ef = forceFrac_normal - p_n;
-        
+        int frac_Id = Frac_ID();
         if (m_simulation_data->IsInitialStateQ()) {
             
             
@@ -193,6 +193,7 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
 
             mem.SetDu_0(Du_0);
         }
+        
         
         STATE Du_n = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
         mem.SetDu_n(Du_n);
@@ -261,6 +262,17 @@ void TPZMatFractureBB<TMEM>::Correctnormal(TPZManVector<STATE,3>  &normal)
         normal[0]=-normal[0];
         normal[1]=-normal[1];
     }
+    int frac_Id = Frac_ID();
+
+    if(frac_Id==10){
+        normal[0]=-normal[0];
+        normal[1]=-normal[1];
+    }
+    
+//    if(frac_Id==13){
+//        normal[0]=-normal[0];
+//        normal[1]=-normal[1];
+//    }
     
 }
 
