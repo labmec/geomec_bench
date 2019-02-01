@@ -188,14 +188,17 @@ void TPZMatFractureBB<TMEM>::Contribute(TPZMaterialData &data, REAL weight, TPZF
             }
             STATE forceFrac_normal0 = InnerVec(forceFrac0,normal);
             //forceFrac_normal0 = -128.41549701748323;
-            STATE Du_0 = (forceFrac_normal0 * Vm)/(forceFrac_normal0-Kni*Vm); //Valor da tensão imposta
+            STATE Du_0 = (forceFrac_normal0 * Vm)/(forceFrac_normal0+Kni*Vm); //Valor da tensão imposta
            // Du_0 = 0.;
 
+            mem.SetForceFrac_normal_0(forceFrac_normal0);
             mem.SetDu_0(Du_0);
         }
         
         
         STATE Du_n = (forceFrac_normal_Ef * Vm)/(forceFrac_normal_Ef+Kni*Vm);
+        mem.SetFrac_normal(normal);
+        mem.SetForceFrac_normal_n(forceFrac_normal_Ef);
         mem.SetDu_n(Du_n);
         mem.SetForceFrac_n(forceFrac);
         

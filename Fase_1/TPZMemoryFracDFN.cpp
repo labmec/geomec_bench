@@ -15,14 +15,18 @@ TPZMemoryFracDFN::TPZMemoryFracDFN() : TPZMonoPhasicMemoryFracDFN() , TPZElastoP
     m_Du_n = 0.;
     m_Vm = 0.;
     m_coord.resize(3);
+    m_Frac_normal.resize(3);
     
     for (int i = 0; i < m_coord.size(); i++) {
+        m_Frac_normal[i] = 0.;
         m_coord[i] = 0.;
     }
 
 }
 
 TPZMemoryFracDFN::TPZMemoryFracDFN(const TPZMemoryFracDFN & other): TPZMonoPhasicMemoryFracDFN(other), TPZElastoPlasticMemoryFracDFN(other) {
+    
+    m_Frac_normal       = other.m_Frac_normal;
     m_alpha = other.m_alpha;
     m_Du_0 = other.m_Du_0;
     m_Du = other.m_Du;
@@ -38,6 +42,7 @@ const TPZMemoryFracDFN & TPZMemoryFracDFN::operator=(const TPZMemoryFracDFN & ot
         return *this;
     }
     
+    m_Frac_normal       = other.m_Frac_normal;
     m_alpha = other.m_alpha;
     m_Du_0 = other.m_Du_0;
     m_Du = other.m_Du;
@@ -57,12 +62,15 @@ const std::string TPZMemoryFracDFN::Name() const {
 }
 
 void TPZMemoryFracDFN::Write(TPZStream &buf, int withclassid) const {
+    
+    buf.Write(m_Frac_normal);
     TPZMonoPhasicMemoryFracDFN::Write(buf, withclassid);
     TPZElastoPlasticMemoryFracDFN::Write(buf, withclassid);
 
 }
 
 void TPZMemoryFracDFN::Read(TPZStream &buf, void *context){
+    buf.Read(m_Frac_normal);
     TPZMonoPhasicMemoryFracDFN::Read(buf, context);
     TPZElastoPlasticMemoryFracDFN::Read(buf, context);
 }
@@ -78,6 +86,7 @@ void TPZMemoryFracDFN::Print(std::ostream &out) const {
     out << "\n Last fracture closure = " << m_Du;
     out << "\n Current fracture closure = " << m_Du_n;
     out << "\n Fracture overture = " << m_Vm + m_Du_0 - m_Du_n;
+    out << "\n Fracture normal = "<< m_Frac_normal;
     out << "\n -------------------------------";
     TPZMonoPhasicMemoryFracDFN::Print(out);
     TPZElastoPlasticMemoryFracDFN::Print(out);

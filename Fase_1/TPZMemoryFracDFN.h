@@ -36,6 +36,9 @@ private:
     // Point coordenates
     TPZManVector<STATE,3> m_coord;
     
+    /// Fracture normal
+    TPZManVector<REAL,3> m_Frac_normal;
+    
 public:
     
     /// Default constructor
@@ -163,6 +166,16 @@ public:
     /// Get the coordinates
     TPZManVector<STATE,3> GetCoord(){
         return m_coord;
+    }
+    
+    /// Set Fracture normal
+    void SetFrac_normal(TPZManVector<REAL,3> & Frac_normal){
+        m_Frac_normal = Frac_normal;
+    }
+    
+    /// Get Fracture normal
+    TPZManVector<REAL,3> & GetFrac_normal(){
+        return m_Frac_normal;
     }
     
 };

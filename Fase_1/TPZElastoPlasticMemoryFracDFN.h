@@ -25,7 +25,13 @@ private:
     
     /// Current normal stress state in fractures
     TPZManVector<REAL,3> m_forceFrac_n;
-
+    
+    /// Initial Efective fracture normal force
+    STATE m_forceFrac_normal_0;
+    
+    /// Current Efective fracture normal force
+    STATE m_forceFrac_normal_n;
+    
     /// Initial normal stress state in fractures
     TPZManVector<REAL,3> m_forceFrac_0;
     
@@ -90,6 +96,25 @@ public:
         return m_forceFrac_0;
     }
     
+    /// Set the Initial Efective fracture normal force
+    void SetForceFrac_normal_0(STATE & forceFrac_normal_0){
+        m_forceFrac_normal_0 = forceFrac_normal_0;
+    }
+
+    /// Get the Initial Efective fracture normal force
+    STATE & GetForceFrac_normal_0(){
+        return m_forceFrac_normal_0;
+    }
+
+    /// Set the Current Efective fracture normal force
+    void SetForceFrac_normal_n(STATE & forceFrac_normal_n){
+        m_forceFrac_normal_n = forceFrac_normal_n;
+    }
+    
+    /// Get the Current Efective fracture normal force
+    STATE & GetForceFrac_normal_n(){
+        return m_forceFrac_normal_n;
+    }
     
     /// Set the current displacement field
     void Setu_n(TPZManVector<REAL,3> & u_n){

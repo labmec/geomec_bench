@@ -168,7 +168,7 @@ public:
     static void Sol_exact(const TPZVec<REAL> &x, TPZVec<STATE> &sol, TPZFMatrix<STATE> &dsol);
     
     //Fractures structure
-    void Plot_over_fractures(TPZCompMesh *cmesh);
+    void Plot_over_fractures(TPZCompMesh *cmeshE, TPZCompMesh *cmeshM);
     void BreakConnectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     void BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     

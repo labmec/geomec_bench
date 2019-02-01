@@ -70,12 +70,16 @@
 #include "TPZSSpStructMatrix.h"
 #include "TPZGmshReader.h"
 #include "../TPZMonoPhasicMemoryDFN.h"
+#include "../TPZElastoPlasticMemoryFracDFN.h"
+#include "../TPZMonoPhasicMemoryFracDFN.h"
 #include "../TPZElastoPlasticMemoryDFN.h"
 #include "../TPZMonoPhasicMemoryBCDFN.h"
 #include "../TPZElastoPlasticMemoryBCDFN.h"
 #include "../TPZPoroElastoPlasticDFN_impl.h"
 #include "../TPZMemoryBCDFN.h"
 #include "../TPZMemoryDFN.h"
+#include "../TPZMemoryFracDFN.h"
+
 
 #define TRIANGLEMESH
 
@@ -330,7 +334,7 @@ void HidraulicoMonofasicoElastico::RunningPoroElasticity(TPZGeoMesh *gmesh, int 
     
     if(finsert_fractures_Q) {
         std::cout << "Postprocessing fracture" << std::endl;
-        Plot_over_fractures(cmesh_M);
+        Plot_over_fractures(cmesh_E,cmesh_M);
     }
     
     
@@ -605,8 +609,8 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     BCond2->SetForcingFunction(0, Sigma_t);
     
     TPZFMatrix<STATE> Stress0(3,3,0.);
-    Stress0(0,0) =-12.857;
-    Stress0(1,1) =-30.;
+    Stress0(0,0) =12.857;
+    Stress0(1,1) =30.;
     sim_data->Set_Stress0(Stress0);
     
     val2.Zero();
@@ -1092,66 +1096,124 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
 }
 
 
-void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmesh){
+void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZCompMesh *cmeshM){
     // Counting for n_fractures
-    int ncel = cmesh->NElements();
-    TPZStack<int> frac_indexes;
-    for (int icel = 0; icel<ncel; icel++) {
-        TPZCompEl *cel=cmesh->Element(icel);
-        if (!cel) {
-            DebugStop();
+    
+    std::ofstream filePlotFrac("Plot_over_frac.txt", std::ofstream::app);
+    
+    for (int i_frac = 0; i_frac< fnFrac; i_frac++) {
+        int ncel = cmeshM->NElements();
+        TPZStack<int> frac_indexes;
+        for (int icel = 0; icel<ncel; icel++) {
+            TPZCompEl *cel=cmeshM->Element(icel);
+            if (!cel) {
+                DebugStop();
+            }
+            TPZGeoEl *gel=cel->Reference();
+            if (!gel) {
+                DebugStop();
+            }
+            if (gel->MaterialId()!=fmatFrac[i_frac]) {
+                continue;
+            }
+            frac_indexes.Push(cel->Index());
         }
-        TPZGeoEl *gel=cel->Reference();
-        if (!gel) {
-            DebugStop();
-        }
-        if (gel->MaterialId()!=fmatFrac[0]) {
-            continue;
-        }
-        frac_indexes.Push(cel->Index());
-    }
-    
-    int n_frac_cels = frac_indexes.size();
-    int var_p = 0;
-    int var_Vx = 5;
-    TPZVec<REAL> par_xi(1,0.0);
-    TPZManVector<STATE,3> sol,x(3,0.0);
-    TPZFMatrix<REAL> pressure(n_frac_cels*3,3,0.0);
-    TPZFMatrix<REAL> V_x(n_frac_cels*3,3,0.0);
-    TPZFMatrix<REAL> V_x_average(1,1,0.0);
-    REAL Vx_sum = 0.;
-    
-    TPZManVector<REAL,3> par_vals(3,0.0);
-    par_vals[0] = -1.0;
-    par_vals[1] =  0.0;
-    par_vals[2] = +1.0;
-    
-    
-    for (int ifrac = 0; ifrac < n_frac_cels; ifrac++) {
         
-        TPZCompEl *cel= cmesh->Element(frac_indexes[ifrac]);
-        TPZGeoEl *gel=cel->Reference();
-        for (int ip = 0; ip < par_vals.size(); ip++) {
-            par_xi[0] = par_vals[ip];
-            gel->X(par_xi, x);
-            cel->Solution(par_xi, var_p, sol);
-            pressure(ifrac*3+ip,0) = x[0];
-            pressure(ifrac*3+ip,1) = x[1];
-            pressure(ifrac*3+ip,2) = sol[0];
+        int n_frac_cels = frac_indexes.size();
+        int var_p = 0;
+        int var_Vx = 5;
+        TPZVec<REAL> par_xi(1,0.0);
+        TPZManVector<STATE,3> sol,x(3,0.0);
+        TPZFMatrix<REAL> pressure(n_frac_cels*3,3,0.0);
+        TPZFMatrix<REAL> V_x(n_frac_cels*3,3,0.0);
+        TPZFMatrix<REAL> V_x_average(1,1,0.0);
+        REAL Vx_sum = 0.;
+        
+        TPZManVector<REAL,3> par_vals(3,0.0);
+        par_vals[0] = -1.0;
+        par_vals[1] =  0.0;
+        par_vals[2] = +1.0;
+        
+        int FracMatID =0;
+        for (int ifrac = 0; ifrac < n_frac_cels; ifrac++) {
             
-            cel->Solution(par_xi, var_Vx, sol);
-            V_x(ifrac*3+ip,0) = x[0];
-            V_x(ifrac*3+ip,1) = x[1];
-            V_x(ifrac*3+ip,2) = sol[0];
-            Vx_sum += V_x(ifrac*3+ip,2);
+            TPZCompEl *cel= cmeshM->Element(frac_indexes[ifrac]);
+            TPZGeoEl *gel=cel->Reference();
+            FracMatID = gel->MaterialId();
+            
+            for (int ip = 0; ip < par_vals.size(); ip++) {
+                par_xi[0] = par_vals[ip];
+                gel->X(par_xi, x);
+                cel->Solution(par_xi, var_p, sol);
+                pressure(ifrac*3+ip,0) = x[0];
+                pressure(ifrac*3+ip,1) = x[1];
+                pressure(ifrac*3+ip,2) = sol[0];
+                
+                cel->Solution(par_xi, var_Vx, sol);
+                V_x(ifrac*3+ip,0) = x[0];
+                V_x(ifrac*3+ip,1) = x[1];
+                V_x(ifrac*3+ip,2) = sol[0];
+                Vx_sum += V_x(ifrac*3+ip,2);
+            }
         }
+        V_x_average(0,0) = Vx_sum/(par_vals.size()*n_frac_cels);
+        
+        filePlotFrac << "Fracture MatID = " << FracMatID << std::endl;
+        
+        TPZMaterial * material_frac_D = cmeshM->FindMaterial(FracMatID);
+        TPZMaterial * material_frac_E = cmeshE->FindMaterial(FracMatID);
+        
+        if (!material_frac_D||!material_frac_E) {
+            DebugStop();
+        }
+        
+        TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac_D = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac_D);
+        TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac_E = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac_E);
+        
+        STATE Du_nM = 0., Du_0 = 0.;
+        REAL kappa_nM =0, kappa_0 =0.;
+        STATE ForceFrac_0 = 0., ForceFrac_n = 0., ForceFrac_nM = 0.;
+        TPZVec<REAL> FracNormal(3,0.);
+        
+        long N_ipoints = mat_with_memory_frac_D->GetMemory().get()->NElements();
+        for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
+            TPZMemoryFracDFN & memory_D = mat_with_memory_frac_D->GetMemory().get()->operator[](ip_index);
+            TPZMemoryFracDFN & memory_E = mat_with_memory_frac_E->GetMemory().get()->operator[](ip_index);
+            
+            Du_0 = memory_D.GetDu_0();
+            STATE Du_n = memory_D.GetDu_n();
+            kappa_0 = memory_D.kappa_0()(0,0);
+            REAL kappa_n = memory_D.kappa()(0,0);
+            ForceFrac_0 = memory_E.GetForceFrac_normal_0();
+            ForceFrac_n = memory_E.GetForceFrac_normal_n();
+            FracNormal = memory_D.GetFrac_normal();
+            
+            Du_nM += Du_n;
+            kappa_nM += kappa_n;
+            ForceFrac_nM += ForceFrac_n;
+            
+        }
+        Du_nM = Du_nM/N_ipoints;
+        kappa_nM = kappa_nM/N_ipoints;
+        ForceFrac_nM= ForceFrac_nM/N_ipoints;
+
+        filePlotFrac << "Initial permebility kappa_0 = " << kappa_0 << std::endl;
+        filePlotFrac << "Final permebility kappa_n = " << kappa_nM << std::endl;
+        
+        filePlotFrac << "Initial closure Du_0 = " << Du_0 << std::endl;
+        filePlotFrac << "Final closure Du_n = " << Du_nM << std::endl;
+
+        filePlotFrac << "Fracture normal = " << FracNormal << std::endl;
+        
+        filePlotFrac << "Initial normal force ForceFrac_0 = " << ForceFrac_0 << std::endl;
+        filePlotFrac << "Final normal force ForceFrac_n = " << ForceFrac_nM << std::endl;
+        
+        pressure.Print("pf = ",filePlotFrac,EMathematicaInput);
+        V_x.Print("V_x = ",filePlotFrac,EMathematicaInput);
+        V_x_average.Print("V_x_average = ",filePlotFrac,EMathematicaInput);
+        filePlotFrac << " ------------------------ " << std::endl;
     }
-    V_x_average(0,0) = Vx_sum/(par_vals.size()*n_frac_cels);
-    
-    pressure.Print("pf = ",std::cout,EMathematicaInput);
-    V_x.Print("V_x = ",std::cout,EMathematicaInput);
-    V_x_average.Print("V_x_average = ",std::cout,EMathematicaInput);
-    
+
 }
 
 
