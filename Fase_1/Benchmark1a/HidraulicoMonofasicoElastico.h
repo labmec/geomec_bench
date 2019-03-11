@@ -123,6 +123,8 @@ private:
     REAL fLref;
     REAL fkovervisc;
     
+    REAL fDeltaP;
+    
     REAL fvalsourceterm;
     
     int ftheta;
@@ -131,6 +133,7 @@ private:
     
     TPZVec<TPZFractureInsertion > fractureInsert;
     
+    TPZSimulationData *fsimulation_data;
     
 public:
 
@@ -178,6 +181,18 @@ public:
     bool insert_fractures_Q = true;
     
     void AdjustIntegrationOrder(TPZSimulationData * sim_data, TPZCompMesh * cmesh_geomechanic, TPZCompMesh * cmesh_reservoir);
+    
+    /// Set the pointer of Simulation data object
+    void SetSimulationData(TPZSimulationData * simulation_data){
+        fsimulation_data = simulation_data;
+    }
+
+    /// Set Delta P simulation condition
+    void SetDeltaP(REAL DeltaP){
+        fDeltaP = DeltaP;
+    }
+    
+    
     
 };
 

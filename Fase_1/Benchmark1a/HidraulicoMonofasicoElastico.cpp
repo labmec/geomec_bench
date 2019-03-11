@@ -166,7 +166,11 @@ HidraulicoMonofasicoElastico::HidraulicoMonofasicoElastico()
     fkovervisc = 0.;
     fvalsourceterm = 0.;
     
+    fDeltaP=0.;
+    
     finsert_fractures_Q  = true;
+    
+    fsimulation_data       = NULL;
     
 }
 
@@ -201,24 +205,27 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     REAL timeT = 0.;
     finsert_fractures_Q = true;
     
-    TPZSimulationData *simulation_data = new TPZSimulationData;
-    //simulation_data->SetMonoPhasicQ(true);
-    simulation_data->Set_insert_fractures_Q(finsert_fractures_Q);
-    simulation_data->Get_volumetric_material_id().push_back(fmatID);
+    if (fsimulation_data==NULL) {
+        DebugStop();
+    }
+    
+    //TPZSimulationData *simulation_data = new TPZSimulationData;
+    fsimulation_data->Set_insert_fractures_Q(finsert_fractures_Q);
+    fsimulation_data->Get_volumetric_material_id().push_back(fmatID);
     
     if(finsert_fractures_Q){
         for (int i_frac = 0; i_frac < fnFrac; i_frac++) {
-            simulation_data->Get_fracture_material_id().push_back(fmatFrac[i_frac]);
-            simulation_data->Get_interface_id().push_back(fmatInterface[i_frac]);
-            simulation_data->Get_interfaceLeft_id().push_back(fmatInterfaceLeft[i_frac]);
-            simulation_data->Get_interfaceRight_id().push_back(fmatInterfaceRight[i_frac]);
+            fsimulation_data->Get_fracture_material_id().push_back(fmatFrac[i_frac]);
+            fsimulation_data->Get_interface_id().push_back(fmatInterface[i_frac]);
+            fsimulation_data->Get_interfaceLeft_id().push_back(fmatInterfaceLeft[i_frac]);
+            fsimulation_data->Get_interfaceRight_id().push_back(fmatInterfaceRight[i_frac]);
         }
     }
-    simulation_data->Set_n_threads(0);
-    simulation_data->Set_epsilon_res(0.001);
-    simulation_data->Set_epsilon_cor(0.01);
-    simulation_data->Set_n_iterations(12);
-    this->SetParameters(simulation_data, Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
+    fsimulation_data->Set_n_threads(0);
+    fsimulation_data->Set_epsilon_res(0.001);
+    fsimulation_data->Set_epsilon_cor(0.001);
+    fsimulation_data->Set_n_iterations(12);
+    this->SetParameters(fsimulation_data, Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     
     ofstream saidaerro("ErroLoula.txt");
 
@@ -241,7 +248,12 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
     int p = 2;
     TPZCompEl::SetgOrder(p);
     
-    RunningPoroElasticity(gmesh, pOrder, simulation_data);
+    
+    //simulation_data->SetMonoPhasicQ(true);
+    //RunningPoroElasticity(gmesh, pOrder, simulation_data);
+    //simulation_data->SetMonoPhasicQ(false);
+    
+    RunningPoroElasticity(gmesh, pOrder, fsimulation_data);
 
 
 }
@@ -937,7 +949,7 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     invK.Zero();
     
     //REAL Sf = 0.0338801;
-    REAL Sf = 1.e+13;
+    REAL Sf = 1.e+14;
     
     K(0,0)=Sf*3.3880079667e-13;
     K(1,1)=Sf*2.5659997999999995e-17;
@@ -960,10 +972,10 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
 
     // 1 - Condições de contorno
     TPZFMatrix<STATE> val1(1,1,0.), val2(3,1,0.);
-    STATE DeltaP = 0.;
+    //STATE DeltaP = 0.;
    
-    STATE Pjusante = 54.9 - DeltaP;
-    STATE Pmontante = 55.0 - DeltaP;
+    STATE Pjusante = 54.9 - fDeltaP;
+    STATE Pmontante = 55.0 - fDeltaP;
     
     val1(0,0) = 0.; //botton
     TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
@@ -985,25 +997,57 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     if (finsert_fractures_Q) {
         // 2 - Material Fraturas
         REAL Dyf = 6.5e-5;
+        TPZVec<REAL> Df(14,0.);
+        Df[0]=9.3e-5;
+        Df[1]=2.5e-5;
+        Df[2]=4.09e-4;
+        Df[3]=2.8e-5;
+        Df[4]=4.8e-5;
+        Df[5]=5.14e-4;
+        Df[6]=1.0e-6;
+        Df[7]=3.93e-4;
+        Df[8]=1.51e-4;
+        Df[9]=1.0e-6;
+        Df[10]=1.0e-6;
+        Df[11]=1.7e-5;
+        Df[12]=4.4e-5;
+        Df[13]=1.23e-4;
+        
         //Dyf =1.;
         
         std::map<REAL, REAL> kf;
         REAL Kni_frac = 12041.;
         
-        kf[fmatFrac[0]] = Sf*7.2e-10*Dyf;
-        kf[fmatFrac[1]] = Sf*5.2e-11*Dyf;
-        kf[fmatFrac[2]] = Sf*1.4e-8*Dyf;
-        kf[fmatFrac[3]] = Sf*6.5e-11*Dyf;
-        kf[fmatFrac[4]] = Sf*1.9e-10*Dyf;
-        kf[fmatFrac[5]] = Sf*2.2e-8*Dyf;
-        kf[fmatFrac[6]] = Sf*1.4e-13*Dyf;
-        kf[fmatFrac[7]] = Sf*1.3e-8*Dyf;
-        kf[fmatFrac[8]] = Sf*1.9e-9*Dyf;
-        kf[fmatFrac[9]] = Sf*5.4e-14*Dyf;
-        kf[fmatFrac[10]] = Sf*1.0e-13*Dyf;
-        kf[fmatFrac[11]] = Sf*2.4e-11*Dyf;
-        kf[fmatFrac[12]] = Sf*1.6e-10*Dyf;
-        kf[fmatFrac[13]] = Sf*1.2e-9*Dyf;
+        kf[fmatFrac[0]] = Sf*7.2e-10*Df[0];
+        kf[fmatFrac[1]] = Sf*5.2e-11*Df[1];
+        kf[fmatFrac[2]] = Sf*1.4e-8*Df[2];
+        kf[fmatFrac[3]] = Sf*6.5e-11*Df[3];
+        kf[fmatFrac[4]] = Sf*1.9e-10*Df[4];
+        kf[fmatFrac[5]] = Sf*2.2e-8*Df[5];
+        kf[fmatFrac[6]] = Sf*1.4e-13*Df[6];
+        kf[fmatFrac[7]] = Sf*1.3e-8*Df[7];
+        kf[fmatFrac[8]] = Sf*1.9e-9*Df[8];
+        kf[fmatFrac[9]] = Sf*5.4e-14*Df[9];
+        kf[fmatFrac[10]] = Sf*1.0e-13*Df[10];
+        kf[fmatFrac[11]] = Sf*2.4e-11*Df[11];
+        kf[fmatFrac[12]] = Sf*1.6e-10*Df[12];
+        kf[fmatFrac[13]] = Sf*1.2e-9*Df[13];
+        
+//        kf[fmatFrac[0]] = Sf*7.2e-10;
+//        kf[fmatFrac[1]] = Sf*5.2e-11;
+//        kf[fmatFrac[2]] = Sf*1.4e-8;
+//        kf[fmatFrac[3]] = Sf*6.5e-11;
+//        kf[fmatFrac[4]] = Sf*1.9e-10;
+//        kf[fmatFrac[5]] = Sf*2.2e-8;
+//        kf[fmatFrac[6]] = Sf*1.4e-13;
+//        kf[fmatFrac[7]] = Sf*1.3e-8;
+//        kf[fmatFrac[8]] = Sf*1.9e-9;
+//        kf[fmatFrac[9]] = Sf*5.4e-14;
+//        kf[fmatFrac[10]] = Sf*1.0e-13;
+//        kf[fmatFrac[11]] = Sf*2.4e-11;
+//        kf[fmatFrac[12]] = Sf*1.6e-10;
+//        kf[fmatFrac[13]] = Sf*1.2e-9;
+        
         
         sim_data->Set_Permeability_0(kf);
         

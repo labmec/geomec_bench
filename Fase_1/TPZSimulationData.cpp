@@ -25,6 +25,7 @@ TPZSimulationData::TPZSimulationData()
     m_fracture_material_id.resize(0);
     m_elasticity_ID = 1;
     m_darcy_ID = 1;
+    m_is_initial_stress_Q = false;
     m_is_initial_state_Q  = false;
     m_is_current_state_Q  = false;
     m_must_accept_solution_Q = false;
@@ -37,6 +38,7 @@ TPZSimulationData::TPZSimulationData()
     m_interface_id.resize(0);
     m_interfaceLeft_id.resize(0);
     m_interfaceRight_id.resize(0);
+    m_Stress_Vol0.resize(0);
     m_Stress0.Resize(3, 3);
     for (int i=0; i<3; i++) {
         m_Stress0(i,i) = 0.;
@@ -76,6 +78,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_fracture_material_id              = other.m_fracture_material_id;
     m_elasticity_ID                     = other.m_elasticity_ID;
     m_darcy_ID                          = other.m_darcy_ID;
+    m_is_initial_stress_Q               = other.m_is_initial_stress_Q;
     m_is_initial_state_Q                = other.m_is_initial_state_Q;
     m_is_current_state_Q                = other.m_is_current_state_Q;
     m_is_mono_Q                         = other.m_is_mono_Q;
@@ -92,6 +95,7 @@ TPZSimulationData::TPZSimulationData(const TPZSimulationData & other)
     m_interfaceLeft_id                  = other.m_interfaceLeft_id;
     m_interfaceRight_id                 = other.m_interfaceRight_id;
     m_Stress0                          = other.m_Stress0;
+    m_Stress_Vol0                       = other.m_Stress_Vol0;
     m_TensorK0                          = other.m_TensorK0;
     m_k0                                = other.m_k0;
     m_fracOrient                        = other.m_fracOrient;
@@ -120,6 +124,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_fracture_material_id              = other.m_fracture_material_id;
         m_elasticity_ID                     = other.m_elasticity_ID;
         m_darcy_ID                          = other.m_darcy_ID;
+        m_is_initial_stress_Q               = other.m_is_initial_stress_Q;
         m_is_initial_state_Q                = other.m_is_initial_state_Q;
         m_is_current_state_Q                = other.m_is_current_state_Q;
         m_is_mono_Q                         = other.m_is_mono_Q;
@@ -134,6 +139,7 @@ TPZSimulationData & TPZSimulationData::operator=(const TPZSimulationData &other)
         m_interfaceLeft_id                  = other.m_interfaceLeft_id;
         m_interfaceRight_id                 = other.m_interfaceRight_id;
         m_Stress0                           = other.m_Stress0;
+        m_Stress_Vol0                       = other.m_Stress_Vol0;
         m_TensorK0                          = other.m_TensorK0;
         m_k0                                = other.m_k0;
         m_fracOrient                        = other.m_fracOrient;
@@ -175,6 +181,7 @@ void TPZSimulationData::Print()
     std::cout << " m_interfaceLeft_id = " << &m_interfaceLeft_id << std::endl;
     std::cout << " m_interfaceRight_id = " << &m_interfaceRight_id << std::endl;
     std::cout << " m_Stress0 = " << &m_Stress0 << std::endl;
+    std::cout << " m_Stress_Vol0 = " << &m_Stress_Vol0 << std::endl;
     std::cout << " m_TensorK0 = " << &m_TensorK0 << std::endl;
     std::cout << " m_k0 = " << &m_k0 << std::endl;
     std::cout << " m_FracOrient = " << &m_fracOrient << std::endl;

@@ -57,6 +57,8 @@ protected:
     
     /** @brief Number of thread */
     int m_n_threads;
+
+    bool m_is_initial_stress_Q;
     
     bool m_is_initial_state_Q;
     
@@ -115,6 +117,9 @@ protected:
     
     /** @brief Initial stress state. Firts simulation scenario*/
     TPZFNMatrix<9,REAL> m_Stress0;
+
+    /** @brief Initial volumetric stress state, for each integration point. Firts simulation scenario*/
+    std::vector<REAL> m_Stress_Vol0;
     
     /** @brief Initial porous media permeability tensor. Coeficient which multiplies the gradient operator*/
     TPZFNMatrix<9,REAL> m_TensorK0;
@@ -166,6 +171,17 @@ public:
     
     /** @brief Get the material and boundaries identifiers sorted per region */
     TPZManVector<std::pair<int, TPZManVector<int,12>>,12> & MaterialIds() { return m_mat_ids; }
+
+    /** @brief Set initial state */
+    void SetInitialStressQ(bool stressstate) {
+        m_is_initial_stress_Q = stressstate;
+    }
+    
+    /** @brief Get initial state */
+    bool IsInitialStressQ() {
+        return m_is_initial_stress_Q;
+    }
+    
     
     /** @brief Set initial state */
     void SetInitialStateQ(bool state) {
@@ -419,6 +435,17 @@ public:
     /** @brief Set Biot coeficient of material  */
     void Set_Biot(REAL alpha){
         m_alpha = alpha;
+    }
+    
+
+    /** @brief Set the initial volumetric stress per integration point index */
+    void Set_Stress_Vol0(std::vector<REAL> Stress0){
+        m_Stress_Vol0 = Stress0;
+    }
+    
+    /** @brief Get the initial volumetric stress per integration point index */
+    std::vector<REAL> Get_Stress_Vol0(){
+        return m_Stress_Vol0;
     }
     
     /** @brief Set the initial stress state tensor */

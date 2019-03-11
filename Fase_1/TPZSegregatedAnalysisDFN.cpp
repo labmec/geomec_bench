@@ -173,7 +173,7 @@ void TPZSegregatedAnalysisDFN::ExecuteTimeEvolution(){
             this->ExecuteOneTimeStep();
             
             if(!m_simulation_data->IsMonoPhasicQ()){
-                if (k==1) {
+                if (k==1 && m_simulation_data->IsInitialStressQ()) {
                     this->SetInitialStress();
                 }
                 this->UpdateParameters();
@@ -205,11 +205,18 @@ void TPZSegregatedAnalysisDFN::SetInitialStress(){
     TPZMatWithMem<TPZMemoryDFN> * mat_with_memory_elastoplast = dynamic_cast<TPZMatWithMem<TPZMemoryDFN> * >(material_elastoplast);
     
     long N_ipoints = mat_with_memory_elastoplast->GetMemory().get()->NElements();
+    REAL Sigma_kk_0 =0.;
+    std::vector<REAL> Sigma_Vol0(N_ipoints,0.);
     for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
         TPZMemoryDFN & memory = mat_with_memory_elastoplast->GetMemory().get()->operator[](ip_index);
-        TPZTensor<REAL> sigma_0 = m_simulation_data->Get_Stress0(); //Initial conditions
-        memory.SetSigma_0(sigma_0);
+        //TPZTensor<REAL> sigma_0 = m_simulation_data->Get_Stress0(); //Initial conditions
+        memory.SetSigma_0(memory.GetSigma_n());
+        Sigma_kk_0 = memory.GetSigma_0()[0]+memory.GetSigma_0()[3]+memory.GetSigma_0()[5];
+        Sigma_Vol0[ip_index]=Sigma_kk_0;
     }
+    m_simulation_data->Set_Stress_Vol0(Sigma_Vol0);
+
+    
 }
 
 
@@ -310,7 +317,7 @@ void TPZSegregatedAnalysisDFN::UpdateParameters(){
         REAL E = m_simulation_data->Get_Eyoung();
         TPZFNMatrix<9,REAL> k_n(3,3,0.);
         for(int i = 0; i < k_0.Rows(); i++){
-            k_n(i,i) = memory.Permeability(k_0(i,i),phi_0,nu,E);
+            k_n(i,i) = memory.Permeability(k_0(i,i),phi_0,nu,E,m_simulation_data->Get_Stress_Vol0()[ip_index]);
         }
         memory.Setkappa(k_n);
     }

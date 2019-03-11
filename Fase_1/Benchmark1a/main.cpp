@@ -25,7 +25,30 @@ int main(int argc, char *argv[])
     InitializePZLOG();
     HidraulicoMonofasicoElastico scenario1a;
     //StopError();
+    
+    // Caso inicial DeltaP = 0
+    TPZSimulationData *simulation_data = new TPZSimulationData;
+    simulation_data->SetInitialStressQ(true);
+    scenario1a.SetSimulationData(simulation_data);
     scenario1a.Run(2);
+   
+    // Demais casos
+    int N_cases = 9;
+    TPZVec<TPZSimulationData *> sim_data_vec(N_cases);
+    TPZVec<HidraulicoMonofasicoElastico *> scenarios_vec(N_cases);
+    REAL DeltaP = 5.;
+    
+    for (int i_case = 0; i_case < N_cases; i_case++) {
+        sim_data_vec[i_case] = new TPZSimulationData;
+        sim_data_vec[i_case]->Set_Stress_Vol0(simulation_data->Get_Stress_Vol0());
+        sim_data_vec[i_case]->SetInitialStressQ(false);
+        scenarios_vec[i_case]->SetDeltaP(DeltaP);
+        scenarios_vec[i_case]->SetSimulationData(sim_data_vec[i_case]);
+        scenarios_vec[i_case]->Run(2);
+        DeltaP = DeltaP+5.;
+    }
+
+
     
 //    MonofasicoElastico cenario0a;
 //    cenario0a.Run(2);
