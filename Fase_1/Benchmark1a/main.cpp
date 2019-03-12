@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
         sim_data_vec[i_case] = new TPZSimulationData;
         sim_data_vec[i_case]->Set_Stress_Vol0(simulation_data->Get_Stress_Vol0());
         sim_data_vec[i_case]->SetInitialStressQ(false);
+        scenarios_vec[i_case] = new HidraulicoMonofasicoElastico;
         scenarios_vec[i_case]->SetDeltaP(DeltaP);
         scenarios_vec[i_case]->SetSimulationData(sim_data_vec[i_case]);
         scenarios_vec[i_case]->Run(2);
