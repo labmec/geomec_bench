@@ -221,10 +221,10 @@ void HidraulicoMonofasicoElastico::Run(int pOrder)
             fsimulation_data->Get_interfaceRight_id().push_back(fmatInterfaceRight[i_frac]);
         }
     }
-    fsimulation_data->Set_n_threads(0);
-    fsimulation_data->Set_epsilon_res(0.001);
+    fsimulation_data->Set_n_threads(4);
+    fsimulation_data->Set_epsilon_res(0.0001);
     fsimulation_data->Set_epsilon_cor(0.001);
-    fsimulation_data->Set_n_iterations(12);
+    fsimulation_data->Set_n_iterations(22);
     this->SetParameters(fsimulation_data, Eyoung, poisson, alpha, Se, perm, visc, fx, fy, sig0);
     
     ofstream saidaerro("ErroLoula.txt");
@@ -379,7 +379,8 @@ void HidraulicoMonofasicoElastico::FunctionStress(const TPZVec<REAL> &x, TPZVec<
     REAL yv = x[1];
     
     STATE f_y = -(85.-0.1*xv/200.);
-    
+    f_y = -85.;
+            
     f[0] = 0.;
     f[1] = f_y;
     
@@ -621,8 +622,8 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder
     BCond2->SetForcingFunction(0, Sigma_t);
     
     TPZFMatrix<STATE> Stress0(3,3,0.);
-    Stress0(0,0) =12.857;
-    Stress0(1,1) =30.;
+    Stress0(0,0) =12.88;
+    Stress0(1,1) =30.05;
     sim_data->Set_Stress0(Stress0);
     
     val2.Zero();
@@ -977,20 +978,20 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
     STATE Pjusante = 54.9 - fDeltaP;
     STATE Pmontante = 55.0 - fDeltaP;
     
-    val1(0,0) = 0.; //botton
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fneumann, val1, val2);
+    val1(0,0) = Pjusante; //botton
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond0 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCbott, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond0);
     
-    val1(0,0) = 0.; //top
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fneumann, val1, val2);
+    val1(0,0) = Pmontante; //top
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond1 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCtop, fdirichlet, val1, val2);
     cmesh->InsertMaterialObject(BCond1);
     
-    val1(0,0) = Pjusante; // right
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, fdirichlet, val1, val2);
+    val1(0,0) = 0.; // right
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond2 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCright, fneumann, val1, val2);
     cmesh->InsertMaterialObject(BCond2);
     
-    val1(0,0) = Pmontante; // left
-    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, fdirichlet, val1, val2);
+    val1(0,0) = 0.; // left
+    TPZBndCondWithMem<TPZMemoryBCDFN> * BCond3 = new TPZBndCondWithMem<TPZMemoryBCDFN>(material, fmatBCleft, fneumann, val1, val2);
     cmesh->InsertMaterialObject(BCond3);
     val1(0,0) = 0.0;
     
@@ -1057,13 +1058,53 @@ TPZCompMesh *HidraulicoMonofasicoElastico::CMesh_M(TPZManVector<TPZCompMesh* , 2
             materialFrac->SetSimulationData(sim_data);
             cmesh->InsertMaterialObject(materialFrac);
             
+            int BC_right = fdirichlet;
+            int BC_left = fdirichlet;
+            TPZFMatrix<STATE> val1_right(1,1,0.),val1_left(1,1,0.);
+            val1_right(0,0) = 54.9- fDeltaP;
+            val1_left(0,0) = 55.- fDeltaP;
+
+            // Spetial conditions for vertical flux:
+            
+            if (fmatFrac[i_frac]==7) {
+                BC_right = fneumann;
+                val1_right(0,0) = 0.;
+            }
+            if (fmatFrac[i_frac]==10) {
+                val1_right(0,0) =55.- fDeltaP;
+                BC_left = fneumann;
+                val1_left(0,0) = 0.;
+            }
+            if (fmatFrac[i_frac]==13) {
+                val1_left(0,0) = 54.9- fDeltaP;
+                //BC_right = fneumann;
+                val1_right(0,0) = 54.91970703125-fDeltaP;;
+            }
+            if (fmatFrac[i_frac]==14) {
+                //BC_left = fneumann;
+                val1_left(0,0) = 54.9716-fDeltaP;
+            }
+            
+            if (fmatFrac[i_frac]==17) {
+                BC_left = fneumann;
+                val1_left(0,0) = 0.;
+            }
+            
+            if (fmatFrac[i_frac]==18) {
+                BC_right = fneumann;
+                val1_right(0,0) = 0.;
+            }
+
+            if (fmatFrac[i_frac]==19) {
+                BC_left = fneumann;
+                val1_left(0,0) = 0.;
+            }
+            
             // 2 - Condições de contorno
-            val1(0,0) =  0.; // right
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], fneumann, val1, val2);
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond4 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointRight[i_frac], BC_right, val1_right, val2);
             cmesh->InsertMaterialObject(BCond4);
 
-            val1(0,0) = 0.; // left
-            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], fneumann, val1, val2);
+            TPZBndCondWithMem<TPZMemoryBCDFN> * BCond5 = new TPZBndCondWithMem<TPZMemoryBCDFN>(materialFrac, fmatPointLeft[i_frac], BC_left, val1_left, val2);
             cmesh->InsertMaterialObject(BCond5);
             
             // 2 - Material Lagrange nas interfaces
@@ -1166,12 +1207,16 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
         int n_frac_cels = frac_indexes.size();
         int var_p = 0;
         int var_Vx = 5;
+        int var_Vy = 6;
         TPZVec<REAL> par_xi(1,0.0);
         TPZManVector<STATE,3> sol,x(3,0.0);
         TPZFMatrix<REAL> pressure(n_frac_cels*3,3,0.0);
         TPZFMatrix<REAL> V_x(n_frac_cels*3,3,0.0);
+        TPZFMatrix<REAL> V_y(n_frac_cels*3,3,0.0);
         TPZFMatrix<REAL> V_x_average(1,1,0.0);
+        TPZFMatrix<REAL> V_y_average(1,1,0.0);
         REAL Vx_sum = 0.;
+        REAL Vy_sum = 0.;
         
         TPZManVector<REAL,3> par_vals(3,0.0);
         par_vals[0] = -1.0;
@@ -1198,9 +1243,16 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
                 V_x(ifrac*3+ip,1) = x[1];
                 V_x(ifrac*3+ip,2) = sol[0];
                 Vx_sum += V_x(ifrac*3+ip,2);
+                
+                cel->Solution(par_xi, var_Vy, sol);
+                V_y(ifrac*3+ip,0) = x[0];
+                V_y(ifrac*3+ip,1) = x[1];
+                V_y(ifrac*3+ip,2) = sol[0];
+                Vy_sum += V_y(ifrac*3+ip,2);
             }
         }
         V_x_average(0,0) = Vx_sum/(par_vals.size()*n_frac_cels);
+        V_y_average(0,0) = Vy_sum/(par_vals.size()*n_frac_cels);
         
         filePlotFrac << "Fracture MatID = " << FracMatID << std::endl;
         
@@ -1214,7 +1266,7 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
         TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac_D = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac_D);
         TPZMatWithMem<TPZMemoryFracDFN> * mat_with_memory_frac_E = dynamic_cast<TPZMatWithMem<TPZMemoryFracDFN> * >(material_frac_E);
         
-        STATE Du_nM = 0., Du_0 = 0.;
+        STATE Du_nM = 0., Du_0 = 0.,Vm_0 =0.;
         REAL kappa_nM =0, kappa_0 =0.;
         STATE ForceFrac_0 = 0., ForceFrac_n = 0., ForceFrac_nM = 0.;
         TPZVec<REAL> FracNormal(3,0.);
@@ -1230,6 +1282,8 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
             REAL kappa_n = memory_D.kappa()(0,0);
             ForceFrac_0 = memory_E.GetForceFrac_normal_0();
             ForceFrac_n = memory_E.GetForceFrac_normal_n();
+            
+            Vm_0 = memory_E.GetVm();
             FracNormal = memory_D.GetFrac_normal();
             
             Du_nM += Du_n;
@@ -1247,6 +1301,9 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
         filePlotFrac << "Initial closure Du_0 = " << Du_0 << std::endl;
         filePlotFrac << "Final closure Du_n = " << Du_nM << std::endl;
 
+        filePlotFrac << "Initial Fracture overture = " << Vm_0<< std::endl;
+        filePlotFrac << "Final Fracture overture !! = " << Vm_0 + Du_0 - Du_nM << std::endl;
+        
         filePlotFrac << "Fracture normal = " << FracNormal << std::endl;
         
         filePlotFrac << "Initial normal force ForceFrac_0 = " << ForceFrac_0 << std::endl;
@@ -1255,6 +1312,8 @@ void HidraulicoMonofasicoElastico::Plot_over_fractures(TPZCompMesh *cmeshE, TPZC
         pressure.Print("pf = ",filePlotFrac,EMathematicaInput);
         V_x.Print("V_x = ",filePlotFrac,EMathematicaInput);
         V_x_average.Print("V_x_average = ",filePlotFrac,EMathematicaInput);
+        V_y.Print("V_y = ",filePlotFrac,EMathematicaInput);
+        V_y_average.Print("V_y_average = ",filePlotFrac,EMathematicaInput);
         filePlotFrac << " ------------------------ " << std::endl;
     }
 

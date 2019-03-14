@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     // Caso inicial DeltaP = 0
     TPZSimulationData *simulation_data = new TPZSimulationData;
     simulation_data->SetInitialStressQ(true);
+    //simulation_data->SetMonoPhasicQ(true);
     scenario1a.SetSimulationData(simulation_data);
     scenario1a.Run(2);
    
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     int N_cases = 9;
     TPZVec<TPZSimulationData *> sim_data_vec(N_cases);
     TPZVec<HidraulicoMonofasicoElastico *> scenarios_vec(N_cases);
-    REAL DeltaP = 5.;
+    REAL DeltaP = 40;
     
     for (int i_case = 0; i_case < N_cases; i_case++) {
         sim_data_vec[i_case] = new TPZSimulationData;

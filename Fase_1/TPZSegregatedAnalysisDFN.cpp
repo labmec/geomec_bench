@@ -207,15 +207,25 @@ void TPZSegregatedAnalysisDFN::SetInitialStress(){
     long N_ipoints = mat_with_memory_elastoplast->GetMemory().get()->NElements();
     REAL Sigma_kk_0 =0.;
     std::vector<REAL> Sigma_Vol0(N_ipoints,0.);
+    STATE val_sxx =0., val_syy =0.;
+    
     for (int ip_index = 0 ; ip_index < N_ipoints; ip_index++) {
         TPZMemoryDFN & memory = mat_with_memory_elastoplast->GetMemory().get()->operator[](ip_index);
         //TPZTensor<REAL> sigma_0 = m_simulation_data->Get_Stress0(); //Initial conditions
         memory.SetSigma_0(memory.GetSigma_n());
         Sigma_kk_0 = memory.GetSigma_0()[0]+memory.GetSigma_0()[3]+memory.GetSigma_0()[5];
         Sigma_Vol0[ip_index]=Sigma_kk_0;
+        val_sxx = val_sxx + memory.GetSigma_0()[0];
+        val_syy = val_syy + memory.GetSigma_0()[3];
     }
-    m_simulation_data->Set_Stress_Vol0(Sigma_Vol0);
 
+    // Correcting Stress 0
+//    TPZFMatrix<STATE> Stress0(3,3,0.);
+//    Stress0(0,0) =-val_sxx/N_ipoints;
+//    Stress0(1,1) =-val_syy/N_ipoints;
+//    m_simulation_data->Set_Stress0(Stress0);
+    
+    m_simulation_data->Set_Stress_Vol0(Sigma_Vol0);
     
 }
 

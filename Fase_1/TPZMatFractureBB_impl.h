@@ -272,10 +272,10 @@ void TPZMatFractureBB<TMEM>::Correctnormal(TPZManVector<STATE,3>  &normal)
         normal[1]=-normal[1];
     }
     
-//    if(frac_Id==13){
-//        normal[0]=-normal[0];
-//        normal[1]=-normal[1];
-//    }
+    if(frac_Id==14){
+        normal[0]=-normal[0];
+        normal[1]=-normal[1];
+    }
     
 }
 
