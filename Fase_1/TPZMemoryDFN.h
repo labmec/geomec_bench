@@ -80,7 +80,7 @@ public:
         REAL varphi = phi/phi0;
         //varphi = 1.;
  
-        REAL perm = k0*pow(varphi, 14.);
+        REAL perm = k0*pow(varphi, 60.);
         
         return perm;
     }

@@ -68,6 +68,8 @@ private:
     vector<int> fmatFrac;
     vector<int> fmatPointLeft;
     vector<int> fmatPointRight;
+    
+    std::map<REAL, REAL> fFracOrient;
     int fnFrac;
     
     //int fmatFrac;
@@ -75,11 +77,11 @@ private:
     //int fmatPointRight;
     
     //Material do elemento de interface
-
-    int fmatInterface;
-    int fmatInterfaceLeft;
-    int fmatInterfaceRight;
-    int fmatFluxWrap;
+    
+    vector<int>  fmatInterface;
+    vector<int>  fmatInterfaceLeft;
+    vector<int>  fmatInterfaceRight;
+    vector<int>  fmatFluxWrap;
     
     //Materiais das condições de contorno (elementos de interface)
     int fmatIntBCbott;
@@ -121,17 +123,20 @@ private:
     REAL fLref;
     REAL fkovervisc;
     
+    REAL fDeltaP;
+    
     REAL fvalsourceterm;
     
     int ftheta;
     
     bool finsert_fractures_Q = true;
     
-    TPZFractureInsertion fractureInsert;
+    TPZVec<TPZFractureInsertion > fractureInsert;
     
+    TPZSimulationData *fsimulation_data;
     
 public:
-
+    
     HidraulicoMonofasicoElastico();
     
     void Run(int pOrder);
@@ -155,7 +160,7 @@ public:
     
     /*  Uniform refinement */
     void UniformRef(TPZGeoMesh * gmesh, int n_div);
-
+    
     /* Malhas computacionais */
     TPZCompMesh *CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZSimulationData *simulation_data); // Malha computacional de elasticidade
     TPZCompMesh *CMesh_q(TPZGeoMesh *gmesh, int pOrder); // Malha computacional de fluxo
@@ -166,7 +171,7 @@ public:
     static void Sol_exact(const TPZVec<REAL> &x, TPZVec<STATE> &sol, TPZFMatrix<STATE> &dsol);
     
     //Fractures structure
-    void Plot_over_fractures(TPZCompMesh *cmesh);
+    void Plot_over_fractures(TPZCompMesh *cmeshE, TPZCompMesh *cmeshM);
     void BreakConnectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     void BreakH1Connectivity(TPZCompMesh &cmesh, std::vector<int> fracture_ids);
     
@@ -177,7 +182,20 @@ public:
     
     void AdjustIntegrationOrder(TPZSimulationData * sim_data, TPZCompMesh * cmesh_geomechanic, TPZCompMesh * cmesh_reservoir);
     
+    /// Set the pointer of Simulation data object
+    void SetSimulationData(TPZSimulationData * simulation_data){
+        fsimulation_data = simulation_data;
+    }
+    
+    /// Set Delta P simulation condition
+    void SetDeltaP(REAL DeltaP){
+        fDeltaP = DeltaP;
+    }
+    
+    
+    
 };
 
 
-#endif 
+#endif
+
