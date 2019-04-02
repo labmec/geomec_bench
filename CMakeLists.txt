@@ -123,6 +123,31 @@ if(WIN32)
 
 endif()
 
+option(USING_CGAL "Whether the CGAL package will be linked with the library" OFF)
+if(USING_CGAL)
+	#Adding a variable to hold this definition
+	set(USING_CGAL USING_CGAL)
+    if(WIN32)
+       set(CMAKE_PREFIX_PATH "C:/Arquivos de Programas/CGAL/lib/cmake/CGAL" ${CMAKE_PREFIX_PATH})
+	endif()
+	
+	find_package(CGAL REQUIRED COMPONENTS Core ) 
+	if ( CGAL_FOUND ) 
+       include( ${CGAL_USE_FILE} ) 
+       message("Use of CGAL library ENABLED!")
+	   add_definitions(-DUSING_CGAL)
+       IF (WIN32)
+	       add_definitions("/fp:precise") # CGAL sets /fp:strict which will not allow compiling SEST2DQT in Windows
+                                      # due to error when including MS xcomplex file:
+                                      #	std::_Fabs<float>(const std::complex<float> &,int *)
+       ENDIF (WIN32)
+    else()									  
+       message(FATAL_ERROR "CGAL library not found.") 
+    endif()
+else()
+    message("Use of CGAL library NOT enabled!")
+endif(USING_CGAL)
+
 include_directories(.)
 
 set(BENCHMARK_SOURCE_DIR ${PROJECT_SOURCE_DIR})

@@ -12,6 +12,6 @@ add_executable(Benchmark1a ${Mymain})
 
 target_compile_definitions(Benchmark1a PUBLIC BENCHMARK_SOURCE_DIR=${PROJECT_SOURCE_DIR})
 
-target_link_libraries(Benchmark1a pz )
+target_link_libraries(Benchmark1a pz ${CGAL})
 
 configure_file(gmsh/GeometryBench.msh GeometryBench.msh COPYONLY)
