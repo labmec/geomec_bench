@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     
 #ifdef USING_VTK
     GenerateVTKInput();
-    VTKWindow();
+    GetBooleanOperationActor(0,1);
     exit(0);
 #endif
     
@@ -34,11 +34,11 @@ int main(int argc, char *argv[]) {
     FractureIntersectionConfig config;
     {
         TPZGmshReader gmsh;
-        gmsh.fPZMaterialId[2]["inflow"] = -1;
-        gmsh.fPZMaterialId[2]["outflow"] = -2;
-        gmsh.fPZMaterialId[2]["top"] = -3;
-        gmsh.fPZMaterialId[2]["lateral"] = -4;
-        gmsh.fPZMaterialId[3]["domain"] = config.volumematid;
+        gmsh.GetDimNamePhysical()[2]["inflow"] = -1;
+        gmsh.GetDimNamePhysical()[2]["outflow"] = -2;
+        gmsh.GetDimNamePhysical()[2]["top"] = -3;
+        gmsh.GetDimNamePhysical()[2]["lateral"] = -4;
+        gmsh.GetDimNamePhysical()[3]["domain"] = config.volumematid;
         config.materialids.insert(1);
         config.bcmaterialids.insert(-1);
         config.bcmaterialids.insert(-2);

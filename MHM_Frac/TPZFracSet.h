@@ -66,6 +66,21 @@ struct TPZFracture
         out << "Orig id " << fOrigId;
         out << std::endl;
     }
+    
+    void Write(TPZStream &buf, int withclassid) const
+    {
+        DebugStop();
+    }
+    
+    void Read(TPZStream &buf, void *context)
+    {
+        DebugStop();
+    }
+    
+    int ClassId() const
+    {
+        DebugStop();
+    }
 };
 
 struct XOrder

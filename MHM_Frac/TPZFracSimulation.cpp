@@ -147,8 +147,8 @@ void TPZFracSimulation::ReadPreamble(std::ifstream &input)
         std::istringstream stin(line);
         stin >> nummat;
     }
-    fGmsh.fPZMaterialId[1]["MHMLine"] = fMHM->fSkeletonMatId;
-    fGmsh.fPZMaterialId[2]["MHMSurface"] = fMHM->fSkeletonMatId;
+    fGmsh.GetDimNamePhysical()[1]["MHMLine"] = fMHM->fSkeletonMatId;
+    fGmsh.GetDimNamePhysical()[2]["MHMSurface"] = fMHM->fSkeletonMatId;
     std::string planemat;
     for (int i=0; i<nummat; i++) {
         ReadNextLine(input, line);
@@ -163,14 +163,14 @@ void TPZFracSimulation::ReadPreamble(std::ifstream &input)
         matname.erase(matname.end()-1,matname.end());
         if (mattype == "flow" && matdimension == dimension) {
             fFracSet.fPhysicalname = matname;
-            fGmsh.fPZMaterialId[dimension][matname] = matidcounter;
+            fGmsh.GetDimNamePhysical()[dimension][matname] = matidcounter;
             InsertDarcyMaterial(matidcounter, perm, density);
             fMaterialIds[matname] = matidcounter;
             matidcounter++;
         }
         if (mattype == "boundary" && matdimension == dimension-1)
         {
-            fGmsh.fPZMaterialId[matdimension][matname] = matidcounter;
+            fGmsh.GetDimNamePhysical()[matdimension][matname] = matidcounter;
             InsertDarcyBCMaterial(matidcounter, matdimension, (int)(density+0.5), perm);
             fMaterialIds[matname] = matidcounter;
             matidcounter++;
@@ -575,6 +575,7 @@ void VerifyEmbeddedElements(TPZGeoMesh *gmesh)
         TPZGeoEl *gel = gmesh->Element(el);
         if(gel && gel->Dimension() < dim)
         {
+            if(gel->HasSubElement()) continue;
             int numneigh = 0;
             int nsides = gel->NSides();
             TPZGeoElSide gelside(gel,nsides-1);
@@ -928,7 +929,7 @@ void TPZFracSimulation::ReadFractures(std::ifstream &input)
         TPZFracture frac = fFracSet.fFractureVec[ifr];
         REAL perm = frac.fFracPerm * frac.fThickness;
         std::string matname = fFracSet.fFractureVec[ifr].fPhysicalName;
-        fGmsh.fPZMaterialId[meshdim-1][matname] = matid;
+        fGmsh.GetDimNamePhysical()[meshdim-1][matname] = matid;
         fMaterialIds[matname] = matid;
         mat->SetSymmetric();
         mat->SetPermeability(perm);
@@ -949,7 +950,7 @@ void TPZFracSimulation::ReadFractures(std::ifstream &input)
         matid++;
         mat = new TPZMixedPoisson(*mat);
         mat->SetId(matid);
-        fGmsh.fPZMaterialId[meshdim-1][matname] = matid;
+        fGmsh.GetDimNamePhysical()[meshdim-1][matname] = matid;
         fMaterialIds[matname] = matid;
         fMHM->CMesh()->InsertMaterialObject(mat);
         TPZVecL2 *vecl2 = new TPZVecL2(matid);
@@ -974,21 +975,21 @@ void TPZFracSimulation::AdjustGeometricMesh(const std::string &rootname)
     TPZGeoMesh *gmesh = fMHM->GMesh().operator->();
     std::set<int> matids = fMHM->fSkeletonWithFlowMatId;
     matids.insert(fMHM->fSkeletonMatId);
-    CreateRefPatterns(gmesh, fGmsh.fEntityIndex, matids);
-    VerifySubdomainConsistency(gmesh, fGmsh.fEntityIndex, matids);
+    CreateRefPatterns(gmesh, fGmsh.EntityIndex(), matids);
+    VerifySubdomainConsistency(gmesh, fGmsh.EntityIndex(), matids);
     VerifyEmbeddedElements(gmesh);
     matids = fMHM->fFractureFlowDim1MatId;
-    AdjustEntityOfFractures(gmesh,fGmsh.fEntityIndex,matids);
+    AdjustEntityOfFractures(gmesh,fGmsh.EntityIndex(),matids);
     std::map<int64_t,std::pair<int64_t,int64_t>> skeletonstruct;
     matids = fMHM->fSkeletonWithFlowMatId;
     matids.insert(fMHM->fSkeletonMatId);
     std::copy(fMHM->fMaterialBCIds.begin(),fMHM->fMaterialBCIds.end(), std::inserter(matids, matids.begin()));
-    BuildSkeleton(gmesh, fGmsh.fEntityIndex, matids, skeletonstruct);
+    BuildSkeleton(gmesh, fGmsh.EntityIndex(), matids, skeletonstruct);
 #ifdef LOG4CXX
     if (logger->isDebugEnabled()) {
         std::stringstream sout;
         gmesh->Print(sout);
-        sout << "Entity index \n" << fGmsh.fEntityIndex << endl;
+        sout << "Entity index \n" << fGmsh.EntityIndex() << endl;
         for (auto it = skeletonstruct.begin(); it != skeletonstruct.end(); it++) {
             TPZGeoEl *gel = fMHM->GMesh()->Element(it->first);
             sout << "skeleton geo " << it->first << " type " << gel->TypeName() << " mat id " << gel->MaterialId() << " linked to subdomains " << it->second.first << " " << it->second.second;
@@ -1036,7 +1037,7 @@ void TPZFracSimulation::AdjustGeometricMesh(const std::string &rootname)
         TPZVTKGeoMesh::PrintGMeshVTK(fMHM->GMesh().operator->(), out, eltype);
     }
 #endif
-    fMHM->DefinePartition(fGmsh.fEntityIndex, skeletonstruct);
+    fMHM->DefinePartition(fGmsh.EntityIndex(), skeletonstruct);
 }
 
 /// adjust the boundary condition type of the elements
@@ -1044,7 +1045,7 @@ void TPZFracSimulation::SetStandardBoundaryElements()
 {
     TPZGeoMesh *gmesh = fMHM->GMesh().operator->();
     int dimension = gmesh->Dimension();
-    int matidbc = fGmsh.fPZMaterialId[dimension-1]["BC"];
+    int matidbc = fGmsh.GetDimNamePhysical()[dimension-1]["BC"];
     int64_t nel = gmesh->NElements();
     for (int64_t el =0; el<nel; el++) {
         TPZGeoEl *gel = gmesh->Element(el);
@@ -1068,16 +1069,16 @@ void TPZFracSimulation::SetStandardBoundaryElements()
                 }
             }
             if (fabs(minx[0]-maxx[0]) < 1.e-6 && fabs(minx[0]-fFracSet.fLowLeft[0]) < 1.e-6) {
-                int matid = fGmsh.fPZMaterialId[dimension-1]["BCIN"];
+                int matid = fGmsh.GetDimNamePhysical()[dimension-1]["BCIN"];
                 gel->SetMaterialId(matid);
             }
             else if (fabs(minx[0]-maxx[0]) < 1.e-6 && fabs(maxx[0]-fFracSet.fTopRight[0]) < 1.e-6) {
-                int matid = fGmsh.fPZMaterialId[dimension-1]["BCOUT"];
+                int matid = fGmsh.GetDimNamePhysical()[dimension-1]["BCOUT"];
                 gel->SetMaterialId(matid);
             }
             // top or bottom
             else {
-                int matid = fGmsh.fPZMaterialId[dimension-1]["BCNOFLOW"];
+                int matid = fGmsh.GetDimNamePhysical()[dimension-1]["BCNOFLOW"];
                 gel->SetMaterialId(matid);
             }
         }

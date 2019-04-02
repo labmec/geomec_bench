@@ -11,7 +11,7 @@
 #include "pzanalysis.h"
 #include "pzstepsolver.h"
 
-#include "pzmaterial.h"
+#include "TPZMaterial.h"
 #include "pzbuildmultiphysicsmesh.h"
 
 #include "TPZSSpStructMatrix.h"
@@ -126,7 +126,7 @@ void TElasticityExample1::ElasticDummy(const TPZVec<REAL> &x, TPZVec<STATE> &res
 TPZAutoPointer<TPZFunction<STATE> > TElasticityExample1::ConstitutiveLawFunction()
 {
     TPZAutoPointer<TPZFunction<STATE> > result;
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(TElasticityExample1::ElasticDummy);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(TElasticityExample1::ElasticDummy,4);
     dummy->SetPolynomialOrder(4);
     result = TPZAutoPointer<TPZFunction<STATE> >(dummy);
     return result;
@@ -279,7 +279,7 @@ void TElasticityExample1::DivSigma(const TPZVec<TVar> &x, TPZVec<TVar> &divsigma
 
 TPZAutoPointer<TPZFunction<STATE> > TElasticityExample1::ForcingFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -287,7 +287,7 @@ TPZAutoPointer<TPZFunction<STATE> > TElasticityExample1::ForcingFunction()
 
 TPZAutoPointer<TPZFunction<STATE> > TElasticityExample1::ValueFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -431,7 +431,7 @@ void TLaplaceExample1::DivSigma(const TPZVec<TVar> &x, TVar &divsigma)
 
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExample1::ForcingFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -439,7 +439,7 @@ TPZAutoPointer<TPZFunction<STATE> > TLaplaceExample1::ForcingFunction()
 
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExample1::ValueFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -449,7 +449,7 @@ TPZAutoPointer<TPZFunction<STATE> > TLaplaceExample1::ValueFunction()
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExample1::ConstitutiveLawFunction()
 {
     TPZAutoPointer<TPZFunction<STATE> > result;
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(PermeabilityDummy);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(PermeabilityDummy,4);
     dummy->SetPolynomialOrder(4);
     result = TPZAutoPointer<TPZFunction<STATE> >(dummy);
     return result;
@@ -578,7 +578,7 @@ void TLaplaceExampleSmooth::DivSigma(const TPZVec<TVar> &x, TVar &divsigma)
 
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExampleSmooth::ForcingFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(Force,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -586,7 +586,7 @@ TPZAutoPointer<TPZFunction<STATE> > TLaplaceExampleSmooth::ForcingFunction()
 
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExampleSmooth::ValueFunction()
 {
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(GradU,5);
     dummy->SetPolynomialOrder(5);
     TPZAutoPointer<TPZFunction<STATE> > result(dummy);
     return result;
@@ -596,7 +596,7 @@ TPZAutoPointer<TPZFunction<STATE> > TLaplaceExampleSmooth::ValueFunction()
 TPZAutoPointer<TPZFunction<STATE> > TLaplaceExampleSmooth::ConstitutiveLawFunction()
 {
     TPZAutoPointer<TPZFunction<STATE> > result;
-    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(PermeabilityDummy);
+    TPZDummyFunction<STATE> *dummy = new TPZDummyFunction<STATE>(PermeabilityDummy,4);
     dummy->SetPolynomialOrder(4);
     result = TPZAutoPointer<TPZFunction<STATE> >(dummy);
     return result;

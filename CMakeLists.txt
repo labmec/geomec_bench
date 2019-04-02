@@ -46,10 +46,12 @@ if(USING_VTK)
 	find_package(VTK 8.0.0 REQUIRED)
 	include(${VTK_USE_FILE})
 	add_definitions(-DUSING_VTK)
+
 	mark_as_advanced(Qt5Core_DIR)
 	mark_as_advanced(Qt5Gui_DIR)
 	mark_as_advanced(Qt5Sql_DIR)
 	mark_as_advanced(Qt5Widgets_DIR)	
+
 else()
 	unset(Qt5Core_DIR CACHE)
 	unset(Qt5Gui_DIR CACHE)

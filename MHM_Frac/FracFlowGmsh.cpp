@@ -195,13 +195,13 @@ int main(int argc, char *argv[])
     gRefDBase.InitializeUniformRefPattern(EQuadrilateral);
     gRefDBase.InitializeUniformRefPattern(ETriangle);
     
-    int dimension = 3;
+    int dimension = 2;
     TPZAutoPointer<TPZMHMixedHybridMeshControl> MHM = new TPZMHMixedHybridMeshControl(dimension);
     
     TPZFracSimulation frac(MHM);
     
     std::stringstream MHMPref;
-    MHMPref << "../test";
+    MHMPref << "../TwoFrac";
 
     frac.ReadDataFile(MHMPref.str());
     

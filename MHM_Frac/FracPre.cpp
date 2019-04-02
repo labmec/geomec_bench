@@ -30,7 +30,8 @@ int main()
     InitializePZLOG();
 #endif
     TPZFracSet fracset;
-    ReadFracDefinition("../DFN_data/2D/HorizontalFrac.data", fracset);
+//    ReadFracDefinition("../DFN_data/2D/HorizontalFrac.data", fracset);
+    ReadFracDefinition("../TwoFrac.data", fracset);
 //    fracset.SetTol(5);
 //    fracset.SetMHMSpacing(11);
     fracset.ComputeFractureIntersections();
@@ -46,7 +47,7 @@ int main()
 //    REAL elem_size = mhm_size/nelem_MHMside;
     fracset.ComputeMeshSizeAtNodes();
 
-    ExportGMsh(fracset,"../HorizontalFrac.geo");
+    ExportGMsh(fracset,"../TwoFrac.geo");
     
     return 0;
 }

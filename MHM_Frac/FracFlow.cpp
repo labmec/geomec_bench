@@ -241,7 +241,8 @@ int main(int argc, char *argv[])
         meshcontrol.DivideSkeletonElements(Configuration.numDivSkeleton);
         if (Configuration.Hybridize)
         {
-            meshcontrol.Hybridize();
+            DebugStop();
+//            meshcontrol.Hybridize();
         }
         
         bool substructure = (bool) Configuration.Condensed;
@@ -352,7 +353,7 @@ void InsertMaterialObjects(TPZMHMeshControl &control)
     
     //BC -2
 	TPZMaterial * BCondD2 = material1->CreateBC(mat1, bc2,dirichlet, val1, val2);
-    TPZAutoPointer<TPZFunction<STATE> > bcmatDirichlet2 = new TPZDummyFunction<STATE>(DirichletValidacao);
+    TPZAutoPointer<TPZFunction<STATE> > bcmatDirichlet2 = new TPZDummyFunction<STATE>(DirichletValidacao,4);
     BCondD2->SetForcingFunction(bcmatDirichlet2);
     cmesh.InsertMaterialObject(BCondD2);
     
@@ -364,7 +365,7 @@ void InsertMaterialObjects(TPZMHMeshControl &control)
     
     //BC -4
 	TPZMaterial * BCondD4 = material1->CreateBC(mat1, bc4,dirichlet, val1, val2);
-    TPZAutoPointer<TPZFunction<STATE> > bcmatDirichlet4 = new TPZDummyFunction<STATE>(DirichletValidacao);
+    TPZAutoPointer<TPZFunction<STATE> > bcmatDirichlet4 = new TPZDummyFunction<STATE>(DirichletValidacao,4);
     BCondD4->SetForcingFunction(bcmatDirichlet4);
     cmesh.InsertMaterialObject(BCondD4);
     

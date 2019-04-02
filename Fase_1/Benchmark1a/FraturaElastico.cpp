@@ -475,16 +475,16 @@ TPZGeoMesh *FraturaElastico::CreateGMesh()
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
-    Geometry.SetfDimensionlessL(s);
-    Geometry.fPZMaterialId[0]["PointLeft"] = 0;
-    Geometry.fPZMaterialId[0]["PointRight"] = 0;
-    Geometry.fPZMaterialId[1]["bottom"] = fmatBCbott;
-    Geometry.fPZMaterialId[1]["right"] = fmatBCright;
-    Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
-    Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
-    Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
-    Geometry.fPZMaterialId[1]["frac2"] = fmatFrac[1];
-    Geometry.fPZMaterialId[2]["Omega"] = fmatID;
+    Geometry.SetCharacteristiclength(s);
+    Geometry.GetDimNamePhysical()[0]["PointLeft"] = 0;
+    Geometry.GetDimNamePhysical()[0]["PointRight"] = 0;
+    Geometry.GetDimNamePhysical()[1]["bottom"] = fmatBCbott;
+    Geometry.GetDimNamePhysical()[1]["right"] = fmatBCright;
+    Geometry.GetDimNamePhysical()[1]["top"] = fmatBCtop;
+    Geometry.GetDimNamePhysical()[1]["left"] = fmatBCleft;
+    Geometry.GetDimNamePhysical()[1]["frac"] = fmatFrac[0];
+    Geometry.GetDimNamePhysical()[1]["frac2"] = fmatFrac[1];
+    Geometry.GetDimNamePhysical()[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
     
     TPZCheckGeom check(gmesh);
@@ -577,7 +577,7 @@ TPZCompMesh *FraturaElastico::CMesh_E(TPZGeoMesh *gmesh, int pOrder)
     TPZElasticCriterion obj ;
     
     TPZElasticResponse er;
-    er.SetUp(fEyoung,fpoisson);
+    er.SetEngineeringData(fEyoung, fpoisson);
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
     cmesh->InsertMaterialObject(material);

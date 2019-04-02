@@ -12,9 +12,15 @@
 
 #ifdef USING_VTK
 
+#include <vtkActor.h>;
+
 void GenerateVTKInput();
 
 void VTKWindow();
+
+void GetBooleanOperationActor( double x, int operation );
+
+vtkActor * GetStructuredGrid();
 
 #endif
 

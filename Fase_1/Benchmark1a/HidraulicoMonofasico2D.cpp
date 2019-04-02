@@ -480,17 +480,17 @@ TPZGeoMesh *HidraulicoMonofasico2D::CreateGMesh()
     
     TPZGmshReader Geometry;
     REAL s = 1.0;
-    Geometry.SetfDimensionlessL(s);
-    Geometry.fPZMaterialId[1]["bottom"] = fmatBCbott;
-    Geometry.fPZMaterialId[1]["right"] = fmatBCright;
-    Geometry.fPZMaterialId[1]["top"] = fmatBCtop;
-    Geometry.fPZMaterialId[1]["left"] = fmatBCleft;
+    Geometry.SetCharacteristiclength(s);
+    Geometry.GetDimNamePhysical()[1]["bottom"] = fmatBCbott;
+    Geometry.GetDimNamePhysical()[1]["right"] = fmatBCright;
+    Geometry.GetDimNamePhysical()[1]["top"] = fmatBCtop;
+    Geometry.GetDimNamePhysical()[1]["left"] = fmatBCleft;
     if (finsert_fractures_Q) {
-        Geometry.fPZMaterialId[1]["frac"] = fmatFrac[0];
-        Geometry.fPZMaterialId[0]["PointLeft"] = fmatPointLeft[0];
-        Geometry.fPZMaterialId[0]["PointRight"] = fmatPointRight[0];
+        Geometry.GetDimNamePhysical()[1]["frac"] = fmatFrac[0];
+        Geometry.GetDimNamePhysical()[0]["PointLeft"] = fmatPointLeft[0];
+        Geometry.GetDimNamePhysical()[0]["PointRight"] = fmatPointRight[0];
     }
-    Geometry.fPZMaterialId[2]["Omega"] = fmatID;
+    Geometry.GetDimNamePhysical()[2]["Omega"] = fmatID;
     gmesh = Geometry.GeometricGmshMesh(grid);
     
     TPZCheckGeom check(gmesh);
@@ -542,7 +542,7 @@ TPZCompMesh *HidraulicoMonofasico2D::CMesh_E(TPZGeoMesh *gmesh, int pOrder, TPZS
     TPZElasticCriterion obj;
     
     TPZElasticResponse er;
-    er.SetUp(fEyoung,fpoisson);
+    er.SetEngineeringData(fEyoung, fpoisson);
     obj.SetElasticResponse(er);
     material->SetPlasticity(obj);
     material->SetAlpha(1.);
