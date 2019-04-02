@@ -80,6 +80,7 @@ struct TPZFracture
     int ClassId() const
     {
         DebugStop();
+		return 0;
     }
 };
 

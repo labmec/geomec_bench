@@ -40,26 +40,26 @@ ENDIF(APPLE)
 include_directories(${PZ_INCLUDE_DIRS})
 
 #enabling VTK library
-option(USING_VTK "Whether the VTK package will be linked IN" OFF)
+#option(USING_VTK "Whether the VTK package will be linked IN" OFF)
 
-if(USING_VTK)
-	find_package(VTK 8.0.0 REQUIRED)
-	include(${VTK_USE_FILE})
-	add_definitions(-DUSING_VTK)
+# if(USING_VTK)
+	# find_package(VTK 8.0.0 REQUIRED)
+	# include(${VTK_USE_FILE})
+	# add_definitions(-DUSING_VTK)
 
-	mark_as_advanced(Qt5Core_DIR)
-	mark_as_advanced(Qt5Gui_DIR)
-	mark_as_advanced(Qt5Sql_DIR)
-	mark_as_advanced(Qt5Widgets_DIR)	
+	# mark_as_advanced(Qt5Core_DIR)
+	# mark_as_advanced(Qt5Gui_DIR)
+	# mark_as_advanced(Qt5Sql_DIR)
+	# mark_as_advanced(Qt5Widgets_DIR)	
 
-else()
-	unset(Qt5Core_DIR CACHE)
-	unset(Qt5Gui_DIR CACHE)
-	unset(Qt5Sql_DIR CACHE)
-	unset(Qt5Widgets_DIR CACHE)
-	unset(VTK_LIBRARIES)
-	unset(VTK_DIR CACHE)
-endif(USING_VTK)
+# else()
+	# unset(Qt5Core_DIR CACHE)
+	# unset(Qt5Gui_DIR CACHE)
+	# unset(Qt5Sql_DIR CACHE)
+	# unset(Qt5Widgets_DIR CACHE)
+	# unset(VTK_LIBRARIES)
+	# unset(VTK_DIR CACHE)
+# endif(USING_VTK)
 
 
 # Location to search files or libraries

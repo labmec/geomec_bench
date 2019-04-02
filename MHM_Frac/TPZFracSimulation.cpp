@@ -21,6 +21,8 @@
 #include "TPZRefPattern.h"
 
 #include <algorithm>
+#include <iterator>
+
 using namespace std;
 
 #ifdef LOG4CXX
