@@ -489,10 +489,12 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
     
     //Aqui é implementado um método para malhas criadas no GMSH
     
-    //std::string dirname = PZSOURCEDIR;
+//    std::string dirname = PZSOURCEDIR;
+//    std::string sourcedir = BENCHMARK_SOURCE_DIR;
+    
     std::string grid;
     
-    grid = "/Users/pablocarvalho/Documents/GitHub/geomec_bench/Fase_1/Benchmark0a/gmsh/GeometryBench.msh";
+    grid = "../GeometryBench.msh";
 
     TPZGmshReader Geometry;
     REAL s = 1.0;
@@ -507,6 +509,7 @@ TPZGeoMesh *HidraulicoMonofasicoElastico::CreateGMesh()
         Geometry.GetDimNamePhysical()[0]["PointRight"] = fmatPointRight[0];
     }
     Geometry.GetDimNamePhysical()[2]["Omega"] = fmatID;
+    Geometry.SetFormatVersion("4.1");
     gmesh = Geometry.GeometricGmshMesh(grid);
     
     TPZCheckGeom check(gmesh);

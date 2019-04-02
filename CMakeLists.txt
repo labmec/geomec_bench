@@ -125,6 +125,8 @@ endif()
 
 include_directories(.)
 
+set(BENCHMARK_SOURCE_DIR ${PROJECT_SOURCE_DIR})
+
 add_subdirectory(Fase_1/Benchmark0a)
 add_subdirectory(Fase_1/Benchmark1a)
 add_subdirectory(MHM_Frac)

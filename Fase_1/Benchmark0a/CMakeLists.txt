@@ -13,3 +13,5 @@ add_executable(Benchmark0a ${Mymain})
 target_compile_definitions(Benchmark0a PUBLIC BENCHMARK_SOURCE_DIR=${PROJECT_SOURCE_DIR})
 
 target_link_libraries(Benchmark0a pz ${VTK_LIBRARIES})
+
+configure_file(gmsh/GeometryBench.msh GeometryBench.msh COPYONLY)
