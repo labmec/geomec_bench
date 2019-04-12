@@ -25,8 +25,7 @@ ELSE()
 ENDIF (WIN32)
 
 
-# this is the top level directory of your build tree 
-MESSAGE( STATUS "CMAKE_BINARY_DIR:         " ${PZ_INCLUDE_DIRS} )
+MESSAGE( STATUS "PZ_INCLUDE_DIRS:         " ${PZ_INCLUDE_DIRS} )
 
 IF(APPLE)
    # Mac OS X specific code
@@ -157,6 +156,6 @@ add_subdirectory(Fase_1/Benchmark1a)
 add_subdirectory(MHM_Frac)
 file(COPY DFN_data DESTINATION MHM_Frac)
 
-#Enabling tests
+#Enabling nightly tests
 ENABLE_TESTING()
 include(CTest)
