@@ -168,7 +168,7 @@ class TPZMatFractureBB : public TPZMatWithMem<TMEM>
         DebugStop();
     }
     
-    int NStateVariables()
+    virtual int NStateVariables() const
     {
         return fNStateVariables;
     }

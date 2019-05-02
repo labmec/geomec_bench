@@ -143,7 +143,7 @@ class TPZLagrangeInterface : public TPZMatWithMem< TMEM, TPZDiscontinuousGalerki
         ContributeInterface(data, dataleft[0], dataright[0], weight, ef);
     }
     
-    virtual int NStateVariables()
+    virtual int NStateVariables() const
     {
         return fNStateVariables;
     }

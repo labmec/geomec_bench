@@ -67,7 +67,7 @@ class  TPZPoroElastoPlasticDFN : public TPZMatWithMem<TMEM>
       virtual int Dimension() const { return fDimension; }
 
       /** returns the number of state variables associated with the material*/
-      virtual int NStateVariables() { return fDimension; }
+      virtual int NStateVariables() const { return fDimension; }
 
       /** print out the data associated with the material*/
       virtual void Print(std::ostream &out, const int memory);
