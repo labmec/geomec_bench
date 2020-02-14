@@ -499,12 +499,12 @@ int64_t GroupElements(TPZStack<int64_t> &elems, TPZGeoMesh *gmesh)
             }
             refpatmesh.CreateGeoElement(gel->Type(), nodeindices, 1, index);
             TPZGeoEl *gelsub = refpatmesh.Element(index);
-            gelsub->SetFather((int64_t)0);
+            gelsub->SetFatherIndex((int64_t)0);
         }
         refpatmesh.BuildConnectivity();
         refpat = new TPZRefPattern(refpatmesh);
         for (int64_t el=0; el<refpatmesh.NElements(); el++) {
-            refpatmesh.Element(el)->SetFather(-1);
+            refpatmesh.Element(el)->SetFatherIndex(-1);
         }
     }
     int64_t index;

@@ -186,7 +186,6 @@ int main(int argc, char *argv[])
         std::cout << "Executing using command line arguments\n";
     }
 
-    HDivPiola = 1;
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif

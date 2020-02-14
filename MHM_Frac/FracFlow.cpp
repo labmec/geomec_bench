@@ -180,8 +180,7 @@ int main(int argc, char *argv[])
     x0.Fill(0.);
     x1.Fill(1.);
 
-    HDivPiola = 1;
-#ifdef LOG4CXX
+ #ifdef LOG4CXX
     InitializePZLOG();
 #endif
     
